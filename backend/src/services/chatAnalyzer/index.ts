@@ -9,7 +9,7 @@ import type {
   PipelineCheck,
 } from '../../types/analysis';
 import { calculateRiskScore } from '../riskScoring';
-import { requestClaudeAnalysis } from './claudeClient';
+import { requestAiAnalysis } from './aiClient';
 import { maskPii } from './maskPii';
 import { scanChatPatterns } from './patternScan';
 import { isEvidenceInText } from './validateEvidence';
@@ -19,7 +19,7 @@ export async function analyzeChat(rawText: string): Promise<AnalysisResult> {
 
   const localIndicators = scanChatPatterns(maskedText);
 
-  const aiResult = await requestClaudeAnalysis(maskedText);
+  const aiResult = await requestAiAnalysis(maskedText);
 
   const checks: PipelineCheck[] = [
     {
@@ -36,10 +36,11 @@ export async function analyzeChat(rawText: string): Promise<AnalysisResult> {
   let aiScamType = null;
 
   if (aiResult.success && aiResult.data) {
+    const providerName = aiResult.provider === 'gemini' ? 'Gemini AI' : 'Claude AI';
     checks.push({
       name: 'ai_analysis',
       status: 'completed',
-      note: 'Ekstraksi penalaran semantik dan klasifikasi Claude AI selesai.',
+      note: `Ekstraksi penalaran semantik dan klasifikasi ${providerName} selesai.`,
     });
 
     canConclude = aiResult.data.can_conclude;
@@ -122,4 +123,3 @@ export async function analyzeChat(rawText: string): Promise<AnalysisResult> {
     timestamp: new Date().toISOString(),
   };
 }
-
