@@ -4,7 +4,7 @@ export const APP_CONFIG = {
   NAME: 'Scamora AI',
   FULL_NAME: 'Scamora - Platform Pendeteksi Potensi Penipuan Digital Berbasis AI',
   TAGLINE: 'Autonomous Digital Threat Defense',
-  EVENT: 'MIT-Week 2026 Innovation Challenge',
+  EVENT: 'Autonomous Cyber Threat Intelligence',
   VERSION: '2.0.0-react',
 };
 

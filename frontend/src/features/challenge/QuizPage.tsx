@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Award, CheckCircle2, XCircle, ArrowRight, RotateCcw, HelpCircle, Sparkles } from 'lucide-react';
+import { Award, CheckCircle2, XCircle, ArrowRight, RotateCcw, HelpCircle, Zap } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface Question {
@@ -122,7 +122,7 @@ export const QuizPage: React.FC = () => {
       <section className="w-full bg-[#143826] text-white py-12 border-b border-[#1D4E36]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EAF2ED] text-[#143826] font-mono text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5 text-[#E86A33]" />
+            <Zap className="w-3.5 h-3.5 text-[#E86A33]" />
             <span>Guardian Challenge AI &bull; P1 Interactive Education</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">

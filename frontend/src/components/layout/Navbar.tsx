@@ -9,7 +9,19 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+
+  // Track window scroll to create smooth responsive sticky header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Prevent background scrolling when mobile menu is open
   useEffect(() => {
@@ -39,9 +51,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
   };
 
   return (
-    <header className="sticky top-0 z-50 glass">
+    <header 
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-200/90' 
+          : 'bg-white/85 backdrop-blur-sm border-b border-gray-100'
+      }`}
+    >
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
-        <div className="flex items-center justify-between h-20 gap-4">
+        <div className={`flex items-center justify-between transition-all duration-300 gap-4 ${scrolled ? 'h-16' : 'h-20'}`}>
           
           {/* Brand Logo (Clean & Spacious Without MIT-Week Badge) */}
           <Link to="/" className="flex items-center gap-3 shrink-0 mr-2 xl:mr-8 group">

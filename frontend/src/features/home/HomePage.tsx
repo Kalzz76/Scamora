@@ -8,7 +8,7 @@ import {
   ArrowRight, 
   Lock, 
   Search,
-  Star,
+  Award,
   Compass,
   Tag,
   Clock,
@@ -403,8 +403,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
               </div>
 
               {/* Top Rating Badge */}
-              <div className="absolute top-5 left-5 z-10 flex items-center gap-1 px-3 py-1 rounded-full bg-[#143826]/90 backdrop-blur-md text-white text-xs font-bold border border-white/15 shadow-sm">
-                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <div className="absolute top-5 left-5 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143826]/90 backdrop-blur-md text-white text-xs font-bold border border-white/15 shadow-sm">
+                <Award className="w-3.5 h-3.5 text-[#E86A33]" />
                 <span>{item.rating}</span>
               </div>
 

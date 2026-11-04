@@ -1,10 +1,53 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Zap, Star, Clock, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useInView, animate } from 'motion/react';
+import { ShieldCheck, Zap, Activity, Clock, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface FooterProps {
   onOpenPrivacy: () => void;
 }
+
+interface CounterProps {
+  to: number;
+  duration?: number;
+  decimals?: number;
+  prefix?: string;
+  suffix?: string;
+}
+
+const AnimatedCounter: React.FC<CounterProps> = ({
+  to,
+  duration = 1.6,
+  decimals = 0,
+  prefix = '',
+  suffix = '',
+}) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const isInView = useInView(ref, { once: true, margin: '-20px' });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    const controls = animate(0, to, {
+      duration,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (latest) => {
+        setDisplayValue(latest);
+      },
+    });
+
+    return () => controls.stop();
+  }, [isInView, to, duration]);
+
+  const formatted = decimals > 0 ? displayValue.toFixed(decimals) : Math.round(displayValue).toString();
+
+  return (
+    <span ref={ref} className="tabular-nums font-bold">
+      {prefix}{formatted}{suffix}
+    </span>
+  );
+};
 
 export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
   const [email, setEmail] = useState('');
@@ -24,10 +67,10 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
     <footer className="w-full bg-white border-t border-gray-200 text-[#1A202C] mt-auto">
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
         
-        {/* Top Strip: Trust Stats & Follow Us (Exact Pomaii Style) */}
+        {/* Top Strip: Trust Stats & Follow Us (Exact Pomaii Style With Animated Counters) */}
         <div className="py-6 flex flex-col lg:flex-row items-center justify-between gap-6 border-b border-gray-100 text-left">
           
-          {/* Trust Metric Badges */}
+          {/* Trust Metric Badges with Count-Up Animation */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 w-full lg:w-auto">
             
             <div className="flex items-center gap-3">
@@ -35,7 +78,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
                 <ShieldCheck className="w-4 h-4 text-[#143826]" />
               </div>
               <div className="leading-tight">
-                <span className="block text-xs sm:text-sm font-bold text-gray-900">100% Zero Data</span>
+                <span className="block text-xs sm:text-sm font-bold text-gray-900">
+                  <AnimatedCounter to={100} duration={1.5} suffix="% Zero Data" />
+                </span>
                 <span className="text-[11px] text-gray-400">Privasi Tanpa Retensi</span>
               </div>
             </div>
@@ -45,17 +90,21 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
                 <Zap className="w-4 h-4 text-[#143826]" />
               </div>
               <div className="leading-tight">
-                <span className="block text-xs sm:text-sm font-bold text-gray-900">&lt;1.5 Detik</span>
+                <span className="block text-xs sm:text-sm font-bold text-gray-900">
+                  <AnimatedCounter to={1.5} duration={1.4} decimals={1} prefix="<" suffix=" Detik" />
+                </span>
                 <span className="text-[11px] text-gray-400">Respon Analisis Cepat</span>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-[#EAF2ED] text-[#143826] flex items-center justify-center shrink-0">
-                <Star className="w-4 h-4 text-[#143826]" />
+                <Activity className="w-4 h-4 text-[#143826]" />
               </div>
               <div className="leading-tight">
-                <span className="block text-xs sm:text-sm font-bold text-gray-900">94.8% Akurasi</span>
+                <span className="block text-xs sm:text-sm font-bold text-gray-900">
+                  <AnimatedCounter to={94.8} duration={1.8} decimals={1} suffix="% Akurasi" />
+                </span>
                 <span className="text-[11px] text-gray-400">Benchmark Evaluasi AI</span>
               </div>
             </div>
@@ -65,7 +114,9 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
                 <Clock className="w-4 h-4 text-[#143826]" />
               </div>
               <div className="leading-tight">
-                <span className="block text-xs sm:text-sm font-bold text-gray-900">24/7 Siaga</span>
+                <span className="block text-xs sm:text-sm font-bold text-gray-900">
+                  <AnimatedCounter to={24} duration={1.2} suffix="/7 Siaga" />
+                </span>
                 <span className="text-[11px] text-gray-400">Akses Publik Mandiri</span>
               </div>
             </div>
