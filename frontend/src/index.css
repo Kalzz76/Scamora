@@ -1,0 +1,186 @@
+@import "tailwindcss";
+
+@theme {
+  /* Pomaii Signature Color Palette */
+  --color-pomaii-green: #143826;
+  --color-pomaii-green-light: #1D4E36;
+  --color-pomaii-orange: #E86A33;
+  --color-pomaii-orange-hover: #D75922;
+  --color-pomaii-sage: #EAF2ED;
+  --color-pomaii-tint: #F2F7F4;
+  --color-pomaii-bg: #F8F9FA;
+  --color-pomaii-card: #FFFFFF;
+  --color-pomaii-text: #1A202C;
+  --color-pomaii-muted: #5E6D7E;
+  --color-pomaii-border: #E8ECE9;
+
+  /* Semantic UI Tokens Mapped to Pomaii */
+  --color-surface: #F8F9FA;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-low: #F8F9FA;
+  --color-surface-container: #EAF2ED;
+  --color-surface-container-high: #DDE8E2;
+  --color-surface-container-highest: #CFDDD5;
+
+  --color-on-surface: #1A202C;
+  --color-on-surface-variant: #5E6D7E;
+  --color-on-background: #1A202C;
+  --color-background: #F8F9FA;
+  --color-outline: #94A3B8;
+  --color-outline-variant: #E8ECE9;
+
+  /* Primary Action (Pomaii Warm Orange) */
+  --color-primary: #E86A33;
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #FDF0E9;
+  --color-on-primary-container: #B44616;
+
+  /* Secondary (Pomaii Deep Forest Green) */
+  --color-secondary: #143826;
+  --color-secondary-container: #1D4E36;
+  --color-on-secondary: #FFFFFF;
+  --color-secondary-fixed: #EAF2ED;
+
+  /* Error / High Risk Alert */
+  --color-error: #DC2626;
+  --color-error-container: #FEF2F2;
+  --color-on-error-container: #991B1B;
+
+  /* Tertiary / Success */
+  --color-tertiary-container: #EAF2ED;
+  --color-on-tertiary-container: #143826;
+
+  /* Typography Pairing */
+  --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Radii */
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+
+  /* Shadows (Pomaii Soft Elevation) */
+  --shadow-sm: 0 1px 3px 0 rgba(20, 56, 38, 0.04);
+  --shadow-card: 0 8px 30px -4px rgba(20, 56, 38, 0.06);
+  --shadow-lift: 0 20px 40px -8px rgba(20, 56, 38, 0.12);
+  --shadow-dock: 0 20px 50px -10px rgba(20, 56, 38, 0.16);
+}
+
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #F8F9FA;
+  color: #1A202C;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+code, kbd, samp, pre {
+  font-family: var(--font-mono);
+}
+
+/* Material Symbols Outlined */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Smooth Interactive Transition */
+.btn-animate {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+button.btn-animate:hover, a.btn-animate:hover {
+  transform: translateY(-2px);
+}
+.btn-animate:active {
+  transform: scale(0.97);
+}
+
+/* Pomaii Floating Search Capsule Dock */
+.pomaii-dock {
+  background-color: #FFFFFF;
+  border-radius: 9999px;
+  box-shadow: var(--shadow-dock);
+  border: 1px solid rgba(232, 236, 233, 0.9);
+  transition: all 0.25s ease;
+}
+
+/* Pomaii Cards */
+.pomaii-card, .gainlove-card, .apple-card, .apple-card-interactive {
+  background-color: #FFFFFF;
+  border-radius: var(--radius-2xl);
+  border: 1px solid #E8ECE9;
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pomaii-card:hover, .gainlove-card:hover, .apple-card-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lift);
+  border-color: #CFDDD5;
+}
+
+/* Sticky Navbar Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid #E8ECE9;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F8F9FA;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CFDDD5;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E86A33;
+}
+
+/* Focus Outline */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #E86A33 !important;
+  outline-offset: 2px !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
