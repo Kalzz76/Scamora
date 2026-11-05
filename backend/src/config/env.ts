@@ -12,6 +12,8 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().default(''),
   GEMINI_MODEL: z.string().default('gemini-3-flash-preview'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
+  SUPABASE_URL: z.string().default(''),
+  SUPABASE_KEY: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
