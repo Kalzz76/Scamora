@@ -7,12 +7,25 @@ import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 
+const allowedOrigins = [
+  env.FRONTEND_ORIGIN,
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
 app.use(helmet());
 app.use(
   cors({
-    origin: env.FRONTEND_ORIGIN,
-    methods: ['GET', 'POST', 'OPTIONS'],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Dev-friendly fallback
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   })
 );
 app.use(express.json({ limit: '10kb' }));
