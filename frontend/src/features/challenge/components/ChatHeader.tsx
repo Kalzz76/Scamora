@@ -44,16 +44,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 {scenario.difficulty === 'easy' ? 'Pemula' : scenario.difficulty === 'medium' ? 'Menengah' : 'Mahir'}
               </span>
             </span>
-            {scenario.isAiGenerated ? (
-              <span className="hidden sm:inline-flex items-center gap-0.5 text-[9px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold">
-                ✨ Gemini AI Live
-              </span>
-            ) : (
-              <span
-                className="hidden sm:inline-flex items-center gap-0.5 text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold"
-                title="Skenario kurasi lokal aktif. Tambahkan GEMINI_API_KEY di backend/.env untuk generate live AI."
-              >
-                Skenario Kurasi
+            {scenario.isAiGenerated && (
+              <span className="hidden sm:inline-flex items-center gap-0.5 text-[9px] font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-bold">
+                Gemini AI
               </span>
             )}
           </div>

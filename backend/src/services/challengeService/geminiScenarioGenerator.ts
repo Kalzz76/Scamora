@@ -64,7 +64,11 @@ export async function generateScenarioWithGemini(
   const difficultyGuide = DIFFICULTY_GUIDELINES[request.difficulty] || DIFFICULTY_GUIDELINES.medium;
   const uniqueSeed = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 
-  if (!env.GEMINI_API_KEY) {
+  const rawKey = env.GEMINI_API_KEY || '';
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, '');
+
+  if (!apiKey) {
+    console.warn('[Gemini Generator] GEMINI_API_KEY tidak ditemukan atau kosong di backend/.env. Menggunakan skenario kurasi.');
     return getFallbackScenario(request.categoryId, request.difficulty, randomAngle);
   }
 
@@ -146,7 +150,7 @@ Kembalikan HANYA JSON valid (tanpa teks pembuka atau markdown di luar JSON) deng
 
   for (const model of modelsToTry) {
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +165,8 @@ Kembalikan HANYA JSON valid (tanpa teks pembuka atau markdown di luar JSON) deng
       });
 
       if (!response.ok) {
-        console.warn(`Gemini model ${model} status ${response.status}, mencoba alternatif...`);
+        const errorText = await response.text().catch(() => '');
+        console.warn(`[Gemini Generator] Model ${model} HTTP ${response.status}: ${errorText}`);
         continue;
       }
 
@@ -177,46 +182,46 @@ Kembalikan HANYA JSON valid (tanpa teks pembuka atau markdown di luar JSON) deng
       }
 
       const parsed = JSON.parse(cleanJson) as ChallengeScenario;
-      parsed.isAiGenerated = true;
-      parsed.id = `ai-gen-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
-      parsed.categoryId = request.categoryId;
-      parsed.difficulty = request.difficulty;
+        parsed.isAiGenerated = true;
+        parsed.id = `ai-gen-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+        parsed.categoryId = request.categoryId;
+        parsed.difficulty = request.difficulty;
 
-      return parsed;
-    } catch (err: any) {
-      console.warn(`Model ${model} gagal:`, err.message);
+        return parsed;
+      } catch (err: any) {
+        console.warn(`Model ${model} gagal:`, err.message);
+      }
     }
+
+    console.warn('Semua model Gemini sedang sibuk, menyajikan skenario kurasi beragam.');
+    return getFallbackScenario(request.categoryId, request.difficulty, randomAngle);
   }
 
-  console.warn('Semua model Gemini sedang sibuk, menyajikan skenario kurasi beragam.');
-  return getFallbackScenario(request.categoryId, request.difficulty, randomAngle);
-}
+  function getFallbackScenario(
+    categoryId: string,
+    difficulty: DifficultyLevel,
+    randomAngle?: string
+  ): ChallengeScenario {
+    const matches = SEED_SCENARIOS.filter(
+      (s) => s.categoryId === categoryId && s.difficulty === difficulty
+    );
+    if (matches.length > 0) {
+      // Pick random match if multiple
+      return matches[Math.floor(Math.random() * matches.length)];
+    }
 
-function getFallbackScenario(
-  categoryId: string,
-  difficulty: DifficultyLevel,
-  randomAngle?: string
-): ChallengeScenario {
-  const matches = SEED_SCENARIOS.filter(
-    (s) => s.categoryId === categoryId && s.difficulty === difficulty
-  );
-  if (matches.length > 0) {
-    // Pick random match if multiple
-    return matches[Math.floor(Math.random() * matches.length)];
-  }
+    const categoryMatches = SEED_SCENARIOS.filter((s) => s.categoryId === categoryId);
+    if (categoryMatches.length > 0) {
+      return categoryMatches[Math.floor(Math.random() * categoryMatches.length)];
+    }
 
-  const categoryMatches = SEED_SCENARIOS.filter((s) => s.categoryId === categoryId);
-  if (categoryMatches.length > 0) {
-    return categoryMatches[Math.floor(Math.random() * categoryMatches.length)];
+    // If even category has no match, return a cloned and customized seed
+    const fallback = { ...SEED_SCENARIOS[0] };
+    fallback.id = `curated-${Date.now()}`;
+    fallback.categoryId = categoryId;
+    fallback.difficulty = difficulty;
+    if (randomAngle) {
+      fallback.title = randomAngle.split(':')[0] || fallback.title;
+    }
+    return fallback;
   }
-
-  // If even category has no match, return a cloned and customized seed
-  const fallback = { ...SEED_SCENARIOS[0] };
-  fallback.id = `curated-${Date.now()}`;
-  fallback.categoryId = categoryId;
-  fallback.difficulty = difficulty;
-  if (randomAngle) {
-    fallback.title = randomAngle.split(':')[0] || fallback.title;
-  }
-  return fallback;
-}
