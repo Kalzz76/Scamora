@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, Menu, X, Lock, Search, Heart, LayoutGrid } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { ShieldCheck, Menu, X, Lock } from 'lucide-react';
 
 interface NavbarProps {
   onOpenPrivacy: () => void;
@@ -42,6 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
     { path: '/panduan', label: 'Panduan' },
     { path: '/kuis', label: 'Tantangan AI' },
     { path: '/pengetahuan', label: 'Edukasi' },
+    { path: '/komunitas', label: 'Komunitas' },
   ];
 
   const isActive = (path: string) => {
@@ -54,30 +55,30 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
     <header 
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-gray-200/90' 
-          : 'bg-white/85 backdrop-blur-sm border-b border-gray-100'
+          ? 'bg-white/95 backdrop-blur-md shadow-xs border-b border-slate-200' 
+          : 'bg-white/80 backdrop-blur-md border-b border-slate-200/70'
       }`}
     >
       <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
-        <div className={`flex items-center justify-between transition-all duration-300 gap-4 ${scrolled ? 'h-16' : 'h-20'}`}>
+        <div className={`relative flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
           
-          {/* Brand Logo (Clean & Spacious Without MIT-Week Badge) */}
-          <Link to="/" className="flex items-center gap-3 shrink-0 mr-2 xl:mr-8 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#143826] to-[#22573B] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-all">
-              <ShieldCheck className="w-5 h-5 text-[#E86A33]" />
+          {/* Left: Brand Logo */}
+          <Link to="/" className="flex items-center gap-3 shrink-0 z-10 group">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0F172A] to-[#1E293B] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-all">
+              <ShieldCheck className="w-5 h-5 text-[#0D9488]" />
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-xl tracking-tight text-[#143826] leading-none">
+              <span className="font-extrabold text-xl tracking-tight text-[#0F172A] leading-none">
                 Scamora
               </span>
-              <span className="text-[10px] text-gray-400 tracking-tight font-medium hidden sm:inline mt-1">
+              <span className="text-[10px] text-slate-500 tracking-tight font-medium hidden sm:inline mt-1">
                 Protect. Reason. Prevent.
               </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation (Pomaii Clean Single-Line Links with Smooth Gliding Indicator) */}
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[13px] xl:text-sm font-semibold whitespace-nowrap">
+          {/* Center: Desktop Navigation Bar (Clean & Pure Text, Dead-Center via absolute) */}
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-[13px] xl:text-sm font-semibold whitespace-nowrap absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
@@ -86,15 +87,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   to={link.path}
                   className={`relative py-1.5 whitespace-nowrap transition-colors ${
                     active
-                      ? 'text-[#E86A33] font-bold'
-                      : 'text-gray-600 hover:text-[#143826]'
+                      ? 'text-[#0D9488] font-bold'
+                      : 'text-slate-600 hover:text-[#0F172A]'
                   }`}
                 >
-                  <span className="whitespace-nowrap">{link.label}</span>
+                  <span>{link.label}</span>
                   {active && (
                     <motion.span
                       layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#E86A33] rounded-full"
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#0D9488] rounded-full"
                       transition={{ type: 'spring', stiffness: 450, damping: 35 }}
                     />
                   )}
@@ -103,43 +104,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             })}
           </nav>
 
-          {/* Actions & Utilities (Pomaii Top Right Toolbar with Generous Margin) */}
-          <div className="flex items-center gap-3 shrink-0 ml-2 xl:ml-8">
-            <Link
-              to="/url"
-              className="w-10 h-10 rounded-full bg-white hover:bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 transition shadow-2xs hidden xl:flex"
-              title="Pencarian Cepat Tautan"
-            >
-              <Search className="w-4 h-4 text-gray-600" />
-            </Link>
-
-            <button
-              onClick={onOpenPrivacy}
-              type="button"
-              className="w-10 h-10 rounded-full bg-white hover:bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-700 transition shadow-2xs hidden xl:flex"
-              title="Pernyataan Privasi"
-            >
-              <Heart className="w-4 h-4 text-[#E86A33]" />
-            </button>
-
-            <button
-              onClick={onOpenPrivacy}
-              type="button"
-              className="btn-animate inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#EAF2ED] hover:bg-[#DDE8E2] text-[#143826] text-xs font-bold transition shadow-2xs whitespace-nowrap"
-            >
-              <Lock className="w-3.5 h-3.5 text-[#143826]" />
-              <span>Zero Retention</span>
-            </button>
-
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-600 hidden 2xl:flex">
-              <LayoutGrid className="w-4 h-4" />
-            </div>
-
-            {/* Mobile Menu Button */}
+          {/* Right: Only Mobile Menu Toggle (lg:hidden) */}
+          <div className="flex items-center lg:hidden z-10">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               type="button"
-              className="lg:hidden w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-700"
+              className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-700 cursor-pointer"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -179,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   setMobileOpen(false);
                   onOpenPrivacy();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#EAF2ED] text-[#143826] text-xs font-bold"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#EAF2ED] text-[#143826] text-xs font-bold cursor-pointer"
               >
                 <Lock className="w-4 h-4 text-[#143826]" />
                 <span>Pernyataan Privasi &amp; Zero Retention</span>

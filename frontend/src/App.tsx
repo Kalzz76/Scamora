@@ -5,7 +5,6 @@ import { Toaster } from 'sonner';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { PrivacyModal } from './components/common/PrivacyModal';
-import { SimPanel } from './components/common/SimPanel';
 import { HomePage } from './features/home/HomePage';
 import { UrlCheckerPage } from './features/url-checker/UrlCheckerPage';
 import { ChatDetectorPage } from './features/chat-detector/ChatDetectorPage';
@@ -13,13 +12,21 @@ import { ReportPage } from './features/risk-report/ReportPage';
 import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
+import { KomunitasPage } from './features/community/KomunitasPage';
 import type { AnalysisResult } from './types/analysis';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, 50);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return null;
@@ -80,6 +87,7 @@ function AnimatedRoutes({
             <Route path="/panduan" element={<PanduanPage />} />
             <Route path="/kuis" element={<QuizPage />} />
             <Route path="/pengetahuan" element={<KnowledgePage />} />
+            <Route path="/komunitas" element={<KomunitasPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>
@@ -127,9 +135,6 @@ export function App() {
           isOpen={privacyModalOpen}
           onClose={() => setPrivacyModalOpen(false)}
         />
-
-        {/* Demo Simulation Controller for MIT-Week Jury */}
-        <SimPanel />
 
         {/* High-Craft Stacked Toast Notifications */}
         <Toaster position="top-right" richColors closeButton />

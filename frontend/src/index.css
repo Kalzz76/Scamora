@@ -1,54 +1,44 @@
 @import "tailwindcss";
 
 @theme {
-  /* Pomaii Signature Color Palette */
-  --color-pomaii-green: #143826;
-  --color-pomaii-green-light: #1D4E36;
-  --color-pomaii-orange: #E86A33;
-  --color-pomaii-orange-hover: #D75922;
-  --color-pomaii-sage: #EAF2ED;
-  --color-pomaii-tint: #F2F7F4;
-  --color-pomaii-bg: #F8F9FA;
-  --color-pomaii-card: #FFFFFF;
-  --color-pomaii-text: #1A202C;
-  --color-pomaii-muted: #5E6D7E;
-  --color-pomaii-border: #E8ECE9;
+  /* Modern Cyber Slate Palette */
+  --color-slate-primary: #0F172A;
+  --color-slate-secondary: #1E293B;
+  --color-cyber-teal: #0D9488;
+  --color-cyber-teal-hover: #0F766E;
+  --color-cyber-amber: #E86A33;
+  --color-cyber-amber-hover: #D75922;
 
-  /* Semantic UI Tokens Mapped to Pomaii */
-  --color-surface: #F8F9FA;
+  /* Semantic UI Tokens - Modern Cyber Slate */
+  --color-surface: #F1F5F9;
   --color-surface-container-lowest: #FFFFFF;
-  --color-surface-container-low: #F8F9FA;
-  --color-surface-container: #EAF2ED;
-  --color-surface-container-high: #DDE8E2;
-  --color-surface-container-highest: #CFDDD5;
+  --color-surface-container-low: #F8FAFC;
+  --color-surface-container: #E2E8F0;
+  --color-surface-container-high: #CBD5E1;
+  --color-surface-container-highest: #94A3B8;
 
-  --color-on-surface: #1A202C;
-  --color-on-surface-variant: #5E6D7E;
-  --color-on-background: #1A202C;
-  --color-background: #F8F9FA;
-  --color-outline: #94A3B8;
-  --color-outline-variant: #E8ECE9;
+  --color-on-surface: #0F172A;
+  --color-on-surface-variant: #475569;
+  --color-on-background: #0F172A;
+  --color-background: #F1F5F9;
+  --color-outline: #CBD5E1;
+  --color-outline-variant: #E2E8F0;
 
-  /* Primary Action (Pomaii Warm Orange) */
-  --color-primary: #E86A33;
+  /* Primary Action */
+  --color-primary: #0D9488;
   --color-on-primary: #FFFFFF;
-  --color-primary-container: #FDF0E9;
-  --color-on-primary-container: #B44616;
+  --color-primary-container: #CCFBF1;
+  --color-on-primary-container: #0F766E;
 
-  /* Secondary (Pomaii Deep Forest Green) */
-  --color-secondary: #143826;
-  --color-secondary-container: #1D4E36;
+  /* Secondary (Deep Slate Navy) */
+  --color-secondary: #0F172A;
+  --color-secondary-container: #1E293B;
   --color-on-secondary: #FFFFFF;
-  --color-secondary-fixed: #EAF2ED;
 
   /* Error / High Risk Alert */
-  --color-error: #DC2626;
-  --color-error-container: #FEF2F2;
-  --color-on-error-container: #991B1B;
-
-  /* Tertiary / Success */
-  --color-tertiary-container: #EAF2ED;
-  --color-on-tertiary-container: #143826;
+  --color-error: #E11D48;
+  --color-error-container: #FFE4E6;
+  --color-on-error-container: #9F1239;
 
   /* Typography Pairing */
   --font-sans: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -61,11 +51,11 @@
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
 
-  /* Shadows (Pomaii Soft Elevation) */
-  --shadow-sm: 0 1px 3px 0 rgba(20, 56, 38, 0.04);
-  --shadow-card: 0 8px 30px -4px rgba(20, 56, 38, 0.06);
-  --shadow-lift: 0 20px 40px -8px rgba(20, 56, 38, 0.12);
-  --shadow-dock: 0 20px 50px -10px rgba(20, 56, 38, 0.16);
+  /* Shadows (Crisp Slate Elevation) */
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 8px 30px -4px rgba(15, 23, 42, 0.07);
+  --shadow-lift: 0 20px 40px -8px rgba(15, 23, 42, 0.12);
+  --shadow-dock: 0 20px 50px -10px rgba(15, 23, 42, 0.15);
 }
 
 html {
@@ -75,8 +65,14 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #F8F9FA;
-  color: #1A202C;
+  background-color: #F1F5F9;
+  background-image: 
+    radial-gradient(at 50% 0%, rgba(13, 148, 136, 0.07) 0px, transparent 65%),
+    linear-gradient(to right, rgba(148, 163, 184, 0.09) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
+  background-attachment: fixed;
+  color: #0F172A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
@@ -181,5 +177,20 @@ select:focus-visible {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Print Stylesheet for Formal Forensic Audit Reports */
+@media print {
+  header, footer, nav, .no-print, .btn-animate {
+    display: none !important;
+  }
+  body, html {
+    background: #ffffff !important;
+    color: #1A202C !important;
+  }
+  .apple-card, .pomaii-card {
+    box-shadow: none !important;
+    border: 1px solid #CCCCCC !important;
   }
 }

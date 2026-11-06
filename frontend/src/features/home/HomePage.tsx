@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, type Variants } from 'motion/react';
+import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { 
   ShieldCheck, 
   Link2, 
@@ -45,11 +45,41 @@ const fadeUp: Variants = {
   },
 };
 
+// High-Definition Curated Cyber Infrastructure & Global Defense Images
+const HERO_IMAGES = [
+  {
+    url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=85',
+    title: 'Infrastruktur Peladen Siber Mutakhir',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=85',
+    title: 'Jaringan Telemetri Ancaman Global',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1920&q=85',
+    title: 'Enkripsi & Pemindaian Pola Heuristik',
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=85',
+    title: 'Komputasi Pertahanan Siber Berkecepatan Tinggi',
+  },
+];
+
 export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [quickInput, setQuickInput] = useState<string>('');
   const [scannerType, setScannerType] = useState<'url' | 'chat'>('url');
+  const [heroIndex, setHeroIndex] = useState<number>(0);
+
+  // Background carousel queue timer (cycles smoothly every 5 seconds)
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSelectPreset = (preset: typeof DEMO_PRESETS[0]) => {
     onLoadDemo(preset.id);
@@ -150,25 +180,26 @@ export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
           
           <div className="relative w-full h-[560px] sm:h-[620px] lg:h-[660px] rounded-3xl sm:rounded-[40px] overflow-hidden shadow-2xl">
             
-            {/* Background High-Def Security & Scenic Mountain Visual */}
-            <div 
-              className="absolute inset-0 bg-cover bg-center"
-              style={{
-                backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=85')`,
-              }}
-            >
-              {/* Gradient Scrim */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/35 to-black/20" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
-            </div>
+            {/* Background Image Carousel with Smooth Crossfade & Motion */}
+            <div className="absolute inset-0 overflow-hidden">
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  key={heroIndex}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url('${HERO_IMAGES[heroIndex].url}')`,
+                  }}
+                />
+              </AnimatePresence>
 
-            {/* Organic Translucent Wave Silhouette (Pomaii Signature Foreground) */}
-            <div 
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                background: `radial-gradient(ellipse 90% 80% at -10% 40%, rgba(248, 249, 250, 0.98) 45%, rgba(248, 249, 250, 0.75) 60%, transparent 80%)`,
-              }}
-            />
+              {/* Cinematic Dark Gradient Scrim (Natural Vignette for Superb Legibility) */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20 z-[1] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 z-[1] pointer-events-none" />
+            </div>
 
             {/* Left Content Area (Animated Cascade On Load) */}
             <motion.div 
@@ -179,23 +210,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
             >
               
               {/* Top Tag with Leaf / Shield */}
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-[#143826]">
-                <span className="w-6 h-6 rounded-full bg-[#EAF2ED] flex items-center justify-center text-[#143826] shadow-2xs">
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest text-emerald-300 w-fit">
+                <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
                   🌿
                 </span>
                 <span>AUTONOMOUS CYBER DEFENSE</span>
               </motion.div>
 
-              {/* Main Headline */}
-              <motion.h1 variants={fadeUp} className="text-4xl sm:text-6xl lg:text-[68px] font-black tracking-tight text-[#1A202C] leading-[1.06]">
+              {/* Main Headline (Crisp Pure White & Accent Emerald / Warm Orange) */}
+              <motion.h1 variants={fadeUp} className="text-4xl sm:text-6xl lg:text-[68px] font-black tracking-tight text-white leading-[1.06] drop-shadow-md">
                 Kenali Penipuan. <br />
-                <span className="text-[#143826]">
+                <span className="text-emerald-400">
                   Lindungi <span className="text-[#E86A33]">Diri Anda.</span>
                 </span>
               </motion.h1>
 
               {/* Description */}
-              <motion.p variants={fadeUp} className="text-base sm:text-lg text-gray-700 max-w-lg leading-relaxed font-medium">
+              <motion.p variants={fadeUp} className="text-base sm:text-lg text-gray-200 max-w-lg leading-relaxed font-medium drop-shadow-xs">
                 Periksa tautan mencurigakan dan bongkar manipulasi percakapan WhatsApp secara instan dengan transparansi bukti kecerdasan buatan.
               </motion.p>
 
@@ -203,7 +234,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
               <motion.div variants={fadeUp} className="pt-2 flex items-center gap-4">
                 <Link
                   to="/url"
-                  className="btn-animate inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 transition-all"
+                  className="btn-animate inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/30 transition-all"
                 >
                   <span>Mulai Periksa Sekarang</span>
                   <ArrowRight className="w-4 h-4" />

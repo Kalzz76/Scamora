@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, AlertTriangle, ArrowRight, Lock, Unlock, RotateCcw, Play } from 'lucide-react';
+import { 
+  Lock, 
+  Unlock, 
+  ArrowRight, 
+  RotateCcw, 
+  ShieldCheck, 
+  Globe, 
+  AlertTriangle, 
+  Play,
+  Terminal,
+  Activity,
+  CheckCircle2
+} from 'lucide-react';
+import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { DEMO_PRESETS } from '../../lib/constants';
 import { analysisService } from '../../services/analysisService';
 import { Stepper } from '../../components/common/Stepper';
+import { UrlDetectiveIllustration } from '../../components/illustrations/Illustrations2D';
 import type { AnalysisResult } from '../../types/analysis';
 
 interface UrlCheckerPageProps {
@@ -19,18 +33,21 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
   onOpenPrivacy,
 }) => {
   const [url, setUrl] = useState('');
-  const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [privacyAgreed, setPrivacyAgreed] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const urlPresets = DEMO_PRESETS.filter((p) => p.type === 'url');
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (initialPresetId) {
       const match = DEMO_PRESETS.find((p) => p.id === initialPresetId);
       if (match) {
         setUrl(match.content);
+        setActivePresetId(match.id);
         setPrivacyAgreed(true);
       }
     }
@@ -39,15 +56,17 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
   const isHttps = url.trim().toLowerCase().startsWith('https://');
   const isHttp = url.trim().toLowerCase().startsWith('http://');
 
-  const handleSelectPreset = (content: string) => {
-    setUrl(content);
+  const handleSelectPreset = (preset: typeof urlPresets[0]) => {
+    setUrl(preset.content);
+    setActivePresetId(preset.id);
     setErrorMessage(null);
     setPrivacyAgreed(true);
-    toast.info('Skenario serangan simulasi dimuat');
+    toast.info(`Skenario "${preset.title}" siap diperiksa`);
   };
 
   const handleClear = () => {
     setUrl('');
+    setActivePresetId(null);
     setErrorMessage(null);
   };
 
@@ -62,15 +81,14 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
     }
 
     if (!privacyAgreed) {
-      setErrorMessage('Anda wajib menyetujui pemberitahuan privasi sebelum mengirim data.');
+      setErrorMessage('Anda wajib menyetujui pemberitahuan privasi sebelum memproses analisis.');
       return;
     }
 
-    // Basic URL validation
     try {
       new URL(trimmed);
     } catch {
-      setErrorMessage('Format URL tidak valid. Pastikan diawali dengan https:// atau http://');
+      setErrorMessage('Format URL tidak valid. Pastikan alamat diawali dengan http:// atau https://');
       return;
     }
 
@@ -92,217 +110,307 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <Stepper type="url" />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-24 min-h-[70vh] flex items-center justify-center">
+        <div className="w-full">
+          <Stepper type="url" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full pb-20">
+    <div className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-transparent text-[#0F172A] relative overflow-hidden">
       
-      {/* HEADER BANNER - Pomaii Deep Green Style */}
-      <section className="w-full bg-[#143826] text-white py-12 border-b border-[#1D4E36]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
+      {/* Background Soft Aura */}
+      <div 
+        className="absolute top-0 right-0 w-[650px] h-[650px] pointer-events-none opacity-50"
+        style={{
+          background: 'radial-gradient(circle at 70% 30%, rgba(13, 148, 136, 0.12) 0%, rgba(241, 245, 249, 0) 70%)',
+        }}
+      />
+
+      {/* ASYMMETRIC SPLIT SCREEN 50:50 WORKSPACE */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 w-full relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-[#EAF2ED] text-[#143826] text-xs font-bold uppercase tracking-wider font-mono">
-              Pemeriksaan Keamanan Tautan
-            </span>
-            <span className="text-[#CFDDD5] text-xs">&bull;</span>
-            <span className="text-xs text-[#EAF2ED] font-medium">Modul Inti P0</span>
-            <div className="ml-auto hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-[#EAF2ED] border border-white/20 text-xs font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#E86A33]"></span>
-              <span>Sanitasi Kredensial Otomatis</span>
-            </div>
-          </div>
+          {/* LEFT COLUMN: HERO, 2D DETECTIVE ILLUSTRATION & LIVE TELEMETRY (lg:col-span-6) */}
+          <div className="lg:col-span-6 space-y-6">
+            
+            {/* Eyebrow Badge */}
+            <motion.div 
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] border border-[#143826]/15 font-mono text-xs font-bold uppercase tracking-wider"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#E86A33]" />
+              <span>PEMINDAI TELEMETRI TAUTAN &amp; PHISHING</span>
+            </motion.div>
 
-          <div className="space-y-1 pt-1">
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Pemeriksaan Tautan (URL Safety Checker)
-            </h1>
-            <p className="text-sm text-gray-200 max-w-2xl leading-relaxed">
-              Memeriksa struktur URL terhadap potensi typosquatting, penyamaran nama merek di subdomain, karakter punycode, dan status reputasi pada Google Safe Browsing.
-            </p>
-          </div>
+            {/* Bold H1 Headline */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#143826] tracking-tight leading-tight"
+            >
+              Bedah Keaslian Tautan <span className="text-[#E86A33]">Tanpa Risiko.</span>
+            </motion.h1>
 
-        </div>
-      </section>
+            {/* Description */}
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="text-sm sm:text-base text-gray-600 leading-relaxed font-medium"
+            >
+              Scamora mengisolasi dan membongkar anatomi URL mencurigakan menggunakan pemindai heuristik cerdas—mendeteksi manipulasi subdomain, penyamaran karakter <span className="font-semibold text-gray-900">punycode</span>, dan domain jebakan sebelum browser Anda mengaksesnya.
+            </motion.p>
 
-      {/* WORKSPACE FORM */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
-        
-        {/* DEMO PRESET PILLS */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-on-surface flex items-center gap-1.5">
-              <Play className="w-3.5 h-3.5 text-secondary fill-secondary" />
-              Pilih Contoh Skenario Uji (Data Simulasi):
-            </span>
-            <span className="text-xs text-on-surface-variant hidden sm:inline">
-              Klik untuk memuat URL otomatis
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {urlPresets.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => handleSelectPreset(preset.content)}
-                className="apple-card-interactive p-4 text-left group"
-              >
-                <div className="flex items-center justify-between w-full mb-1.5">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    preset.expectedCategory === 'high'
-                      ? 'bg-error-container text-error'
-                      : preset.expectedCategory === 'review'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-tertiary-container text-on-tertiary-container'
-                  }`}>
-                    {preset.expectedCategory === 'high' ? 'Indikasi Tinggi' : preset.expectedCategory === 'review' ? 'Perlu Ditinjau' : 'Risiko Rendah'}
-                  </span>
-                  <span className="text-[10px] font-mono text-on-surface-variant">Skor ~{preset.expectedScore}</span>
-                </div>
-                <span className="text-xs font-bold text-on-surface block truncate w-full group-hover:text-secondary">
-                  {preset.title}
-                </span>
-                <span className="font-mono text-[11px] text-on-surface-variant truncate block w-full opacity-70 mt-0.5">
-                  {preset.content}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* INPUT BOX - Apple Card */}
-        <form onSubmit={handleSubmit} className="apple-card p-6 sm:p-8 space-y-5">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-            <label htmlFor="input-url" className="text-sm font-bold text-on-surface">
-              Masukkan Alamat Tautan (URL) Lengkap:
-            </label>
-            <span className="text-xs font-mono text-on-surface-variant">
-              {url.length} / 2.048 karakter
-            </span>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-stretch gap-3">
-            <div className="flex-1 relative flex items-center bg-surface-container-low rounded-xl border border-outline-variant focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20 transition-all px-3.5">
+            {/* Prominent 2D Cartoon Visual Dock with Soft Sage Plinth */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="p-6 rounded-3xl bg-gradient-to-b from-[#EAF2ED]/70 to-[#F8F9FA] border border-[#143826]/10 flex flex-col items-center justify-center relative overflow-hidden"
+            >
+              <UrlDetectiveIllustration className="w-64 h-44 sm:w-80 sm:h-52 drop-shadow-sm" />
               
-              {/* Protocol Badge */}
-              <div className="mr-2.5 shrink-0">
-                {isHttps ? (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-mono text-[11px] font-bold">
-                    <Lock className="w-3 h-3" />
-                    HTTPS
-                  </span>
-                ) : isHttp ? (
-                  <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-error font-mono text-[11px] font-bold">
-                    <Unlock className="w-3 h-3" />
-                    HTTP
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-mono text-[11px]">
-                    URL
-                  </span>
-                )}
+              {/* Telemetry Status Bar Under Illustration */}
+              <div className="mt-3 flex items-center gap-3 px-4 py-2 rounded-xl bg-white/90 border border-gray-200/80 shadow-2xs text-[11px] font-mono text-gray-700">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+                </span>
+                <span className="font-bold text-[#143826]">Sandbox Anti-SSRF Aktif</span>
+                <span className="text-gray-300">|</span>
+                <span>Zero Retention Guard</span>
+              </div>
+            </motion.div>
+
+            {/* 3 Live Telemetry Bullets */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="p-3.5 rounded-2xl bg-white border border-gray-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#143826]">
+                  <Globe className="w-3.5 h-3.5 text-[#E86A33]" />
+                  <span>Typosquatting</span>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-tight">
+                  Membongkar huruf tiruan &amp; subdomain bank palsu.
+                </p>
               </div>
 
-              <input
-                id="input-url"
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                maxLength={2048}
-                placeholder="https://contoh-domain.com/halaman"
-                className="w-full py-3 bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-hidden font-mono"
-              />
+              <div className="p-3.5 rounded-2xl bg-white border border-gray-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#143826]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Anti-Infeksi</span>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-tight">
+                  Tautan tidak diklik langsung oleh gawai Anda.
+                </p>
+              </div>
 
-              {url && (
+              <div className="p-3.5 rounded-2xl bg-white border border-gray-200/80 shadow-2xs space-y-1">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#143826]">
+                  <Activity className="w-3.5 h-3.5 text-[#143826]" />
+                  <span>Radar Global</span>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-tight">
+                  Sinkronisasi database ancaman &amp; aduan publik.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: INTERACTIVE COMMAND CONSOLE DOCK (lg:col-span-6) */}
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-6 space-y-5"
+          >
+            
+            {/* Main Console Box */}
+            <div className="bg-white rounded-3xl border border-gray-200/90 shadow-xl shadow-gray-200/60 p-6 sm:p-7 space-y-5">
+              
+              {/* Console Top Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#EAF2ED] text-[#143826] flex items-center justify-center font-bold">
+                    <Terminal className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-gray-900 leading-tight">Konsol Forensik Tautan</h2>
+                    <p className="text-[11px] text-gray-400 font-mono">Modul Penyelidikan URL Siber</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 text-[10px] font-mono font-bold border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>ONLINE</span>
+                </div>
+              </div>
+
+              {/* Form Input Capsule */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                
+                {/* Protocol + URL Input Field */}
+                <div className="p-3 rounded-2xl bg-gray-50 border border-gray-200 focus-within:bg-white focus-within:border-[#143826] focus-within:ring-2 focus-within:ring-[#143826]/10 transition-all space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-gray-400 px-1">
+                    <span>ALAMAT TARGET (FQDN)</span>
+                    {isHttps ? (
+                      <span className="text-emerald-700 font-bold flex items-center gap-1">
+                        <Lock className="w-3 h-3 text-emerald-600" />
+                        HTTPS Terdeteksi
+                      </span>
+                    ) : isHttp ? (
+                      <span className="text-red-600 font-bold flex items-center gap-1">
+                        <Unlock className="w-3 h-3 text-red-600" />
+                        HTTP (Tidak Terenkripsi)
+                      </span>
+                    ) : (
+                      <span>Format: https://...</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={url}
+                      onChange={(e) => {
+                        setUrl(e.target.value);
+                        if (activePresetId) setActivePresetId(null);
+                      }}
+                      placeholder="Tempelkan tautan mencurigakan di sini..."
+                      className="w-full bg-transparent text-sm sm:text-base font-mono text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    />
+
+                    {url && (
+                      <button
+                        type="button"
+                        onClick={handleClear}
+                        className="p-1.5 text-gray-400 hover:text-gray-700 transition cursor-pointer shrink-0"
+                        title="Hapus teks"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Error Banner */}
+                {errorMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center gap-2"
+                  >
+                    <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                    <span>{errorMessage}</span>
+                  </motion.div>
+                )}
+
+                {/* Privacy Consent Checkbox */}
+                <div className="flex items-start gap-2 pt-1 text-[11px] text-gray-500 leading-snug">
+                  <input
+                    type="checkbox"
+                    id="privacyCheck"
+                    checked={privacyAgreed}
+                    onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 rounded text-[#143826] focus:ring-0 cursor-pointer"
+                  />
+                  <label htmlFor="privacyCheck" className="cursor-pointer select-none">
+                    Saya menyetujui pemindaian keamanan tanpa retensi data sesuai{' '}
+                    <button
+                      type="button"
+                      onClick={onOpenPrivacy}
+                      className="text-[#143826] font-bold underline hover:text-[#E86A33]"
+                    >
+                      Pemberitahuan Privasi
+                    </button>
+                    . Parameter pribadi disanitasi otomatis.
+                  </label>
+                </div>
+
+                {/* Large Orange Action Button */}
                 <button
-                  type="button"
-                  onClick={handleClear}
-                  className="p-1.5 text-on-surface-variant hover:text-on-surface ml-2 transition-colors"
-                  title="Bersihkan input"
+                  type="submit"
+                  className="btn-animate w-full inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-2xl bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 cursor-pointer transition-all"
                 >
-                  <RotateCcw className="w-4 h-4" />
+                  <span>Mulai Analisis Telemetri URL</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              )}
+
+              </form>
+
             </div>
 
-            <button
-              type="submit"
-              className="btn-animate inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm transition-all shrink-0 shadow-md shadow-orange-500/20"
-            >
-              <span>Periksa Tautan</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
+            {/* SIMULATION SCENARIO DECK (Stacked Vertically for Quick Test) */}
+            <div className="bg-white rounded-3xl border border-gray-200/90 shadow-sm p-5 space-y-3">
+              <div className="flex items-center justify-between text-xs px-1">
+                <span className="font-bold text-gray-800 flex items-center gap-1.5">
+                  <Play className="w-3.5 h-3.5 text-[#E86A33] fill-[#E86A33]" />
+                  <span>Uji Skenario Kasus Nyata:</span>
+                </span>
+                <span className="text-[11px] text-gray-400 font-mono">1-Klik untuk memuat</span>
+              </div>
 
-          {/* Privacy Consent Checkbox */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-outline-variant/60">
-            <label className="flex items-center gap-2.5 cursor-pointer text-xs text-on-surface">
-              <input
-                type="checkbox"
-                checked={privacyAgreed}
-                onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                className="rounded border-outline text-secondary focus:ring-secondary w-4 h-4"
-              />
-              <span className="select-none leading-relaxed">
-                Saya menyetujui pemrosesan URL ini sesuai ketentuan{' '}
-                <button
-                  type="button"
-                  onClick={onOpenPrivacy}
-                  className="text-secondary underline font-semibold hover:text-secondary-container"
-                >
-                  Pemberitahuan Privasi
-                </button>
-              </span>
-            </label>
+              <div className="space-y-2.5">
+                {urlPresets.map((preset) => {
+                  const isSelected = activePresetId === preset.id;
+                  const isHighRisk = preset.expectedCategory === 'high';
+                  const isReview = preset.expectedCategory === 'review';
 
-            <span className="text-[11px] text-on-surface-variant">
-              Kredensial login &amp; token sensitif disanitasi otomatis sebelum diproses
-            </span>
-          </div>
+                  return (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleSelectPreset(preset)}
+                      className={`w-full p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                        isSelected
+                          ? 'bg-[#EAF2ED] border-[#143826] shadow-2xs ring-1 ring-[#143826]'
+                          : 'bg-gray-50/70 hover:bg-white hover:border-gray-300 border-gray-200'
+                      }`}
+                    >
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                            isHighRisk
+                              ? 'bg-red-50 text-red-700 border border-red-200'
+                              : isReview
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          }`}>
+                            {isHighRisk ? '🔴 Phishing' : isReview ? '🟡 Mencurigakan' : '🟢 Situs Resmi'}
+                          </span>
+                          <span className="font-bold text-xs text-gray-900 truncate">
+                            {preset.title}
+                          </span>
+                        </div>
+                        <div className="font-mono text-[11px] text-gray-500 truncate pl-0.5">
+                          {preset.content}
+                        </div>
+                      </div>
 
-          {/* Error Box */}
-          {errorMessage && (
-            <div className="p-4 rounded-xl bg-error-container text-on-error-container text-xs flex items-center gap-2.5 animate-in fade-in duration-200">
-              <AlertTriangle className="w-4 h-4 text-error shrink-0" />
-              <span className="font-medium">{errorMessage}</span>
+                      <div className="shrink-0 flex items-center gap-1 text-[11px] font-bold text-gray-400 group-hover:text-gray-900">
+                        {isSelected ? (
+                          <span className="flex items-center gap-1 text-[#143826] font-bold">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Siap</span>
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 font-mono text-[11px]">Pilih &rarr;</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
 
-        </form>
+          </motion.div>
 
-        {/* Technical Notice & Safety Guidelines */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="apple-card p-6 flex items-start gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-secondary-fixed flex items-center justify-center text-secondary shrink-0 mt-0.5">
-              <Lock className="w-4 h-4" />
-            </div>
-            <div className="space-y-1 text-xs">
-              <h4 className="font-bold text-on-surface">Perlindungan SSRF &amp; Keamanan Pengujian</h4>
-              <p className="text-on-surface-variant leading-relaxed">
-                Sistem tidak membuka atau mengunduh isi server tujuan URL secara aktif. Evaluasi dilakukan secara aman melalui parser struktur URL dan API reputasi.
-              </p>
-            </div>
-          </div>
-
-          <div className="apple-card p-6 flex items-start gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary-container shrink-0 mt-0.5">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-            <div className="space-y-1 text-xs">
-              <h4 className="font-bold text-on-surface">Penyelarasan Google Safe Browsing</h4>
-              <p className="text-on-surface-variant leading-relaxed">
-                Domain yang tidak tercatat pada basis data ancaman dinyatakan <em>"tidak ditemukan pada daftar ancaman"</em>, bukan jaminan pasti aman.
-              </p>
-            </div>
-          </div>
         </div>
-
       </div>
 
     </div>

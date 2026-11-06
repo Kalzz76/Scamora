@@ -12,7 +12,8 @@ import {
   Eye, 
   Users, 
   CheckCircle2, 
-  Zap, 
+  Play, 
+  Target, 
   ShieldAlert,
   Lightbulb,
   PhoneCall,
@@ -25,6 +26,7 @@ import {
   KeyRound,
   Activity
 } from 'lucide-react';
+import { AcademyIllustration } from '../../components/illustrations/Illustrations2D';
 
 interface AnatomyHotspot {
   id: string;
@@ -699,69 +701,81 @@ export const KnowledgePage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full bg-[#F8F9FA] text-[#1A202C] min-h-screen">
+    <div className="flex flex-col w-full bg-transparent text-[#0F172A] min-h-screen">
       
-      {/* 1. HERO HEADER BANNER (Pomaii Spacious Forest Green Style) */}
-      <section className="w-full bg-[#143826] text-white pt-12 pb-16 border-b border-[#1D4E36] relative overflow-hidden">
-        
-        {/* Subtle Background Glow */}
-        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(232,106,51,0.5),rgba(255,255,255,0))]" />
+      {/* 1. HERO HEADER (Clean Editorial Academy Hub with 2D Visual) */}
+      <section className="w-full pt-10 pb-8 relative overflow-hidden border-b border-slate-200/80 bg-white/60">
+        <div 
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[400px] pointer-events-none opacity-50"
+          style={{
+            background: 'radial-gradient(circle at 50% 15%, rgba(13, 148, 136, 0.12) 0%, rgba(241, 245, 249, 0) 70%)',
+          }}
+        />
 
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 relative z-10 space-y-5 text-left">
-          
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] font-mono text-xs font-bold uppercase tracking-wider shadow-2xs">
-            <BookOpen className="w-4 h-4 text-[#E86A33]" />
-            <span>PUSAT EDUKASI &amp; ANATOMI KEJAHATAN SIBER</span>
+        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div className="lg:col-span-7 space-y-4 text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] border border-[#143826]/15 font-mono text-xs font-bold uppercase tracking-wider shadow-2xs">
+                <BookOpen className="w-4 h-4 text-[#E86A33]" />
+                <span>PUSAT EDUKASI &amp; ANATOMI KEJAHATAN SIBER</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-5xl font-black text-[#143826] tracking-tight leading-tight">
+                Laboratorium Bedah Modus <br />
+                <span className="text-[#E86A33]">&amp; Ensiklopedia Penipuan Digital.</span>
+              </h1>
+
+              <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed font-medium">
+                Pelajari anatomi trik psikologis, manipulasi teknis, dan ciri fisik pesan penipuan melalui simulasi interaktif sebelum Anda menjadi korban berikutnya.
+              </p>
+
+              {/* Navigation Mode Switcher Pills */}
+              <div className="flex items-center gap-2.5 sm:gap-3 pt-2 flex-wrap">
+                <button
+                  onClick={() => setActiveTab('anatomi')}
+                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'anatomi'
+                      ? 'bg-[#143826] text-white shadow-sm'
+                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Bedah Kasus Interaktif (Hotspot)</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('katalog')}
+                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'katalog'
+                      ? 'bg-[#143826] text-white shadow-sm'
+                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Katalog Modus Populer</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('kamus')}
+                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                    activeTab === 'kamus'
+                      ? 'bg-[#143826] text-white shadow-sm'
+                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  <Info className="w-4 h-4" />
+                  <span>Kamus Istilah Siber</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 2D Cartoon Illustration on the right */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <AcademyIllustration className="w-64 h-48 sm:w-72 sm:h-56" />
+            </div>
+
           </div>
-
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight max-w-3xl">
-            Laboratorium Bedah Modus <br />
-            <span className="text-[#E86A33]">&amp; Ensiklopedia Penipuan Digital.</span>
-          </h1>
-
-          <p className="text-sm sm:text-base text-gray-200 max-w-2xl leading-relaxed font-medium">
-            Pelajari anatomi trik psikologis, manipulasi teknis, dan ciri fisik pesan penipuan melalui simulasi interaktif sebelum Anda menjadi korban berikutnya.
-          </p>
-
-          {/* Navigation Mode Switcher Pills */}
-          <div className="flex items-center gap-3 pt-3 flex-wrap">
-            <button
-              onClick={() => setActiveTab('anatomi')}
-              className={`btn-animate px-6 py-3 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-                activeTab === 'anatomi'
-                  ? 'bg-[#E86A33] text-white shadow-md shadow-orange-500/25'
-                  : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
-              }`}
-            >
-              <Eye className="w-4 h-4" />
-              <span>Bedah Kasus Interaktif (Hotspot)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('katalog')}
-              className={`btn-animate px-6 py-3 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-                activeTab === 'katalog'
-                  ? 'bg-[#E86A33] text-white shadow-md shadow-orange-500/25'
-                  : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
-              }`}
-            >
-              <ShieldAlert className="w-4 h-4" />
-              <span>Katalog Modus Populer</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('kamus')}
-              className={`btn-animate px-6 py-3 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
-                activeTab === 'kamus'
-                  ? 'bg-[#E86A33] text-white shadow-md shadow-orange-500/25'
-                  : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
-              }`}
-            >
-              <Info className="w-4 h-4" />
-              <span>Kamus Istilah Siber</span>
-            </button>
-          </div>
-
         </div>
       </section>
 
@@ -969,7 +983,7 @@ export const KnowledgePage: React.FC = () => {
                         onClick={() => handleTestInScanner(currentCase.presetTarget)}
                         className="btn-animate inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition w-full shadow-sm"
                       >
-                        <Zap className="w-4 h-4 text-[#E86A33]" />
+                        <Play className="w-3.5 h-3.5 text-[#E86A33] fill-[#E86A33]" />
                         <span>Uji Kasus Ini di Scanner Scamora</span>
                         <ArrowRight className="w-4 h-4" />
                       </button>
@@ -1230,7 +1244,7 @@ export const KnowledgePage: React.FC = () => {
           
           <div className="lg:col-span-8 space-y-3 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white font-mono text-xs font-bold uppercase tracking-wider">
-              <Zap className="w-3.5 h-3.5 text-[#E86A33]" />
+              <Target className="w-3.5 h-3.5 text-[#E86A33]" />
               <span>UJI PEMAHAMAN ANDA SEKARANG</span>
             </div>
 
