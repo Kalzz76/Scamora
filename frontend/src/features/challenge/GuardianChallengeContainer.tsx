@@ -23,10 +23,8 @@ export const GuardianChallengeContainer: React.FC = () => {
 
   // Dashboard Data
   const [categories, setCategories] = useState<ChallengeCategory[]>([]);
-  const [scenarios, setScenarios] = useState<ChallengeScenario[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('kurir-apk');
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel>('easy');
-  const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null);
   const [statistics, setStatistics] = useState<UserChallengeStatistics | null>(null);
 
   // Active Simulation State
@@ -56,7 +54,7 @@ export const GuardianChallengeContainer: React.FC = () => {
     scrollToBottom();
   }, [activeSession?.messages, isTyping, lastFeedback]);
 
-  // Load Categories & Scenarios on mount
+  // Load Categories & Statistics on mount
   useEffect(() => {
     const initData = async () => {
       try {
@@ -64,12 +62,6 @@ export const GuardianChallengeContainer: React.FC = () => {
         setCategories(cats);
         if (cats.length > 0) {
           setSelectedCategoryId(cats[0].id);
-        }
-
-        const scenList = await challengeService.getScenarios();
-        setScenarios(scenList);
-        if (scenList.length > 0) {
-          setSelectedScenarioId(scenList[0].id);
         }
 
         const stats = await challengeService.getUserStatistics();
@@ -82,23 +74,6 @@ export const GuardianChallengeContainer: React.FC = () => {
     initData();
   }, []);
 
-  // Filter scenarios when category or difficulty changes
-  useEffect(() => {
-    const updateScenarios = async () => {
-      try {
-        const list = await challengeService.getScenarios(selectedCategoryId, selectedDifficulty);
-        setScenarios(list);
-        if (list.length > 0) {
-          setSelectedScenarioId(list[0].id);
-        }
-      } catch (err) {
-        console.warn('Gagal memfilter skenario:', err);
-      }
-    };
-
-    updateScenarios();
-  }, [selectedCategoryId, selectedDifficulty]);
-
   // Handle selecting difficulty and immediately generating & starting chat
   const handleSelectDifficultyAndStart = async (diff: DifficultyLevel) => {
     setSelectedDifficulty(diff);
@@ -108,8 +83,6 @@ export const GuardianChallengeContainer: React.FC = () => {
     try {
       // Generate skenario baru via AI / seed sesuai tingkat kesulitan yang dipilih
       const targetScenario = await challengeService.generateScenario(selectedCategoryId, diff);
-      setScenarios((prev) => [targetScenario, ...prev]);
-      setSelectedScenarioId(targetScenario.id);
 
       // Langsung buat sesi dan mulai percakapan simulasi chat!
       const data = await challengeService.createSession(targetScenario.id);
@@ -141,8 +114,6 @@ export const GuardianChallengeContainer: React.FC = () => {
     try {
       // Selalu generate skenario baru via Gemini AI sesuai kategori & tingkat kesulitan yang dipilih
       const targetScenario = await challengeService.generateScenario(selectedCategoryId, selectedDifficulty);
-      setScenarios((prev) => [targetScenario, ...prev]);
-      setSelectedScenarioId(targetScenario.id);
 
       const data = await challengeService.createSession(targetScenario.id);
       setActiveSession(data.session);
@@ -244,8 +215,6 @@ export const GuardianChallengeContainer: React.FC = () => {
         selectedDifficulty,
         topicPrompt
       );
-      setScenarios((prev) => [newScenario, ...prev]);
-      setSelectedScenarioId(newScenario.id);
 
       // Langsung mulai simulasi chat dengan skenario baru dari AI
       const data = await challengeService.createSession(newScenario.id);
@@ -279,12 +248,10 @@ export const GuardianChallengeContainer: React.FC = () => {
       {viewMode === 'dashboard' && (
         <ChallengeDashboard
           categories={categories}
-          scenarios={scenarios}
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={setSelectedCategoryId}
           selectedDifficulty={selectedDifficulty}
           onSelectDifficulty={handleSelectDifficultyAndStart}
-          selectedScenarioId={selectedScenarioId}
           onStartSimulation={handleStartSimulation}
           onGenerateAiScenario={handleGenerateAiScenario}
           isGeneratingAi={isGeneratingAi}

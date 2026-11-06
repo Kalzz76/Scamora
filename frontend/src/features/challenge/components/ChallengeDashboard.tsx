@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   ShieldAlert,
   Activity,
@@ -10,27 +10,22 @@ import {
   ArrowRight,
   Shield,
   Play,
-  Cpu,
-  Bot,
 } from 'lucide-react';
 import type {
   ChallengeCategory,
-  ChallengeScenario,
   DifficultyLevel,
   UserChallengeStatistics,
 } from '../../../types/challenge';
 
 interface ChallengeDashboardProps {
   categories: ChallengeCategory[];
-  scenarios: ChallengeScenario[];
   selectedCategoryId: string;
   onSelectCategory: (catId: string) => void;
   selectedDifficulty: DifficultyLevel;
   onSelectDifficulty: (diff: DifficultyLevel) => void;
-  selectedScenarioId: string | null;
   onStartSimulation: () => void;
-  onGenerateAiScenario: (topicPrompt?: string) => void;
-  isGeneratingAi: boolean;
+  onGenerateAiScenario?: (topicPrompt?: string) => void;
+  isGeneratingAi?: boolean;
   statistics: UserChallengeStatistics | null;
   isLoading: boolean;
 }
@@ -45,28 +40,15 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
   categories,
-  scenarios,
   selectedCategoryId,
   onSelectCategory,
   selectedDifficulty,
   onSelectDifficulty,
-  selectedScenarioId,
   onStartSimulation,
-  onGenerateAiScenario,
   isGeneratingAi,
   statistics,
   isLoading,
 }) => {
-  const [showAiInput, setShowAiInput] = useState(false);
-  const [customTopic, setCustomTopic] = useState('');
-
-  const currentScenario = scenarios.find((s) => s.id === selectedScenarioId) || scenarios[0];
-
-  const handleTriggerGenerate = (e: React.FormEvent) => {
-    e.preventDefault();
-    onGenerateAiScenario(customTopic.trim() || undefined);
-  };
-
   return (
     <div className="space-y-8">
       {/* STATS HIGHLIGHT BAR */}
@@ -120,9 +102,6 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
             <Activity className="w-4 h-4 text-[#0D9488]" />
             <span>Pilih Modus Penipuan yang Ingin Disimulasikan</span>
           </h3>
-          <span className="text-xs text-on-surface-variant hidden sm:inline">
-            Kasus berbasis tren kejahatan siber Indonesia
-          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -172,9 +151,6 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
               Pilih Tingkat Kesulitan untuk Langsung Mulai Chat:
             </h4>
           </div>
-          <span className="text-[11px] text-on-surface-variant hidden sm:inline font-medium">
-            ⚡ Klik salah satu level untuk generate & mulai simulasi instan
-          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -216,136 +192,19 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
         </div>
       </div>
 
-      {/* SCENARIO DETAIL & LAUNCH CARD */}
-      {currentScenario ? (
-        <div className="p-6 rounded-3xl bg-surface-container-lowest border border-surface-container shadow-sm space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase font-bold text-[#E86A33]">
-                Skenario Terpilih:
-              </span>
-              <h3 className="text-lg sm:text-xl font-black text-on-surface">
-                {currentScenario.title}
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-surface-container font-mono text-[11px] font-bold uppercase text-on-surface-variant">
-                {currentScenario.difficulty}
-              </span>
-              {currentScenario.isAiGenerated && (
-                <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 font-mono text-[11px] font-bold uppercase">
-                  AI Generated
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container space-y-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-sm shadow-xs shrink-0">
-                {currentScenario.characterAvatar || '👤'}
-              </div>
-              <div>
-                <span className="text-xs font-bold text-on-surface block">
-                  {currentScenario.characterName}
-                </span>
-                <span className="text-[10px] text-on-surface-variant block">
-                  {currentScenario.characterRole}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2 text-xs text-on-surface font-medium leading-relaxed italic border-t border-surface-container">
-              "{currentScenario.initialDialogue[0]?.text || 'Menunggu pesan...'}"
-            </div>
-          </div>
-
-          {/* Learning Focus Preview */}
-          <div className="space-y-2">
-            <span className="text-[11px] font-bold text-on-surface block uppercase tracking-wider font-mono">
-              Target Literasi Keamanan:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {currentScenario.redFlags.map((rf) => (
-                <div
-                  key={rf.id}
-                  className="p-2.5 rounded-xl bg-surface-container-low border border-surface-container text-xs text-on-surface flex items-start gap-2"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E86A33] shrink-0 mt-1.5" />
-                  <div>
-                    <span className="font-bold block">{rf.title}</span>
-                    <span className="text-[10px] text-on-surface-variant line-clamp-1">
-                      {rf.description}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Actions & AI Generation Bar */}
-          <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <button
-              onClick={onStartSimulation}
-              disabled={isLoading || isGeneratingAi}
-              type="button"
-              className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-[#143826] hover:bg-[#1D4E36] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60"
-            >
-              <Play className="w-4 h-4 text-[#E86A33] fill-[#E86A33]" />
-              <span>{isLoading ? 'tunggu sebentar yahh...' : 'Mulai Simulasi Interaktif'}</span>
-              <ArrowRight className="w-4 h-4 text-gray-300" />
-            </button>
-
-            <button
-              onClick={() => setShowAiInput(!showAiInput)}
-              type="button"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl border border-[#143826]/30 bg-[#143826]/5 hover:bg-[#143826]/10 text-[#143826] font-bold text-xs transition-all"
-            >
-              <Cpu className="w-4 h-4 text-[#0D9488]" />
-              <span>{showAiInput ? 'Tutup Generator AI' : 'Buat Kasus Baru via Gemini AI'}</span>
-            </button>
-          </div>
-
-          {/* AI Generator Input Drawer */}
-          {showAiInput && (
-            <form onSubmit={handleTriggerGenerate} className="p-4 rounded-2xl bg-[#143826]/5 border border-[#143826]/15 space-y-3 animate-in fade-in duration-200">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-[#0D9488]" />
-                <span className="text-xs font-bold text-on-surface">
-                  Google Gemini Scenario Generator
-                </span>
-              </div>
-              <p className="text-[11px] text-on-surface-variant">
-                Ketik topik penipuan spesifik yang ingin di-generate oleh Gemini (atau biarkan kosong untuk topik otomatis):
-              </p>
-              <div className="flex flex-col sm:flex-row items-stretch gap-2">
-                <input
-                  type="text"
-                  value={customTopic}
-                  onChange={(e) => setCustomTopic(e.target.value)}
-                  placeholder="Misal: Surat Undangan Nikah APK, Tilang ETLE, Hadiah Shopee..."
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-surface-container text-xs text-on-surface placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#143826]"
-                />
-                <button
-                  type="submit"
-                  disabled={isGeneratingAi}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-[#0D9488] hover:bg-[#0f766e] text-white font-bold text-xs transition-all shadow-xs disabled:opacity-60"
-                >
-                  <Cpu className="w-3.5 h-3.5" />
-                  <span>{isGeneratingAi ? 'tunggu sebentar yahh...' : 'Generate Sekarang'}</span>
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      ) : (
-        <div className="p-8 rounded-3xl bg-surface-container-lowest border border-dashed border-surface-container text-center space-y-2">
-          <p className="text-xs text-on-surface-variant">
-            Pilih kategori di atas untuk memuat skenario simulasi.
-          </p>
-        </div>
-      )}
+      {/* LAUNCH BAR */}
+      <div className="pt-2 flex justify-start">
+        <button
+          onClick={onStartSimulation}
+          disabled={isLoading || isGeneratingAi}
+          type="button"
+          className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-[#143826] hover:bg-[#1D4E36] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+        >
+          <Play className="w-4 h-4 text-[#E86A33] fill-[#E86A33]" />
+          <span>{isLoading ? 'tunggu sebentar yahh...' : 'Mulai Simulasi Interaktif'}</span>
+          <ArrowRight className="w-4 h-4 text-gray-300" />
+        </button>
+      </div>
     </div>
   );
 };
