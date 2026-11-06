@@ -1,4 +1,6 @@
 import {
+  CHAT_INDICATOR_WEIGHTS,
+  getSeverityFromWeight,
   INDICATOR_TITLES,
   URL_INDICATOR_WEIGHTS,
 } from '../../config/scoring';
@@ -7,7 +9,11 @@ import type {
   Indicator,
   PipelineCheck,
 } from '../../types/analysis';
+import { isEvidenceInText } from '../chatAnalyzer/validateEvidence';
 import { calculateRiskScore } from '../riskScoring';
+import { requestClaudePageAnalysis } from './claudePageAnalyzer';
+import { scanCrawlHeuristics } from './crawlerHeuristics';
+import { crawlWebPage } from './pageCrawler';
 import { checkSafeBrowsing } from './safeBrowsing';
 import { sanitizeUrl } from './sanitizeUrl';
 import { checkUrlStructure } from './structureCheck';
@@ -16,11 +22,12 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
   const { cleanUrl, hasUserInfo, hasCleanedParams } = sanitizeUrl(rawUrl);
 
   const parsed = new URL(cleanUrl);
-  const indicators: Indicator[] = checkUrlStructure(parsed, hasUserInfo, rawUrl);
+  const rawIndicators: Indicator[] = checkUrlStructure(parsed, hasUserInfo, rawUrl);
 
+  // 1. Google Safe Browsing Check
   const safeBrowsing = await checkSafeBrowsing(cleanUrl);
   if (safeBrowsing.isThreat) {
-    indicators.push({
+    rawIndicators.push({
       type: 'safe_browsing_match',
       title: INDICATOR_TITLES.safe_browsing_match || 'Terdaftar pada Basis Data Google Safe Browsing',
       severity: 'high',
@@ -30,6 +37,24 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
       description: 'Domain tercatat aktif sebagai ancaman malware atau social engineering terkonfirmasi.',
     });
   }
+
+  // 2. Safe Web Page Crawling (Fetching DOM, forms, sensitive inputs & text)
+  const crawl = await crawlWebPage(cleanUrl);
+
+  // 3. Local Crawler DOM Heuristics
+  if (crawl.status === 'completed') {
+    const crawlerIndicators = scanCrawlHeuristics(parsed, crawl);
+    for (const ind of crawlerIndicators) {
+      rawIndicators.push(ind);
+    }
+  }
+
+  // 4. Claude AI Semantic Reasoning on Crawled Content
+  const aiResult = await requestClaudePageAnalysis(cleanUrl, crawl);
+
+  let canConclude = true;
+  let aiScamType = null;
+  let hasDroppedQuotes = false;
 
   const checks: PipelineCheck[] = [
     {
@@ -43,17 +68,72 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
       note: safeBrowsing.note,
     },
     {
-      name: 'domain_age',
-      status: 'skipped',
-      note: 'Pemeriksaan usia domain (RDAP) dilewati pada versi ini.',
+      name: 'crawler',
+      status: crawl.status,
+      note: crawl.note,
     },
   ];
 
-  const scoring = calculateRiskScore(indicators, checks);
+  if (aiResult.success && aiResult.data) {
+    checks.push({
+      name: 'content_ai',
+      status: 'completed',
+      note: `Penalaran semantik ${aiResult.provider === 'gemini' ? 'Google Gemini AI' : 'Claude AI'} terhadap konten halaman yang dirayapi selesai.`,
+    });
+
+    canConclude = aiResult.data.can_conclude;
+    aiScamType = aiResult.data.scam_type;
+
+    const sourceText = `${crawl.title || ''} ${crawl.metaDescription || ''} ${crawl.extractedText}`;
+
+    for (const aiInd of aiResult.data.indicators) {
+      if (isEvidenceInText(aiInd.evidence_quote, sourceText)) {
+        const weight =
+          URL_INDICATOR_WEIGHTS[aiInd.type] ||
+          CHAT_INDICATOR_WEIGHTS[aiInd.type] ||
+          20;
+        const severity = getSeverityFromWeight(weight);
+        const title = INDICATOR_TITLES[aiInd.type] || aiInd.type;
+
+        rawIndicators.push({
+          type: aiInd.type,
+          title,
+          severity,
+          weight,
+          source: 'content_ai',
+          evidence: aiInd.evidence_quote,
+          description: aiInd.reason,
+        });
+      } else {
+        hasDroppedQuotes = true;
+      }
+    }
+  } else {
+    checks.push({
+      name: 'content_ai',
+      status: crawl.status === 'completed' && !crawl.extractedText ? 'skipped' : 'partial',
+      note:
+        aiResult.error ||
+        'Layanan AI belum dikonfigurasi atau konten web statis; dialihkan ke heuristik perayapan lokal.',
+    });
+  }
+
+  const scoring = calculateRiskScore(
+    rawIndicators,
+    checks,
+    canConclude,
+    aiScamType
+  );
 
   if (hasCleanedParams || hasUserInfo) {
     scoring.limitations.push(
       'Parameter bernilai sensitif atau informasi akun pada URL telah dibersihkan secara otomatis demi privasi pengguna.'
+    );
+  }
+
+  if (hasDroppedQuotes) {
+    scoring.limitations.push(
+      'Sebagian kutipan indikator AI disaring karena tidak terbukti secara harfiah pada konten yang dirayapi (pencegahan halusinasi).'
     );
   }
 
@@ -76,4 +156,3 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     timestamp: new Date().toISOString(),
   };
 }
-

@@ -8,13 +8,22 @@ export const SCORE_THRESHOLDS = {
 export const CRITICAL_INDICATOR_TYPES = [
   'safe_browsing_match',
   'otp_request',
+  'credential_harvesting_form',
+  'malicious_apk_download',
 ];
 
 export const URL_INDICATOR_WEIGHTS: Record<string, number> = {
   safe_browsing_match: 60,
+  credential_harvesting_form: 35,
+  malicious_apk_download: 35,
+  brand_impersonation_content: 30,
+  financial_data_request: 30,
   typosquatting: 35,
   punycode_homograph: 30,
   brand_in_subdomain: 30,
+  fake_giveaway_content: 25,
+  urgency_scam_content: 20,
+  external_form_action: 20,
   ip_host: 25,
   userinfo_in_url: 20,
   url_shortener: 15,
@@ -41,6 +50,13 @@ export const CHAT_INDICATOR_WEIGHTS: Record<string, number> = {
 
 export const INDICATOR_TITLES: Record<string, string> = {
   safe_browsing_match: 'Terdaftar pada Basis Data Ancaman Google Safe Browsing',
+  credential_harvesting_form: 'Formulir Pengumpulan Kredensial / Kata Sandi Tidak Resmi',
+  malicious_apk_download: 'Tautan atau Pemicu Pengunduhan Berkas APK Berbahaya',
+  brand_impersonation_content: 'Pencatutan Identitas dan Konten Merek Resmi pada Halaman',
+  financial_data_request: 'Permintaan Data Rekening / Kartu Perbankan Sensitif',
+  fake_giveaway_content: 'Konten Undian atau Hadiah Palsu Berbahaya',
+  urgency_scam_content: 'Manipulasi Teks Kepanikan dan Desakan Waktu',
+  external_form_action: 'Formulir Mengirimkan Data ke Server Eksternal Mencurigakan',
   typosquatting: 'Kemiripan Nama Domain dengan Merek Resmi (Typosquatting)',
   punycode_homograph: 'Karakter Punycode Homograf Menyerupai Huruf Asli',
   brand_in_subdomain: 'Pencatutan Nama Merek pada Subdomain',
@@ -67,6 +83,13 @@ export const INDICATOR_TITLES: Record<string, string> = {
 
 export const INDICATOR_DEFAULT_SOURCES: Record<string, IndicatorSource> = {
   safe_browsing_match: 'threat_db',
+  credential_harvesting_form: 'web_crawler',
+  malicious_apk_download: 'web_crawler',
+  brand_impersonation_content: 'content_ai',
+  financial_data_request: 'web_crawler',
+  fake_giveaway_content: 'content_ai',
+  urgency_scam_content: 'content_ai',
+  external_form_action: 'web_crawler',
   typosquatting: 'url_structure',
   punycode_homograph: 'url_structure',
   brand_in_subdomain: 'url_structure',
@@ -115,4 +138,3 @@ export function getSeverityFromWeight(weight: number): IndicatorSeverity {
   }
   return 'low';
 }
-

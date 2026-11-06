@@ -113,7 +113,7 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
             <span className="text-xs text-[#EAF2ED] font-medium">Modul Inti P0</span>
             <div className="ml-auto hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-[#EAF2ED] border border-white/20 text-xs font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-[#E86A33]"></span>
-              <span>Sanitasi Kredensial Otomatis</span>
+              <span>Crawler &amp; Penalaran Semantik AI</span>
             </div>
           </div>
 
@@ -122,7 +122,7 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
               Pemeriksaan Tautan (URL Safety Checker)
             </h1>
             <p className="text-sm text-gray-200 max-w-2xl leading-relaxed">
-              Memeriksa struktur URL terhadap potensi typosquatting, penyamaran nama merek di subdomain, karakter punycode, dan status reputasi pada Google Safe Browsing.
+              Mendeteksi potensi penipuan digital secara menyeluruh: menganalisis struktur URL, reputasi Safe Browsing, serta merayapi (crawling) konten halaman web untuk mendeteksi form pencurian kredensial, APK berbahaya, dan penalaran AI semantik.
             </p>
           </div>
 

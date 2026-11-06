@@ -9,6 +9,9 @@ const envSchema = z.object({
   FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
   ANTHROPIC_API_KEY: z.string().default(''),
   CLAUDE_MODEL: z.string().default('claude-3-5-haiku-20241022'),
+  GEMINI_API_KEY: z.string().default(''),
+  GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
+  AI_PROVIDER: z.enum(['auto', 'gemini', 'anthropic']).default('auto'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
 });
 
@@ -20,4 +23,3 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
-

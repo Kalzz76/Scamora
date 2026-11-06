@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { DEMO_EXAMPLES } from '../data/demoExamples';
+import { getActivePresets } from './admin.controller';
 import type { ApiSuccessResponse, DemoPreset } from '../types/analysis';
 
 export function handleGetDemoExamples(
@@ -8,8 +8,7 @@ export function handleGetDemoExamples(
 ): void {
   const payload: ApiSuccessResponse<DemoPreset[]> = {
     success: true,
-    data: DEMO_EXAMPLES,
+    data: getActivePresets(),
   };
   res.status(200).json(payload);
 }
-

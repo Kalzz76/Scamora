@@ -7,7 +7,9 @@ export type IndicatorSource =
   | 'threat_db'
   | 'ai'
   | 'chat_heuristic'
-  | 'reputation';
+  | 'reputation'
+  | 'web_crawler'
+  | 'content_ai';
 
 export type ScamType =
   | 'phishing'

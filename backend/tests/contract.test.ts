@@ -9,7 +9,7 @@ import type {
   DemoPreset,
 } from '../src/types/analysis';
 
-describe('API Contract Tests (/api/v1)', () => {
+describe('API Contract Tests (/api/v1)', { timeout: 60000 }, () => {
   let server: Server;
   let baseUrl: string;
 
@@ -21,13 +21,13 @@ describe('API Contract Tests (/api/v1)', () => {
         resolve();
       });
     });
-  });
+  }, 30000);
 
   afterAll(async () => {
     await new Promise<void>((resolve) => {
       server.close(() => resolve());
     });
-  });
+  }, 30000);
 
   it('GET /demo-examples returns 200 with list of presets', async () => {
     const res = await fetch(`${baseUrl}/demo-examples`);
@@ -58,7 +58,8 @@ describe('API Contract Tests (/api/v1)', () => {
     expect(body.data.input_sanitized).not.toContain('secret123');
     expect(body.data.risk_score).toBeGreaterThan(0);
     expect(body.data.indicators.length).toBeGreaterThan(0);
-    expect(body.data.checks.length).toBe(3);
+    expect(body.data.checks.length).toBeGreaterThanOrEqual(3);
+    expect(body.data.checks.some((c) => c.name === 'crawler')).toBe(true);
     expect(body.data.timestamp).toBeDefined();
   });
 
@@ -83,21 +84,20 @@ describe('API Contract Tests (/api/v1)', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: 'Selamat Anda mendapatkan hadiah 50 juta rupiah, silakan transfer biaya administrasi 500 ribu ke rekening 1234567890 hubungi 08123456789 sekarang.',
+        text: 'Halo kak, kami dari Shopee. Anda dapat komisi 5jt per hari dengan transfer uang muka 100rb ke rekening 1234567890 hubungi 08123456789 sekarang!',
         privacy_consent: true,
       }),
     });
 
     expect(res.status).toBe(200);
     const body = (await res.json()) as ApiSuccessResponse<AnalysisResult>;
-
     expect(body.success).toBe(true);
     expect(body.data.analysis_type).toBe('chat');
     expect(body.data.input_sanitized).toContain('[TELEPON]');
     expect(body.data.input_sanitized).toContain('[REKENING]');
     expect(body.data.risk_score).toBeGreaterThanOrEqual(30);
     expect(body.data.indicators.some((i) => i.type === 'advance_fee')).toBe(true);
-  });
+  }, 40000);
 
   it('POST /analyze/chat rejects text shorter than 10 characters with 422', async () => {
     const res = await fetch(`${baseUrl}/analyze/chat`, {

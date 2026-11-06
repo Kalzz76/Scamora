@@ -39,7 +39,7 @@ export async function analyzeChat(rawText: string): Promise<AnalysisResult> {
     checks.push({
       name: 'ai_analysis',
       status: 'completed',
-      note: 'Ekstraksi penalaran semantik dan klasifikasi Claude AI selesai.',
+      note: `Ekstraksi penalaran semantik dan klasifikasi ${aiResult.provider === 'gemini' ? 'Google Gemini AI' : 'Claude AI'} selesai.`,
     });
 
     canConclude = aiResult.data.can_conclude;

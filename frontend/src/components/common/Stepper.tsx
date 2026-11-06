@@ -9,10 +9,10 @@ export const Stepper: React.FC<StepperProps> = ({ type }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = type === 'url' ? [
-    { title: 'Sanitasi & Format Input', desc: 'Menghapus kredensial login & token sensitif' },
-    { title: 'Heuristik Struktur Domain', desc: 'Memindai typosquatting, homograf punycode, & TLD' },
-    { title: 'Cross-Check Safe Browsing', desc: 'Mencocokkan ke basis data ancaman phishing' },
-    { title: 'Kalkulasi Skor Risiko', desc: 'Menghitung bobot indikator unik & rekomendasi' },
+    { title: 'Sanitasi & Struktur Domain', desc: 'Menghapus token sensitif, cek typosquatting & TLD' },
+    { title: 'Cross-Check Safe Browsing', desc: 'Mencocokkan ke basis data ancaman phishing & malware' },
+    { title: 'Perayapan Konten Web (Crawler)', desc: 'Memeriksa DOM, formulir login, input sandi, & berkas APK' },
+    { title: 'Penalaran AI & Skor Risiko', desc: 'Mengevaluasi modus penipuan konten & kalkulasi risiko' },
   ] : [
     { title: 'Pembersihan Data Pribadi (PII)', desc: 'Menyamarkan nomor telepon, rekening, NIK, & OTP' },
     { title: 'Pemindaian Pola Rekayasa Sosial', desc: 'Mendeteksi indikasi uang muka, urgensi, & modus' },
@@ -90,7 +90,7 @@ export const Stepper: React.FC<StepperProps> = ({ type }) => {
 
       <div className="p-3 rounded-xl bg-surface-container-low border border-surface-container flex items-center gap-2 text-[11px] text-on-surface-variant">
         <Shield className="w-4 h-4 text-secondary shrink-0" />
-        <span>Pemrosesan mematuhi aturan privasi: Tanpa unduhan konten aktif & tanpa retensi teks.</span>
+        <span>Pemrosesan terlindungi: Perayapan web dilakukan dalam sandbox aman tanpa eksekusi skrip klien & tanpa retensi data.</span>
       </div>
     </div>
   );
