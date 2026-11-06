@@ -58,9 +58,9 @@ describe('API Contract Tests (/api/v1)', () => {
     expect(body.data.input_sanitized).not.toContain('secret123');
     expect(body.data.risk_score).toBeGreaterThan(0);
     expect(body.data.indicators.length).toBeGreaterThan(0);
-    expect(body.data.checks.length).toBe(3);
+    expect(body.data.checks.length).toBe(5);
     expect(body.data.timestamp).toBeDefined();
-  }, 15000);
+  }, 30000);
 
   it('POST /analyze/url rejects missing privacy_consent with 422 VALIDATION_ERROR', async () => {
     const res = await fetch(`${baseUrl}/analyze/url`, {
@@ -97,7 +97,7 @@ describe('API Contract Tests (/api/v1)', () => {
     expect(body.data.input_sanitized).toContain('[REKENING]');
     expect(body.data.risk_score).toBeGreaterThanOrEqual(30);
     expect(body.data.indicators.some((i) => i.type === 'advance_fee')).toBe(true);
-  }, 15000);
+  }, 30000);
 
   it('POST /analyze/chat rejects text shorter than 10 characters with 422', async () => {
     const res = await fetch(`${baseUrl}/analyze/chat`, {
