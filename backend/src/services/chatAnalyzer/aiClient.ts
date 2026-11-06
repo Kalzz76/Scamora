@@ -32,3 +32,4 @@ export async function requestAiAnalysis(
     error: 'Layanan AI belum dikonfigurasi atau sedang mengalami kendala.',
   };
 }
+

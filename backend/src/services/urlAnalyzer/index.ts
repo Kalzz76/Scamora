@@ -8,17 +8,34 @@ import type {
   PipelineCheck,
 } from '../../types/analysis';
 import { calculateRiskScore } from '../riskScoring';
+import { inspectLiveContent } from './contentInspector';
+import { inspectDomainAndDns } from './domainInspector';
 import { checkSafeBrowsing } from './safeBrowsing';
 import { sanitizeUrl } from './sanitizeUrl';
+import { inspectSslCertificate } from './sslInspector';
 import { checkUrlStructure } from './structureCheck';
 
 export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
   const { cleanUrl, hasUserInfo, hasCleanedParams } = sanitizeUrl(rawUrl);
-
   const parsed = new URL(cleanUrl);
+
+  // 1. Lapisan 1: Analisis Struktur URL & Heuristik
   const indicators: Indicator[] = checkUrlStructure(parsed, hasUserInfo, rawUrl);
 
-  const safeBrowsing = await checkSafeBrowsing(cleanUrl);
+  // 2. Lapisan 2 - 5: Jalankan Pengecekan Jaringan & Konten secara Paralel (Konkuren)
+  const [safeBrowsingRes, domainRes, sslRes, contentRes] = await Promise.allSettled([
+    checkSafeBrowsing(cleanUrl),
+    inspectDomainAndDns(parsed.hostname),
+    inspectSslCertificate(parsed.hostname),
+    inspectLiveContent(cleanUrl),
+  ]);
+
+  // Safe Browsing
+  const safeBrowsing =
+    safeBrowsingRes.status === 'fulfilled'
+      ? safeBrowsingRes.value
+      : { isThreat: false, status: 'failed' as const, note: 'Pengecekan Google Safe Browsing gagal.' };
+
   if (safeBrowsing.isThreat) {
     indicators.push({
       type: 'safe_browsing_match',
@@ -30,6 +47,41 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
       description: 'Domain tercatat aktif sebagai ancaman malware atau social engineering terkonfirmasi.',
     });
   }
+
+  // Lapisan 2: Domain DNS & Usia Domain
+  const domainData =
+    domainRes.status === 'fulfilled'
+      ? domainRes.value
+      : {
+          indicators: [],
+          dnsStatus: 'failed' as const,
+          dnsNote: 'Inspeksi DNS gagal dijalankan.',
+          ageStatus: 'failed' as const,
+          ageNote: 'Inspeksi RDAP usia domain gagal dijalankan.',
+        };
+  indicators.push(...domainData.indicators);
+
+  // Lapisan 3: SSL/TLS
+  const sslData =
+    sslRes.status === 'fulfilled'
+      ? sslRes.value
+      : {
+          indicators: [],
+          status: 'failed' as const,
+          note: 'Inspeksi koneksi SSL/TLS gagal dijalankan.',
+        };
+  indicators.push(...sslData.indicators);
+
+  // Lapisan 4 & 5: Konten & DOM
+  const contentData =
+    contentRes.status === 'fulfilled'
+      ? contentRes.value
+      : {
+          indicators: [],
+          status: 'failed' as const,
+          note: 'Inspeksi konten web langsung gagal dijalankan.',
+        };
+  indicators.push(...contentData.indicators);
 
   const checks: PipelineCheck[] = [
     {
@@ -44,8 +96,18 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     },
     {
       name: 'domain_age',
-      status: 'skipped',
-      note: 'Pemeriksaan usia domain (RDAP) dilewati pada versi ini.',
+      status: domainData.ageStatus,
+      note: domainData.ageNote,
+    },
+    {
+      name: 'ssl_certificate',
+      status: sslData.status,
+      note: sslData.note,
+    },
+    {
+      name: 'live_content',
+      status: contentData.status,
+      note: contentData.note,
     },
   ];
 
@@ -76,4 +138,3 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     timestamp: new Date().toISOString(),
   };
 }
-

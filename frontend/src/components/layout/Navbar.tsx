@@ -36,9 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
 
   const navLinks = [
     { path: '/', label: 'Beranda' },
-    { path: '/url', label: 'Cek URL' },
-    { path: '/chat', label: 'Analisis Chat' },
-    { path: '/laporan', label: 'Laporan' },
+    { path: '/laporan', label: 'Direktori Komunitas' },
     { path: '/panduan', label: 'Panduan' },
     { path: '/kuis', label: 'Tantangan AI' },
     { path: '/pengetahuan', label: 'Edukasi' },

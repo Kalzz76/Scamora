@@ -24,6 +24,7 @@ pnpm-debug.log*
 
 # Reference materials / external repos
 referemsi/
+PhishingScanner/
 
 # Editor and OS files
 .vscode/

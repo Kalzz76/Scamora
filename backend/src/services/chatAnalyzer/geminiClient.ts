@@ -149,3 +149,4 @@ Format respons JSON yang wajib dipatuhi:
     error: 'Respons dari Gemini API tidak valid.',
   };
 }
+

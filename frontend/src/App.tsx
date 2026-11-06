@@ -6,14 +6,11 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { PrivacyModal } from './components/common/PrivacyModal';
 import { HomePage } from './features/home/HomePage';
-import { UrlCheckerPage } from './features/url-checker/UrlCheckerPage';
-import { ChatDetectorPage } from './features/chat-detector/ChatDetectorPage';
 import { ReportPage } from './features/risk-report/ReportPage';
 import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
-import type { AnalysisResult } from './types/analysis';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -32,21 +29,7 @@ function ScrollToTop() {
   return null;
 }
 
-interface AnimatedRoutesProps {
-  selectedDemoId: string | null;
-  lastResult: AnalysisResult | null;
-  handleAnalysisComplete: (result: AnalysisResult) => void;
-  handleLoadDemo: (presetId: string) => void;
-  onOpenPrivacy: () => void;
-}
-
-function AnimatedRoutes({
-  selectedDemoId,
-  lastResult,
-  handleAnalysisComplete,
-  handleLoadDemo,
-  onOpenPrivacy,
-}: AnimatedRoutesProps) {
+function AnimatedRoutes() {
   const location = useLocation();
 
   return (
@@ -62,28 +45,11 @@ function AnimatedRoutes({
           className="flex-1 flex flex-col w-full"
         >
           <Routes location={location}>
-            <Route path="/" element={<HomePage onLoadDemo={handleLoadDemo} />} />
-            <Route
-              path="/url"
-              element={
-                <UrlCheckerPage
-                  initialPresetId={selectedDemoId}
-                  onAnalysisComplete={handleAnalysisComplete}
-                  onOpenPrivacy={onOpenPrivacy}
-                />
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <ChatDetectorPage
-                  initialPresetId={selectedDemoId}
-                  onAnalysisComplete={handleAnalysisComplete}
-                  onOpenPrivacy={onOpenPrivacy}
-                />
-              }
-            />
-            <Route path="/laporan" element={<ReportPage result={lastResult} />} />
+            <Route path="/" element={<HomePage />} />
+            <Route path="/url" element={<Navigate to="/" replace />} />
+            <Route path="/chat" element={<Navigate to="/" replace />} />
+            <Route path="/laporan" element={<ReportPage />} />
+            <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
             <Route path="/panduan" element={<PanduanPage />} />
             <Route path="/kuis" element={<QuizPage />} />
             <Route path="/pengetahuan" element={<KnowledgePage />} />
@@ -98,16 +64,6 @@ function AnimatedRoutes({
 
 export function App() {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
-  const [lastResult, setLastResult] = useState<AnalysisResult | null>(null);
-  const [selectedDemoId, setSelectedDemoId] = useState<string | null>(null);
-
-  const handleAnalysisComplete = (result: AnalysisResult) => {
-    setLastResult(result);
-  };
-
-  const handleLoadDemo = (presetId: string) => {
-    setSelectedDemoId(presetId);
-  };
 
   return (
     <HashRouter>
@@ -118,13 +74,7 @@ export function App() {
 
         {/* Dynamic Route Content with Smooth Page Transitions */}
         <main className="flex-1 flex flex-col">
-          <AnimatedRoutes
-            selectedDemoId={selectedDemoId}
-            lastResult={lastResult}
-            handleAnalysisComplete={handleAnalysisComplete}
-            handleLoadDemo={handleLoadDemo}
-            onOpenPrivacy={() => setPrivacyModalOpen(true)}
-          />
+          <AnimatedRoutes />
         </main>
 
         {/* Universal Footer */}

@@ -1,629 +1,991 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, type Variants } from 'motion/react';
-import { 
-  ShieldCheck, 
-  Link2, 
-  MessageSquare, 
-  ArrowRight, 
-  Lock, 
-  Search,
-  Award,
-  Compass,
-  Tag,
-  Clock,
-  Shield,
-  Layers
-} from 'lucide-react';
-import { DEMO_PRESETS } from '../../lib/constants';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+import { toast } from 'sonner';
+import { analysisService } from '../../services/analysisService';
+import { directoryService } from '../../services/directoryService';
+import { AnalysisResultView } from '../../components/analysis/AnalysisResultView';
+import type { AnalysisResult } from '../../types/analysis';
 
-interface HomePageProps {
-  onLoadDemo: (presetId: string) => void;
-}
-
-// Animation Variants for Scroll & Entrance Transitions
-const containerStagger: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
-    },
-  },
-};
-
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 28 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.55,
-      ease: [0.16, 1, 0.3, 1] as const,
-    },
-  },
-};
-
-// High-Definition Curated Cyber Infrastructure & Global Defense Images
-const HERO_IMAGES = [
+const MODUS_EXAMPLES = [
   {
-    url: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=85',
-    title: 'Infrastruktur Peladen Siber Mutakhir',
+    type: 'chat' as const,
+    title: 'Paket atau resi palsu',
+    snippet: '"Paket kamu tertahan di gudang. Bayar biaya admin Rp15.000 sekarang juga lewat tautan ini atau paket dikembalikan. Info: wa.me/628123456789"',
+    text: 'Halo Kak, paket pesanan kamu tertahan di gudang logistik kami. Segera bayar biaya admin sebesar Rp15.000 sekarang juga lewat tautan ini agar paket tidak dikembalikan ke pengirim. Link: https://resi-paket-cek.site/bayar',
   },
   {
-    url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1920&q=85',
-    title: 'Jaringan Telemetri Ancaman Global',
+    type: 'url' as const,
+    title: 'Undangan pernikahan APK',
+    snippet: 'http://undangan-nikah-digital.top/undangan.apk',
+    text: 'http://undangan-nikah-digital.top/undangan.apk',
   },
   {
-    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1920&q=85',
-    title: 'Enkripsi & Pemindaian Pola Heuristik',
+    type: 'chat' as const,
+    title: 'Hadiah undian',
+    snippet: '"Selamat! Kamu menang undian Rp50 juta. Segera kirim kode OTP yang masuk ke HP kamu dalam 1 jam..."',
+    text: 'Selamat! Nomor Anda terpilih memenangkan hadiah undian festival belanja sebesar Rp 50.000.000. Segera kirimkan 6 digit kode OTP rahasia yang masuk via SMS ke nomor ini dalam waktu 1 jam sebelum hadiah hangus!',
   },
   {
-    url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=85',
-    title: 'Komputasi Pertahanan Siber Berkecepatan Tinggi',
+    type: 'url' as const,
+    title: 'Tilang atau pajak palsu',
+    snippet: 'http://tilang-online-bayar.click/denda',
+    text: 'http://tilang-online-bayar.click/denda',
+  },
+  {
+    type: 'chat' as const,
+    title: 'Lowongan kerja palsu',
+    snippet: '"Dibutuhkan admin online, gaji 8 juta/bulan. Transfer biaya pendaftaran Rp200.000 dan pindah ke Telegram..."',
+    text: 'Dibutuhkan segera staf admin online paruh waktu dari rumah, gaji 8 juta per bulan tanpa syarat pengalaman. Untuk aktivasi ID kerja, silakan transfer biaya pendaftaran Rp 200.000 ke rekening bendahara kami lalu konfirmasi ke Telegram: @admin_karir.',
+  },
+  {
+    type: 'chat' as const,
+    title: 'Investasi cepat untung',
+    snippet: '"Investasi modal kecil, pasti untung 20% per minggu, jaminan keuntungan cuan..."',
+    text: 'Program investasi syariah tanpa risiko! Modal mulai 500rb, pasti untung dan profit harian 20% per minggu dijamin cuan kembali 100%. Hubungi mentor sekarang juga di grup Telegram resmi.',
   },
 ];
 
-export const HomePage: React.FC<HomePageProps> = ({ onLoadDemo }) => {
-  const navigate = useNavigate();
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [quickInput, setQuickInput] = useState<string>('');
-  const [scannerType, setScannerType] = useState<'url' | 'chat'>('url');
-  const [heroIndex, setHeroIndex] = useState<number>(0);
+const CARA_STEPS = [
+  {
+    num: '1',
+    title: 'Tempel',
+    desc: 'Masukkan tautan atau isi chat yang bikin curiga.',
+    label: 'Langkah 1: Tempel Tautan atau Chat',
+  },
+  {
+    num: '2',
+    title: 'Diperiksa berlapis',
+    desc: 'Struktur alamat, daftar ancaman Google, dan isi pesan dibaca AI.',
+    label: 'Langkah 2: Pemeriksaan 3 Lapis',
+  },
+  {
+    num: '3',
+    title: 'Skor dan bukti',
+    desc: 'Setiap tanda bahaya ditunjukkan beserta alasannya.',
+    label: 'Langkah 3: Skor Risiko & Rincian Bukti',
+  },
+  {
+    num: '4',
+    title: 'Langkah aman',
+    desc: 'Kamu tahu apa yang harus dilakukan, dan ke mana melapor.',
+    label: 'Langkah 4: Langkah Tindakan Aman',
+  },
+];
 
-  // Background carousel queue timer (cycles smoothly every 5 seconds)
+export const HomePage: React.FC = () => {
+  const location = useLocation();
+
+  // Active Input Tab: 'url' or 'chat'
+  const [activeTab, setActiveTab] = useState<'url' | 'chat'>('url');
+
+  // Input states
+  const [urlInput, setUrlInput] = useState('');
+  const [chatInput, setChatInput] = useState('');
+  const [privacyAgreedUrl, setPrivacyAgreedUrl] = useState(false);
+  const [privacyAgreedChat, setPrivacyAgreedChat] = useState(false);
+
+  // Status & Error
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+
+  // Cara Kerja Interactive State
+  const [currentCaraStep, setCurrentCaraStep] = useState(0);
+  const [caraInteracted, setCaraInteracted] = useState(false);
+
+  const hasilRef = useRef<HTMLDivElement>(null);
+  const inputSectionRef = useRef<HTMLDivElement>(null);
+
+  // Auto rotate cara kerja step if user hasn't clicked
   useEffect(() => {
+    if (caraInteracted) return;
     const timer = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 5000);
-
+      setCurrentCaraStep((prev) => (prev + 1) % 4);
+    }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [caraInteracted]);
 
-  const handleSelectPreset = (preset: typeof DEMO_PRESETS[0]) => {
-    onLoadDemo(preset.id);
-    if (preset.type === 'url') {
-      navigate('/url');
-    } else {
-      navigate('/chat');
+  // Handle prefill from Community Directory or navigation
+  useEffect(() => {
+    const state = location.state as { prefillUrl?: string } | null;
+    if (state?.prefillUrl) {
+      setActiveTab('url');
+      setUrlInput(state.prefillUrl);
+      handleScanUrl(state.prefillUrl);
     }
-  };
+  }, [location.state]);
 
-  const handleQuickSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickInput.trim()) {
-      if (scannerType === 'url') navigate('/url');
-      else navigate('/chat');
+  const handleScanUrl = async (targetUrl?: string, bypassConsent = false) => {
+    const raw = (targetUrl !== undefined ? targetUrl : urlInput).trim();
+    setErrorMessage(null);
+
+    const isConsented = bypassConsent || privacyAgreedUrl;
+    if (!isConsented) {
+      setErrorMessage('Centang dulu persetujuan ketentuan di atas.');
       return;
     }
 
-    if (scannerType === 'url') {
-      navigate('/url');
-    } else {
-      navigate('/chat');
+    if (!raw) {
+      setErrorMessage('Masukkan alamat tautan terlebih dahulu.');
+      return;
+    }
+
+    let validUrl = false;
+    try {
+      const u = new URL(raw.startsWith('http') ? raw : `http://${raw}`);
+      validUrl = !!u.hostname;
+    } catch {
+      validUrl = false;
+    }
+
+    if (!validUrl) {
+      setErrorMessage('Masukkan tautan lengkap yang valid (misal: http://contoh.xyz/login)');
+      return;
+    }
+
+    setLoading(true);
+    setAnalysisResult(null);
+
+    try {
+      const res = await analysisService.analyzeUrl({
+        url: raw.startsWith('http') ? raw : `http://${raw}`,
+        privacy_consent: true,
+      });
+
+      setAnalysisResult(res);
+
+      // Record to community directory automatically
+      directoryService.recordDomain(raw, res.risk_score || res.raw_score || 0, res.risk_level || 'review');
+
+      // Smooth scroll to results
+      setTimeout(() => {
+        hasilRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Pemeriksaan tautan gagal diproses.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const categories = [
-    { id: 'all', label: 'Semua Modus', icon: Layers },
-    { id: 'url', label: 'URL Phishing', icon: Link2 },
-    { id: 'chat', label: 'Chat WhatsApp', icon: MessageSquare },
-    { id: 'apk', label: 'Berkas .APK', icon: Shield },
-    { id: 'job', label: 'Job Scam', icon: Tag },
-    { id: 'bank', label: 'Tiruan Bank', icon: Compass },
-  ];
+  const handleScanChat = async (targetChat?: string, bypassConsent = false) => {
+    const raw = (targetChat !== undefined ? targetChat : chatInput).trim();
+    setErrorMessage(null);
 
-  const popularScenarios = [
-    {
-      id: 'apk-undangan',
-      presetId: 'chat-apk-invitation',
-      title: 'Undangan Pernikahan .APK',
-      subtitle: 'Malware Kurir & Pencuri OTP',
-      type: 'chat',
-      rating: '4.9',
-      scoreBadge: 'RISIKO TINGGI',
-      scoreColor: 'text-[#E86A33]',
-      bgGradient: 'from-[#143826] via-[#1C4E36] to-[#0D2418]',
-      icon: MessageSquare,
-      imagePlaceholder: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'phishing-bank',
-      presetId: 'url-bank-phishing',
-      title: 'Domain Bank Tiruan',
-      subtitle: 'Typosquatting & Subdomain Palsu',
-      type: 'url',
-      rating: '4.8',
-      scoreBadge: 'RISIKO TINGGI',
-      scoreColor: 'text-[#E86A33]',
-      bgGradient: 'from-[#0D2636] via-[#133A52] to-[#0A1D2A]',
-      icon: Link2,
-      imagePlaceholder: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'job-scam',
-      presetId: 'chat-job-scam',
-      title: 'Freelance Like Video',
-      subtitle: 'Komisi Fiktif & Deposit Uang',
-      type: 'chat',
-      rating: '4.9',
-      scoreBadge: 'RISIKO TINGGI',
-      scoreColor: 'text-[#E86A33]',
-      bgGradient: 'from-[#3A2218] via-[#522E1F] to-[#24150E]',
-      icon: Tag,
-      imagePlaceholder: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=600&q=80',
-    },
-    {
-      id: 'portal-resmi',
-      presetId: 'url-official-portal',
-      title: 'Portal Bank Terverifikasi',
-      subtitle: 'Protokol HTTPS & Domain Sah',
-      type: 'url',
-      rating: '5.0',
-      scoreBadge: 'RISIKO RENDAH',
-      scoreColor: 'text-emerald-500',
-      bgGradient: 'from-[#163628] via-[#20523C] to-[#0E241B]',
-      icon: ShieldCheck,
-      imagePlaceholder: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80',
-    },
-  ];
+    const isConsented = bypassConsent || privacyAgreedChat;
+    if (!isConsented) {
+      setErrorMessage('Centang dulu persetujuan ketentuan di atas.');
+      return;
+    }
+
+    if (!raw || raw.length < 10) {
+      setErrorMessage('Isi chat minimal 10 karakter.');
+      return;
+    }
+
+    if (raw.length > 5000) {
+      setErrorMessage('Isi chat maksimal 5.000 karakter.');
+      return;
+    }
+
+    setLoading(true);
+    setAnalysisResult(null);
+
+    try {
+      const res = await analysisService.analyzeChat({
+        text: raw,
+        privacy_consent: true,
+      });
+
+      setAnalysisResult(res);
+
+      // Smooth scroll to results
+      setTimeout(() => {
+        hasilRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Pemeriksaan pesan WhatsApp gagal diproses.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSelectModus = (modus: typeof MODUS_EXAMPLES[0]) => {
+    setActiveTab(modus.type);
+    setErrorMessage(null);
+
+    if (modus.type === 'url') {
+      setUrlInput(modus.text);
+      setPrivacyAgreedUrl(true);
+      inputSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+      handleScanUrl(modus.text, true);
+    } else {
+      setChatInput(modus.text);
+      setPrivacyAgreedChat(true);
+      inputSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+      handleScanChat(modus.text, true);
+    }
+    toast.info(`Memuat contoh: ${modus.title}`);
+  };
 
   return (
-    <div className="flex flex-col w-full bg-[#F8F9FA] text-[#1A202C]">
+    <div className="flex flex-col w-full bg-[#F5F3EE] text-[#14130F] min-h-screen">
       
-      {/* 1. HERO SECTION (Spacious & Luxurious Pomaii Travel SaaS Style) */}
-      <section className="relative w-full pt-8 pb-16 sm:pt-12 sm:pb-24 overflow-hidden">
+      {/* 1. HERO + SCANNER INPUT SECTION */}
+      <section ref={inputSectionRef} className="max-w-[760px] mx-auto px-4 sm:px-6 pt-12 pb-14 w-full text-center">
         
-        {/* Scenic Background with Pomaii Organic Wave Cutout */}
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 relative">
-          
-          <div className="relative w-full h-[560px] sm:h-[620px] lg:h-[660px] rounded-3xl sm:rounded-[40px] overflow-hidden shadow-2xl">
-            
-            {/* Background Image Carousel with Smooth Crossfade & Motion */}
-            <div className="absolute inset-0 overflow-hidden">
-              <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={heroIndex}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url('${HERO_IMAGES[heroIndex].url}')`,
-                  }}
-                />
-              </AnimatePresence>
+        {/* Main Headline - Clean, Tasteful Editorial Typography (No AI Slop) */}
+        <h1 className="font-display text-3xl sm:text-4xl lg:text-[44px] font-bold tracking-tight leading-[1.12] text-[#14130F]">
+          Cek dulu sebelum <br className="hidden sm:inline" />
+          kamu klik atau balas.
+        </h1>
 
-              {/* Cinematic Dark Gradient Scrim (Natural Vignette for Superb Legibility) */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/20 z-[1] pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 z-[1] pointer-events-none" />
+        <p className="text-sm sm:text-base text-[#5B5850] mt-3.5 max-w-md mx-auto leading-relaxed">
+          Tempel tautan atau chat WhatsApp yang bikin curiga. Hasilnya langsung muncul di bawah.
+        </p>
+
+        {/* Tab Switcher Pills */}
+        <div className="inline-flex gap-1 p-1 bg-[#E9E5DA] rounded-full mt-6 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => { setActiveTab('url'); setErrorMessage(null); }}
+            className={`h-10 px-5 rounded-full font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+              activeTab === 'url'
+                ? 'bg-[#14130F] text-white shadow-2xs'
+                : 'bg-transparent text-[#3F3C35] hover:text-[#14130F]'
+            }`}
+          >
+            Cek Tautan
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveTab('chat'); setErrorMessage(null); }}
+            className={`h-10 px-5 rounded-full font-semibold text-xs sm:text-sm transition-all cursor-pointer ${
+              activeTab === 'chat'
+                ? 'bg-[#14130F] text-white shadow-2xs'
+                : 'bg-transparent text-[#3F3C35] hover:text-[#14130F]'
+            }`}
+          >
+            Cek Chat WhatsApp
+          </button>
+        </div>
+
+        {/* Form Panel: Cek Tautan */}
+        {activeTab === 'url' && (
+          <div className="mt-5 text-left space-y-2.5">
+            <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') handleScanUrl(); }}
+                placeholder="Tempel tautan di sini, contoh: http://bank-nusa-login.xyz/verifikasi-akun"
+                className="h-13 flex-1 min-w-[260px] px-5 rounded-full border-[1.5px] border-[#CFCABD] bg-white text-sm text-[#14130F] placeholder:text-[#8C887B] focus:outline-2 focus:outline-[#14130F] focus:outline-offset-1 transition-all shadow-2xs"
+              />
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleScanUrl()}
+                className="h-13 px-7 rounded-full bg-[#14130F] hover:bg-[#2A2721] disabled:opacity-50 text-white font-semibold text-sm transition-all cursor-pointer shadow-2xs shrink-0"
+              >
+                {loading ? 'Memeriksa...' : 'Periksa'}
+              </button>
             </div>
 
-            {/* Left Content Area (Animated Cascade On Load) */}
-            <motion.div 
-              initial="hidden"
-              animate="visible"
-              variants={containerStagger}
-              className="relative z-10 h-full flex flex-col justify-center px-8 sm:px-14 lg:px-20 max-w-2xl space-y-7"
-            >
-              
-              {/* Top Tag with Leaf / Shield */}
-              <motion.div variants={fadeUp} className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest text-emerald-300 w-fit">
-                <span className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  🌿
-                </span>
-                <span>AUTONOMOUS CYBER DEFENSE</span>
-              </motion.div>
-
-              {/* Main Headline (Crisp Pure White & Accent Emerald / Warm Orange) */}
-              <motion.h1 variants={fadeUp} className="text-4xl sm:text-6xl lg:text-[68px] font-black tracking-tight text-white leading-[1.06] drop-shadow-md">
-                Kenali Penipuan. <br />
-                <span className="text-emerald-400">
-                  Lindungi <span className="text-[#E86A33]">Diri Anda.</span>
-                </span>
-              </motion.h1>
-
-              {/* Description */}
-              <motion.p variants={fadeUp} className="text-base sm:text-lg text-gray-200 max-w-lg leading-relaxed font-medium drop-shadow-xs">
-                Periksa tautan mencurigakan dan bongkar manipulasi percakapan WhatsApp secara instan dengan transparansi bukti kecerdasan buatan.
-              </motion.p>
-
-              {/* Orange Pill CTA Button */}
-              <motion.div variants={fadeUp} className="pt-2 flex items-center gap-4">
-                <Link
-                  to="/url"
-                  className="btn-animate inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/30 transition-all"
-                >
-                  <span>Mulai Periksa Sekarang</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </motion.div>
-
-            </motion.div>
-
+            {/* Checkbox Consent */}
+            <div className="pt-0.5 pl-2">
+              <label className="flex items-center gap-2 text-[13px] text-[#5B5850] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={privacyAgreedUrl}
+                  onChange={(e) => setPrivacyAgreedUrl(e.target.checked)}
+                  className="w-4 h-4 accent-[#14130F] rounded cursor-pointer"
+                />
+                <span>Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
+              </label>
+            </div>
           </div>
+        )}
 
-          {/* FLOATING SCANNER CAPSULE DOCK (Smooth Slide Up on Load) */}
-          <motion.div 
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="relative -mt-12 sm:-mt-14 z-20 max-w-5xl mx-auto px-4"
-          >
-            <form 
-              onSubmit={handleQuickSubmit}
-              className="pomaii-dock p-4 sm:p-5 bg-white rounded-2xl sm:rounded-full border border-gray-200/90 shadow-2xl flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 sm:gap-3"
-            >
-              
-              {/* Field 1: Mode Switcher */}
-              <div className="flex-1 flex items-center gap-3.5 px-4 py-2 hover:bg-gray-50 rounded-xl sm:rounded-full transition cursor-pointer">
-                <div className="w-10 h-10 rounded-full bg-[#EAF2ED] flex items-center justify-center text-[#143826] shrink-0 shadow-2xs">
-                  {scannerType === 'url' ? <Link2 className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[11px] font-bold text-gray-900 leading-tight">Jenis Analisis:</span>
-                  <div className="flex gap-2.5 text-xs font-semibold text-gray-500 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => setScannerType('url')}
-                      className={`hover:text-[#143826] transition-colors ${scannerType === 'url' ? 'text-[#E86A33] font-bold underline' : ''}`}
-                    >
-                      Tautan URL
-                    </button>
-                    <span>&bull;</span>
-                    <button
-                      type="button"
-                      onClick={() => setScannerType('chat')}
-                      className={`hover:text-[#143826] transition-colors ${scannerType === 'chat' ? 'text-[#E86A33] font-bold underline' : ''}`}
-                    >
-                      Chat WhatsApp
-                    </button>
-                  </div>
-                </div>
+        {/* Form Panel: Cek Chat WhatsApp */}
+        {activeTab === 'chat' && (
+          <div className="mt-5 text-left">
+            <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 shadow-2xs space-y-2.5">
+              <label htmlFor="chatArea" className="font-semibold text-xs sm:text-sm text-[#14130F] block">
+                Isi pesan atau chat yang mencurigakan:
+              </label>
+              <textarea
+                id="chatArea"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                maxLength={5000}
+                placeholder="Tempel isi chat WhatsApp yang bikin curiga di sini..."
+                className="w-full h-36 p-3.5 border border-[#CFCABD] rounded-xl text-xs sm:text-sm leading-relaxed text-[#14130F] placeholder:text-[#8C887B] focus:outline-2 focus:outline-[#14130F] focus:outline-offset-1 resize-none"
+              />
+              <div className="flex justify-between text-xs text-[#706C62]">
+                <span>Nomor HP, email, dan rekening disamarkan otomatis.</span>
+                <span className="font-mono">{chatInput.length} / 5000</span>
               </div>
 
-              <div className="hidden sm:block w-px h-9 bg-gray-200" />
+              <label className="flex items-center gap-2 text-[13px] text-[#5B5850] cursor-pointer pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={privacyAgreedChat}
+                  onChange={(e) => setPrivacyAgreedChat(e.target.checked)}
+                  className="w-4 h-4 accent-[#14130F] rounded cursor-pointer"
+                />
+                <span>Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
+              </label>
 
-              {/* Field 2: Quick Input Box */}
-              <div className="flex-[2] flex items-center gap-3.5 px-4 py-2 hover:bg-gray-50 rounded-xl sm:rounded-full transition">
-                <Search className="w-5 h-5 text-gray-400 shrink-0" />
-                <div className="flex flex-col text-left w-full">
-                  <span className="text-[11px] font-bold text-gray-900 leading-tight">
-                    {scannerType === 'url' ? 'Masukkan URL Mencurigakan' : 'Tempelkan Teks Percakapan'}
-                  </span>
-                  <input
-                    type="text"
-                    value={quickInput}
-                    onChange={(e) => setQuickInput(e.target.value)}
-                    placeholder={scannerType === 'url' ? 'https://bca-klik.secure-update.xyz...' : 'Halo kak, ada tugas part-time online...'}
-                    className="w-full text-xs text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-hidden font-sans truncate mt-0.5"
-                  />
-                </div>
-              </div>
-
-              <div className="hidden sm:block w-px h-9 bg-gray-200" />
-
-              {/* Field 3: Privacy Indicator */}
-              <div className="hidden md:flex flex-1 items-center gap-3.5 px-4 py-2">
-                <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-700 shrink-0 shadow-2xs">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-[11px] font-bold text-gray-900 leading-tight">Privasi Data</span>
-                  <span className="text-[11px] text-gray-500 mt-0.5">Zero Data Retention</span>
-                </div>
-              </div>
-
-              {/* Dark Green Search Pill Button */}
               <button
-                type="submit"
-                className="btn-animate inline-flex items-center justify-center gap-2 px-9 py-4 rounded-full bg-[#143826] hover:bg-[#1D4E36] text-white font-bold text-sm shadow-md transition-all shrink-0"
+                type="button"
+                disabled={loading}
+                onClick={() => handleScanChat()}
+                className="w-full h-12 mt-1.5 rounded-full bg-[#14130F] hover:bg-[#2A2721] disabled:opacity-50 text-white font-semibold text-xs sm:text-sm transition-all cursor-pointer shadow-2xs"
               >
-                <span>Periksa</span>
-                <Search className="w-4 h-4" />
+                {loading ? 'Memeriksa Chat...' : 'Periksa Chat'}
               </button>
+            </div>
+          </div>
+        )}
 
-            </form>
-          </motion.div>
+        {/* Error Notification */}
+        {errorMessage && (
+          <div className="p-3 mt-3 rounded-xl bg-[#FEE4E2] text-[#B42318] text-xs font-semibold border border-[#FDA29B] text-left">
+            {errorMessage}
+          </div>
+        )}
 
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="mt-6 p-6 rounded-2xl bg-white border border-[#E4E0D6] flex flex-col items-center justify-center gap-2.5 text-[#5B5850]">
+            <div className="w-6 h-6 border-2 border-[#14130F] border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs font-semibold">Sedang memeriksa berlapis...</span>
+          </div>
+        )}
+
+        {/* 2. LIVE OUTPUT CONTAINER (RIGHT BELOW INPUT) */}
+        <div ref={hasilRef} id="hasil" className="mt-6 text-left">
+          {analysisResult && (
+            <AnalysisResultView
+              result={analysisResult}
+              onReset={() => {
+                setAnalysisResult(null);
+                setUrlInput('');
+                setChatInput('');
+              }}
+            />
+          )}
         </div>
 
       </section>
 
-      {/* 2. FOUR MICRO-FEATURE BADGES ROW (Scroll Triggered Stagger) */}
-      <motion.section 
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={containerStagger}
-        className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 py-12 sm:py-16 w-full"
-      >
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          
-          <motion.div variants={fadeUp} className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-card transition-all">
-            <div className="w-12 h-12 rounded-full border border-gray-200 bg-[#F8F9FA] flex items-center justify-center text-[#143826] shrink-0">
-              <Compass className="w-6 h-6 text-[#143826]" />
-            </div>
-            <div className="text-left">
-              <h4 className="text-sm font-bold text-[#1A202C]">Deteksi Cepat &bull; &lt;1.5s</h4>
-              <p className="text-xs text-gray-500 mt-0.5">Pemindaian seketika tanpa antrean.</p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-card transition-all">
-            <div className="w-12 h-12 rounded-full border border-gray-200 bg-[#F8F9FA] flex items-center justify-center text-[#143826] shrink-0">
-              <Tag className="w-6 h-6 text-[#143826]" />
-            </div>
-            <div className="text-left">
-              <h4 className="text-sm font-bold text-[#1A202C]">Zero Data Retention</h4>
-              <p className="text-xs text-gray-500 mt-0.5">Data mentah tidak disimpan di server.</p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-card transition-all">
-            <div className="w-12 h-12 rounded-full border border-gray-200 bg-[#F8F9FA] flex items-center justify-center text-[#143826] shrink-0">
-              <ShieldCheck className="w-6 h-6 text-[#143826]" />
-            </div>
-            <div className="text-left">
-              <h4 className="text-sm font-bold text-[#1A202C]">Explainable AI</h4>
-              <p className="text-xs text-gray-500 mt-0.5">Disertai kutipan bukti otentik asli.</p>
-            </div>
-          </motion.div>
-
-          <motion.div variants={fadeUp} className="flex items-center gap-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-card transition-all">
-            <div className="w-12 h-12 rounded-full border border-gray-200 bg-[#F8F9FA] flex items-center justify-center text-[#143826] shrink-0">
-              <Clock className="w-6 h-6 text-[#143826]" />
-            </div>
-            <div className="text-left">
-              <h4 className="text-sm font-bold text-[#1A202C]">Akses Terbuka 24/7</h4>
-              <p className="text-xs text-gray-500 mt-0.5">Dapat dipakai tanpa registrasi akun.</p>
-            </div>
-          </motion.div>
-
-        </div>
-      </motion.section>
-
-      {/* 3. POPULAR SCENARIOS SECTION (Scroll Triggered Staggered Cards) */}
-      <motion.section 
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={containerStagger}
-        className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-24 w-full space-y-10"
-      >
-        
-        {/* Section Header */}
-        <motion.div variants={fadeUp} className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1A202C] tracking-tight">
-              Skenario Serangan Populer
+      {/* 3. SECTION: APA ITU SCAMORA */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+              Apa itu Scamora?
             </h2>
-            <span className="text-xl">🌿</span>
+            <p className="text-sm sm:text-base text-[#5B5850] mt-3 leading-relaxed">
+              Scamora memeriksa tautan dan pesan WhatsApp yang mencurigakan. Kamu tempel, kami periksa dari beberapa sisi, lalu kamu mendapat skor risiko, bukti, dan langkah aman dalam bahasa sehari-hari. Dibuat untuk masyarakat Indonesia yang sering menerima tautan asing tak dikenal.
+            </p>
           </div>
 
-          <Link
-            to="/panduan"
-            className="text-sm font-bold text-gray-700 hover:text-[#143826] flex items-center gap-1.5 group transition-colors"
-          >
-            <span>Lihat Semua Modus</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </motion.div>
+          <div className="flex flex-col gap-2.5">
+            <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4 shadow-2xs">
+              <b className="text-xs sm:text-sm font-bold text-[#14130F] block">Gratis, tanpa login</b>
+              <p className="text-xs text-[#5B5850] mt-0.5">Langsung pakai, tidak perlu daftar akun atau nomor identitas.</p>
+            </div>
+            <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4 shadow-2xs">
+              <b className="text-xs sm:text-sm font-bold text-[#14130F] block">Bahasa yang mudah dipahami</b>
+              <p className="text-xs text-[#5B5850] mt-0.5">Tanda bahaya dijelaskan tanpa istilah teknis yang rumit.</p>
+            </div>
+            <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4 shadow-2xs">
+              <b className="text-xs sm:text-sm font-bold text-[#14130F] block">Input tidak disimpan</b>
+              <p className="text-xs text-[#5B5850] mt-0.5">Tautan dan isi chat kamu tidak disimpan permanen di server.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {/* 4 Cards Grid with Staggered Fade Up */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7">
-          {popularScenarios.map((item) => (
-            <motion.div
-              key={item.id}
-              variants={fadeUp}
-              whileHover={{ y: -8, transition: { duration: 0.25 } }}
-              onClick={() => {
-                const preset = DEMO_PRESETS.find(p => p.id === item.presetId);
-                if (preset) handleSelectPreset(preset);
-              }}
-              className="pomaii-card relative h-[380px] rounded-3xl overflow-hidden cursor-pointer group shadow-md"
-            >
-              {/* Background Cover Image with Scrim */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
-                style={{ backgroundImage: `url('${item.imagePlaceholder}')` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
-              </div>
-
-              {/* Top Rating Badge */}
-              <div className="absolute top-5 left-5 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143826]/90 backdrop-blur-md text-white text-xs font-bold border border-white/15 shadow-sm">
-                <Award className="w-3.5 h-3.5 text-[#E86A33]" />
-                <span>{item.rating}</span>
-              </div>
-
-              {/* Bottom Info Overlay */}
-              <div className="absolute bottom-0 inset-x-0 p-6 text-white z-10 flex items-end justify-between">
-                <div>
-                  <h3 className="font-extrabold text-lg leading-snug text-white group-hover:text-[#E86A33] transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-gray-300 mt-1 line-clamp-1 font-medium">
-                    {item.subtitle}
-                  </p>
-                </div>
-
-                <div className={`text-xs font-black shrink-0 tracking-wide ${item.scoreColor}`}>
-                  {item.scoreBadge}
-                </div>
-              </div>
-
-            </motion.div>
-          ))}
+      {/* 4. SECTION: CARA KERJA INTERAKTIF (PERBAIKAN FOTO 3) */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <div className="flex justify-between items-end gap-4 flex-wrap mb-6">
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+              Cara kerja
+            </h2>
+            <p className="text-sm text-[#5B5850] mt-1.5">
+              Pemeriksaan berlapis dari input sampai panduan tindakan aman.
+            </p>
+          </div>
+          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-[#EEEAE0] text-[#3F3C35]">
+            Langkah {currentCaraStep + 1} dari 4
+          </span>
         </div>
 
-        {/* CATEGORY FILTER PILLS ROW */}
-        <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 sm:gap-4 flex-wrap pt-8">
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            const active = activeCategory === cat.id;
-            return (
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-6 items-stretch">
+          
+          {/* Kolom Kiri: 4 Step Buttons */}
+          <div className="flex flex-col gap-2.5 justify-center">
+            {CARA_STEPS.map((step, idx) => (
               <button
-                key={cat.id}
+                key={idx}
                 type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                className={`btn-animate inline-flex items-center gap-2.5 px-6 py-3 rounded-full text-xs sm:text-sm font-bold border transition ${
-                  active
-                    ? 'bg-[#143826] text-white border-[#143826] shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                onClick={() => {
+                  setCaraInteracted(true);
+                  setCurrentCaraStep(idx);
+                }}
+                className={`p-4 sm:p-4.5 rounded-2xl border text-left transition-all flex items-start gap-3.5 cursor-pointer shadow-2xs ${
+                  currentCaraStep === idx
+                    ? 'bg-[#14130F] text-white border-[#14130F]'
+                    : 'bg-white text-[#14130F] border-[#E4E0D6] hover:border-[#14130F]'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${active ? 'text-[#E86A33]' : 'text-gray-500'}`} />
-                <span>{cat.label}</span>
+                <div
+                  className={`w-8 h-8 min-w-8 rounded-full flex items-center justify-center font-display font-bold text-xs ${
+                    currentCaraStep === idx
+                      ? 'bg-white text-[#14130F]'
+                      : 'bg-[#F5F3EE] text-[#14130F] border border-[#CFCABD]'
+                  }`}
+                >
+                  {step.num}
+                </div>
+                <div>
+                  <div className="font-display font-bold text-sm sm:text-base leading-tight">{step.title}</div>
+                  <p className={`text-xs mt-1 leading-relaxed ${currentCaraStep === idx ? 'text-[#D6D2C8]' : 'text-[#5B5850]'}`}>
+                    {step.desc}
+                  </p>
+                </div>
               </button>
-            );
-          })}
-        </motion.div>
+            ))}
+          </div>
 
-      </motion.section>
-
-      {/* 4. GUIDES & STORIES SECTION (Scroll Reveal) */}
-      <motion.section 
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-50px" }}
-        variants={containerStagger}
-        className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 py-16 sm:py-24 w-full"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center bg-[#F2F7F4] p-10 sm:p-14 lg:p-16 rounded-[40px] border border-[#CFDDD5]">
-          
-          {/* Left Column: Editorial Callout */}
-          <motion.div variants={fadeUp} className="lg:col-span-5 space-y-5 text-left">
-            <span className="text-xs font-bold uppercase tracking-widest text-gray-500 font-mono">
-              Perlu Tindakan Cepat?
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-[#143826] tracking-tight leading-tight">
-              Panduan Tanggap Insiden &amp; Checklist Mitigasi
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 leading-relaxed font-medium">
-              Langkah darurat yang wajib dilakukan jika Anda terlanjur mengklik tautan mencurigakan atau menginstal file .APK dari nomor tidak dikenal.
-            </p>
-            <div className="pt-3">
-              <Link
-                to="/panduan"
-                className="btn-animate inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-[#143826] hover:bg-[#1D4E36] text-white text-xs sm:text-sm font-bold shadow-md transition"
-              >
-                <span>Buka Panduan Lengkap</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+          {/* Kolom Kanan: Pratinjau Interaktif Sesuai scamora.html */}
+          <div className="bg-white border-[1.5px] border-[#E4E0D6] rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-2xs min-h-[420px]">
+            <div className="flex items-center justify-between border-b border-[#EEEAE0] pb-3 mb-4">
+              <div className="flex items-center gap-2 text-xs font-bold font-display text-[#14130F]">
+                <span className="w-2 h-2 rounded-full bg-[#14130F]"></span>
+                <span>{CARA_STEPS[currentCaraStep].label}</span>
+              </div>
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-[#F5F3EE] text-[#5B5850] border border-[#EAE6DC]">
+                Pratinjau Interaktif
+              </span>
             </div>
-          </motion.div>
 
-          {/* Right Column: 2 Horizontal Rounded Cards */}
-          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            
-            {/* Guide Card 1 */}
-            <motion.div variants={fadeUp} whileHover={{ y: -6, transition: { duration: 0.25 } }}>
-              <Link
-                to="/panduan"
-                className="pomaii-card block p-5 rounded-3xl bg-white border border-[#E8ECE9] space-y-4 group hover:shadow-lg transition"
-              >
-                <div className="w-full h-44 rounded-2xl overflow-hidden bg-gray-100">
-                  <img
-                    src="https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=500&q=80"
-                    alt="APK Isolation Protocol"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+            {/* Slide 0: Tempel */}
+            {currentCaraStep === 0 && (
+              <div className="flex flex-col gap-3.5 flex-1">
+                <div className="flex gap-1.5">
+                  <span className="h-8 px-3.5 bg-[#14130F] text-white rounded-full text-xs font-semibold inline-flex items-center">
+                    Cek Tautan
+                  </span>
+                  <span className="h-8 px-3.5 bg-[#EEEAE0] text-[#5B5850] rounded-full text-xs font-medium inline-flex items-center">
+                    Cek WhatsApp
+                  </span>
                 </div>
-                <div className="space-y-1.5 text-left">
-                  <h4 className="font-extrabold text-base text-[#143826] group-hover:text-[#E86A33] transition-colors leading-snug">
-                    Protokol Isolasi Ponsel Pasca Instal .APK
-                  </h4>
-                  <span className="text-xs text-gray-400 font-medium">3 menit baca &bull; Mitigasi Kritis</span>
-                </div>
-              </Link>
-            </motion.div>
 
-            {/* Guide Card 2 */}
-            <motion.div variants={fadeUp} whileHover={{ y: -6, transition: { duration: 0.25 } }}>
-              <Link
-                to="/panduan"
-                className="pomaii-card block p-5 rounded-3xl bg-white border border-[#E8ECE9] space-y-4 group hover:shadow-lg transition"
-              >
-                <div className="w-full h-44 rounded-2xl overflow-hidden bg-gray-100">
-                  <img
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=500&q=80"
-                    alt="Transfer Checklist"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                <div className="flex items-center gap-2.5 bg-white border-[1.5px] border-[#14130F] rounded-xl p-3 shadow-2xs">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14130F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  <div className="flex-1 font-mono text-xs text-[#14130F] truncate">
+                    https://bank-nusa-login.xyz/verifikasi-akun
+                  </div>
+                  <span className="h-7 px-3 bg-[#14130F] text-white rounded-full text-[11px] font-semibold inline-flex items-center shrink-0">
+                    Periksa
+                  </span>
                 </div>
-                <div className="space-y-1.5 text-left">
-                  <h4 className="font-extrabold text-base text-[#143826] group-hover:text-[#E86A33] transition-colors leading-snug">
-                    Checklist 6 Poin Sebelum Transfer Dana
-                  </h4>
-                  <span className="text-xs text-gray-400 font-medium">2 menit baca &bull; Cek Rekening</span>
-                </div>
-              </Link>
-            </motion.div>
 
+                <div className="flex flex-col gap-2 text-xs text-[#3F3C35]">
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 min-w-4 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold mt-0.5">✓</span>
+                    <span>Mendukung tautan web mencurigakan, domain singkat, &amp; chat WhatsApp</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 min-w-4 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold mt-0.5">✓</span>
+                    <span>Nomor HP, rekening bank, dan email disamarkan otomatis</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="w-4 h-4 min-w-4 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold mt-0.5">✓</span>
+                    <span>Input kamu tidak pernah disimpan di server (privasi terjaga)</span>
+                  </div>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 text-xs text-[#5B5850] mt-auto">
+                  <b>Tips:</b> Tempel seluruh pesan chat apa adanya. Sistem otomatis memilah bagian berbahaya tanpa kamu harus mengeditnya dulu.
+                </div>
+              </div>
+            )}
+
+            {/* Slide 1: Diperiksa berlapis */}
+            {currentCaraStep === 1 && (
+              <div className="flex flex-col gap-3 flex-1">
+                <div className="text-xs font-bold text-[#5B5850]">HASIL PEMERIKSAAN SISTEM:</div>
+                
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-bold text-[#14130F]">1. Struktur Domain &amp; Ekstensi</div>
+                    <div className="text-[11px] text-[#5B5850]">Typosquatting nama merek, ekstensi .xyz murah</div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-[#FEF0C7] text-[#93370D] font-bold text-[10px]">Terdeteksi</span>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-bold text-[#14130F]">2. Basis Data Google Safe Browsing</div>
+                    <div className="text-[11px] text-[#5B5850]">Pencocokan daftar blacklist ancaman global</div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-[#FEE4E2] text-[#B42318] font-bold text-[10px]">Diverifikasi</span>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-bold text-[#14130F]">3. Analisis Rekayasa Sosial AI</div>
+                    <div className="text-[11px] text-[#5B5850]">Desakan batas waktu &amp; permintaan OTP sensitif</div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-[#DCFAE6] text-[#067647] font-bold text-[10px]">Aktif</span>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 text-xs text-[#5B5850] mt-auto">
+                  <b>Analisis Berjalan:</b> Tiga lapisan pengujian berjalan simultan dalam hitungan detik.
+                </div>
+              </div>
+            )}
+
+            {/* Slide 2: Skor dan bukti */}
+            {currentCaraStep === 2 && (
+              <div className="flex flex-col gap-3 flex-1">
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-[10px] font-bold text-[#5B5850] uppercase tracking-wider">SKOR RISIKO TERDETEKSI</div>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="font-display text-4xl font-bold text-[#B42318] leading-none">85</span>
+                      <span className="text-sm text-[#5B5850]">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-3 py-1 rounded-full bg-[#FEE4E2] text-[#B42318] text-xs font-bold inline-block">
+                      Risiko Tinggi
+                    </span>
+                    <div className="text-[11px] text-[#5B5850] mt-0.5">Indikasi bahaya kuat</div>
+                  </div>
+                </div>
+
+                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3 space-y-1.5">
+                  <div className="h-2 rounded-full bg-[#EEEAE0] overflow-hidden flex">
+                    <div style={{ flex: 30 }} className="bg-[#12B76A]" />
+                    <div style={{ flex: 30 }} className="bg-[#F79009]" />
+                    <div style={{ flex: 40 }} className="bg-[#D92D20]" />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-[#5B5850]">
+                    <span>Rendah (0–29)</span>
+                    <span>Perlu ditinjau (30–59)</span>
+                    <span className="font-bold text-[#B42318]">Tinggi (60–100) ▲</span>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs mt-auto">
+                  <div className="bg-white border border-[#EAE6DC] rounded-lg p-2.5 flex items-center justify-between">
+                    <span>⚠️ Nama domain meniru merek (bank-nusa)</span>
+                    <b className="text-[#B42318]">+35</b>
+                  </div>
+                  <div className="bg-white border border-[#EAE6DC] rounded-lg p-2.5 flex items-center justify-between">
+                    <span>⚠️ Kata kunci sensitif verifikasi akun</span>
+                    <b className="text-[#B42318]">+30</b>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Slide 3: Langkah aman */}
+            {currentCaraStep === 3 && (
+              <div className="flex flex-col gap-3 flex-1">
+                <div className="space-y-2 text-xs">
+                  <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-2.5 flex items-center gap-2">
+                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold">✓</span>
+                    <span><b>Berhenti:</b> Jangan isi OTP, password, atau transfer dana.</span>
+                  </div>
+                  <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-2.5 flex items-center gap-2">
+                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold">✓</span>
+                    <span><b>Amankan:</b> Ganti kata sandi m-banking &amp; aktifkan 2FA.</span>
+                  </div>
+                  <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-2.5 flex items-center gap-2">
+                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-[10px] font-bold">✓</span>
+                    <span><b>Hubungi:</b> Hubungi kanal resmi bank / instansi terkait.</span>
+                  </div>
+                </div>
+
+                <div className="mt-auto pt-2">
+                  <div className="text-[11px] font-bold tracking-wider text-[#5B5850] uppercase mb-1.5">
+                    KANAL RESMI PEMERINTAH:
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-white border border-[#EAE6DC] rounded-lg p-2">
+                      <div className="font-bold text-[11px]">cekrekening.id</div>
+                      <div className="text-[10px] text-[#5B5850]">Rekening</div>
+                    </div>
+                    <div className="bg-white border border-[#EAE6DC] rounded-lg p-2">
+                      <div className="font-bold text-[11px]">aduannomor.id</div>
+                      <div className="text-[10px] text-[#5B5850]">Nomor HP</div>
+                    </div>
+                    <div className="bg-white border border-[#EAE6DC] rounded-lg p-2">
+                      <div className="font-bold text-[11px]">lapor.go.id</div>
+                      <div className="text-[10px] text-[#5B5850]">Pengaduan</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
-      </motion.section>
+      </section>
 
-      {/* 5. WIDE SPECIAL OFFER BANNER CARD (Scroll Reveal) */}
-      <motion.section 
-        initial={{ opacity: 0, y: 35 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 py-12 sm:py-16 w-full"
-      >
-        <div className="relative rounded-[40px] bg-[#143826] text-white overflow-hidden shadow-2xl grid grid-cols-1 lg:grid-cols-12 min-h-[380px]">
+      {/* 5. SECTION: CIRI-CIRI TAUTAN PHISHING (PERBAIKAN FOTO 4) */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+          Ciri-ciri tautan phishing
+        </h2>
+        <p className="text-sm text-[#5B5850] mt-1.5">
+          Enam tanda yang paling sering muncul saat penipuan mencoba mengelabui korban.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
           
-          {/* Left Visual Half */}
-          <div className="lg:col-span-5 relative h-72 lg:h-auto overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=800&q=80"
-              alt="Global Threat Defense"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-transparent to-[#143826]" />
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 01</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Nama domain mirip merek</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Penipu menambah kata atau memodifikasi huruf agar terlihat resmi saat sekilas dibaca.
+              </p>
+            </div>
+            <div className="font-mono text-[10.5px] sm:text-[11px] xl:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg py-2.5 px-2 text-[#2D2A24] mt-auto whitespace-nowrap overflow-hidden">
+              <span className="text-[#067647] font-semibold">bank-nusa.co.id</span> <span className="text-[#8C887B] mx-1">vs</span> <span className="text-[#B42318] font-semibold">bank-nusa-login.xyz</span>
+            </div>
           </div>
 
-          {/* Right Text Half */}
-          <div className="lg:col-span-7 p-8 sm:p-14 lg:p-18 flex flex-col justify-center space-y-6 text-left relative z-10">
-            
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#E86A33]">
-              <span>SPECIAL CHALLENGE</span>
-              <span>🌾</span>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 02</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Ekstensi domain janggal</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Beberapa ekstensi domain murah atau anonim sering dimanfaatkan untuk situs penipuan massal.
+              </p>
             </div>
-
-            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
-              Lindungi Percakapan &amp; Transaksi Anda Hari Ini
-            </h2>
-
-            <p className="text-sm sm:text-base text-gray-300 max-w-lg leading-relaxed font-medium">
-              Gunakan pemindai mandiri Scamora AI tanpa pungutan biaya, tanpa akun, dan dengan jaminan privasi mutlak.
-            </p>
-
-            {/* Warm Orange Pill Button */}
-            <div className="pt-2">
-              <Link
-                to="/url"
-                className="btn-animate inline-flex items-center gap-3 px-9 py-4 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white font-bold text-sm sm:text-base shadow-lg shadow-orange-500/25 transition"
-              >
-                <span>Mulai Uji Coba Sekarang</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+            <div className="flex gap-1.5 flex-wrap font-mono text-xs bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 mt-auto">
+              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.xyz</span>
+              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.top</span>
+              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.click</span>
+              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.site</span>
             </div>
+          </div>
 
-            {/* Botanical Graphic Accent on Bottom Right */}
-            <div className="absolute bottom-6 right-8 text-7xl opacity-20 pointer-events-none select-none">
-              🌺
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 03</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Tautan dipendekkan</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Tautan pendek menyembunyikan domain tujuan asli agar korban tidak curiga sebelum mengekliknya.
+              </p>
             </div>
+            <div className="font-mono text-[11.5px] sm:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 text-[#5B5850] mt-auto whitespace-nowrap">
+              <span>bit.ly/xxxx</span> <span className="text-[#8C887B] mx-1">&bull;</span> <span>s.id/xxxx</span>
+            </div>
+          </div>
 
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 04</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Meminta OTP, PIN, kata sandi</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Layanan resmi tidak pernah meminta kredensial rahasia perbankan lewat tautan web atau chat.
+              </p>
+            </div>
+            <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
+              "Kirim kode OTP yang masuk ke HP kamu"
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 05</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Menekan lewat batas waktu</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Korban dipaksa bertindak terburu-buru dengan ancaman pemblokiran akun agar tidak sempat berpikir.
+              </p>
+            </div>
+            <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
+              "Akun diblokir jika tidak verifikasi dalam 1 jam"
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+            <div>
+              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 06</div>
+              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Gembok bukan jaminan aman</h3>
+              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
+                Situs penipuan modern pun bisa memakai HTTPS. Ikon gembok hanya menandakan koneksi terenkripsi.
+              </p>
+            </div>
+            <div className="font-mono text-xs leading-normal bg-[#F5F3EE] border border-[#EAE6DC] rounded-lg p-2.5 mt-auto text-[#2D2A24]">
+              <span className="font-semibold">https://...</span> tetap bisa situs palsu!
+            </div>
           </div>
 
         </div>
-      </motion.section>
+
+        {/* Bar Bawah: Cek Manual */}
+        <div className="mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-5 grid grid-cols-1 md:grid-cols-4 gap-4 items-center shadow-2xs">
+          <div className="font-display font-bold text-sm text-[#14130F] leading-snug">
+            Cek manual <br className="hidden md:inline" /> tanpa alat:
+          </div>
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+            <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
+            <div>
+              <b className="text-[#14130F] block">Tahan tautan</b>
+              <span className="text-[#5B5850]">Lihat alamat asli di pratinjau sebelum klik.</span>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+            <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
+            <div>
+              <b className="text-[#14130F] block">Baca nama domain</b>
+              <span className="text-[#5B5850]">Cek domain tepat sebelum garis miring pertama (/).</span>
+            </div>
+          </div>
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+            <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
+            <div>
+              <b className="text-[#14130F] block">Tanya pengirim</b>
+              <span className="text-[#5B5850]">Konfirmasi melalui nomor resmi atau aplikasi resmi.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. SECTION: MODUS YANG SERING DITEMUI (PERBAIKAN FOTO 5) */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+          Modus yang sering ditemui
+        </h2>
+        <p className="text-sm text-[#5B5850] mt-1.5">
+          Klik salah satu kartu di bawah ini untuk mencoba pemeriksaannya secara langsung.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-5">
+          {MODUS_EXAMPLES.map((modus, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSelectModus(modus)}
+              className="bg-white border border-[#E4E0D6] hover:border-[#14130F] hover:-translate-y-0.5 rounded-2xl p-4.5 text-left flex flex-col justify-between shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+            >
+              <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mb-2.5 leading-snug">
+                {modus.title}
+              </h3>
+              <div className="font-mono text-[11.5px] leading-relaxed text-[#5B5850] bg-[#FAF8F5] p-2.5 rounded-lg border border-[#EAE6DC] mt-auto">
+                {modus.snippet}
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. SECTION: KENAPA SCAMORA */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+          Kenapa Scamora
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
+            <span className="font-mono font-bold text-xs text-[#8C887B]">01</span>
+            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Ada bukti, bukan sekadar label</h3>
+            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
+              Bukan cuma "bahaya" atau "aman". Tiap tanda bahaya dijabarkan dengan alasan dan bobot risikonya.
+            </p>
+          </div>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
+            <span className="font-mono font-bold text-xs text-[#8C887B]">02</span>
+            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Tautan dan chat satu tempat</h3>
+            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
+              Periksa tautan web mencurigakan dan percakapan WhatsApp tanpa perlu berpindah aplikasi.
+            </p>
+          </div>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
+            <span className="font-mono font-bold text-xs text-[#8C887B]">03</span>
+            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Privasi lebih dulu</h3>
+            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
+              Nomor HP, rekening, dan data pribadi di chat disamarkan otomatis, serta input tidak disimpan.
+            </p>
+          </div>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
+            <span className="font-mono font-bold text-xs text-[#8C887B]">04</span>
+            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Ada langkah setelahnya</h3>
+            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
+              Saran tindakan nyata dan kanal pelaporan resmi ke bank atau otoritas, bukan berhenti di skor.
+            </p>
+          </div>
+        </div>
+
+        {/* Transparansi Kemampuan (Bisa vs Belum Bisa) */}
+        <div className="mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 shadow-2xs">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#DCFAE6] text-[#067647]">Cakupan</span>
+              <h3 className="font-display font-bold text-base text-[#14130F]">Yang bisa ditunjukkan hasil ini</h3>
+            </div>
+            <ul className="text-xs text-[#3F3C35] space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-[#067647] font-bold">✓</span>
+                <span>Kemiripan nama domain dengan merek resmi (typosquatting &amp; subdomain masking)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#067647] font-bold">✓</span>
+                <span>Pencocokan reputasi dengan basis data ancaman Google Safe Browsing</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#067647] font-bold">✓</span>
+                <span>Pola manipulasi urgensi, ancaman blokir, dan permintaan kode rahasia/OTP di chat</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-4 md:pt-0 md:pl-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EEEAE0] text-[#5B5850]">Batasan</span>
+              <h3 className="font-display font-bold text-base text-[#14130F]">Yang belum bisa dilakukan</h3>
+            </div>
+            <ul className="text-xs text-[#3F3C35] space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-[#8C887B] font-bold">—</span>
+                <span>Menjamin 100% keamanan situs jika penipuan memakai domain resmi yang baru dibajak</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#8C887B] font-bold">—</span>
+                <span>Melihat isi formulir internal atau tujuan akhir tautan pendek tanpa diakses</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[#8C887B] font-bold">—</span>
+                <span>Menggantikan peran penegak hukum atau konfirmasi manual langsung ke pihak bank</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. SECTION: TINDAKAN DARURAT (PERBAIKAN: HAPUS LATAR BELAKANG PUTIH LUAR) */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <div>
+          <span className="text-[11px] font-bold font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#EAE6DC] text-[#14130F]">
+            PANDUAN DARURAT
+          </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight mt-2.5">
+            Sudah terlanjur klik atau transfer?
+          </h2>
+          <p className="text-sm text-[#5B5850] mt-1.5">
+            Tenang, lakukan berurutan. Pemblokiran lewat bank paling efektif dalam 24 jam pertama.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="w-6 h-6 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs mb-2.5">1</span>
+              <h3 className="font-bold text-sm text-[#14130F]">Berhenti</h3>
+              <p className="text-xs text-[#5B5850] mt-1 leading-relaxed">
+                Tutup segera halaman tersebut, jangan masukkan OTP, password, atau transfer dana lagi.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="w-6 h-6 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs mb-2.5">2</span>
+              <h3 className="font-bold text-sm text-[#14130F]">Amankan akun</h3>
+              <p className="text-xs text-[#5B5850] mt-1 leading-relaxed">
+                Segera ganti kata sandi email, m-banking, dan aktifkan verifikasi dua langkah (2FA).
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="w-6 h-6 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs mb-2.5">3</span>
+              <h3 className="font-bold text-sm text-[#14130F]">Hubungi bank</h3>
+              <p className="text-xs text-[#5B5850] mt-1 leading-relaxed">
+                Minta pemblokiran rekening atau penahanan transaksi, lalu simpan nomor laporan buktinya.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="w-6 h-6 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs mb-2.5">4</span>
+              <h3 className="font-bold text-sm text-[#14130F]">Laporkan</h3>
+              <p className="text-xs text-[#5B5850] mt-1 leading-relaxed">
+                Laporkan insiden ke kanal resmi:
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-2 font-mono text-[11px]">
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6]">cekrekening.id</span>
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6]">aduannomor.id</span>
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6]">lapor.go.id</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. SECTION: FAQ PERTANYAAN UMUM */}
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+          Pertanyaan umum
+        </h2>
+
+        <div className="mt-6 border-t border-[#DDD8CC] divide-y divide-[#DDD8CC]">
+          <details className="group py-4.5 cursor-pointer">
+            <summary className="flex justify-between items-center font-display text-base sm:text-lg font-bold text-[#14130F] list-none select-none">
+              <span>Apakah Scamora gratis dan perlu login?</span>
+              <ChevronDown className="w-4.5 h-4.5 text-[#14130F] group-open:rotate-180 transition-transform duration-200" />
+            </summary>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-2.5 leading-relaxed">
+              Gratis dan tanpa login. Kamu bisa langsung memeriksa tautan atau chat yang mencurigakan tanpa perlu mendaftar akun atau memasukkan data pribadi.
+            </p>
+          </details>
+
+          <details className="group py-4.5 cursor-pointer">
+            <summary className="flex justify-between items-center font-display text-base sm:text-lg font-bold text-[#14130F] list-none select-none">
+              <span>Apakah tautan atau chat saya disimpan?</span>
+              <ChevronDown className="w-4.5 h-4.5 text-[#14130F] group-open:rotate-180 transition-transform duration-200" />
+            </summary>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-2.5 leading-relaxed">
+              Tidak. Hanya nama domain yang bisa tampil di Direktori Komunitas, itu pun kalau kamu mencentang izinnya. Isi chat tidak pernah disimpan di server dan data pribadi seperti nomor telepon, rekening, atau kata sandi disamarkan otomatis.
+            </p>
+          </details>
+
+          <details className="group py-4.5 cursor-pointer">
+            <summary className="flex justify-between items-center font-display text-base sm:text-lg font-bold text-[#14130F] list-none select-none">
+              <span>Hasil Rendah berarti aman 100%?</span>
+              <ChevronDown className="w-4.5 h-4.5 text-[#14130F] group-open:rotate-180 transition-transform duration-200" />
+            </summary>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-2.5 leading-relaxed">
+              Tidak. Artinya belum ditemukan tanda bahaya yang signifikan pada pemeriksaan yang dilakukan. Tetap waspada dan jangan pernah membagikan kode OTP atau PIN kepada siapa pun.
+            </p>
+          </details>
+
+          <details className="group py-4.5 cursor-pointer">
+            <summary className="flex justify-between items-center font-display text-base sm:text-lg font-bold text-[#14130F] list-none select-none">
+              <span>Kenapa hasilnya Perlu Ditinjau?</span>
+              <ChevronDown className="w-4.5 h-4.5 text-[#14130F] group-open:rotate-180 transition-transform duration-200" />
+            </summary>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-2.5 leading-relaxed">
+              Ada tanda yang perlu diverifikasi lebih lanjut, atau sebagian pemeriksaan teknis tidak dapat diselesaikan. Hubungi pihak pengirim atau lembaga resmi lewat kanal resmi mereka sebelum mengambil tindakan.
+            </p>
+          </details>
+        </div>
+      </section>
 
     </div>
   );

@@ -8,21 +8,37 @@ export const SCORE_THRESHOLDS = {
 export const CRITICAL_INDICATOR_TYPES = [
   'safe_browsing_match',
   'otp_request',
+  'ssl_expired',
+  'password_form_insecure',
 ];
 
 export const URL_INDICATOR_WEIGHTS: Record<string, number> = {
   safe_browsing_match: 60,
+  ssl_expired: 40,
   typosquatting: 35,
   punycode_homograph: 30,
+  homograph_cyrillic: 30,
   brand_in_subdomain: 30,
+  ssl_self_signed: 30,
   ip_host: 25,
+  very_new_domain: 25,
+  password_form_insecure: 25,
   userinfo_in_url: 20,
+  ip_private_host: 20,
+  ssl_very_new: 20,
+  hidden_iframe: 20,
+  ssl_error: 20,
   url_shortener: 15,
+  recently_registered_domain: 15,
+  ssl_expiring_soon: 15,
+  excessive_redirects: 15,
   excessive_subdomains: 10,
   risky_tld: 10,
   no_https: 10,
   sensitive_keywords: 10,
   unusual_port: 10,
+  missing_security_headers: 10,
+  consecutive_hyphens: 10,
   long_encoded_url: 5,
 };
 
@@ -43,6 +59,7 @@ export const INDICATOR_TITLES: Record<string, string> = {
   safe_browsing_match: 'Terdaftar pada Basis Data Ancaman Google Safe Browsing',
   typosquatting: 'Kemiripan Nama Domain dengan Merek Resmi (Typosquatting)',
   punycode_homograph: 'Karakter Punycode Homograf Menyerupai Huruf Asli',
+  homograph_cyrillic: 'Karakter Cyrillic Homograf Menyerupai Alfabet Asli',
   brand_in_subdomain: 'Pencatutan Nama Merek pada Subdomain',
   ip_host: 'Tautan Menggunakan Alamat IP Langsung',
   userinfo_in_url: 'Penyisipan Kredensial Login di dalam URL',
@@ -52,7 +69,20 @@ export const INDICATOR_TITLES: Record<string, string> = {
   no_https: 'Koneksi Tidak Terenkripsi (HTTP)',
   sensitive_keywords: 'Kata Kunci Sensitif pada Alamat Tautan',
   unusual_port: 'Penggunaan Port Tidak Lazim',
+  consecutive_hyphens: 'Tanda Hubung Ganda / Beruntun pada Nama Domain',
   long_encoded_url: 'Tautan Sangat Panjang atau Banyak Karakter Ter-encode',
+  very_new_domain: 'Usia Domain Sangat Baru Terdaftar (< 30 Hari)',
+  recently_registered_domain: 'Usia Domain Masih Baru Terdaftar (< 90 Hari)',
+  ip_private_host: 'Domain Mengarah ke Alamat IP Jaringan Privat (Bukan Publik)',
+  ssl_expired: 'Sertifikat Keamanan SSL/TLS Telah Kedaluwarsa',
+  ssl_self_signed: 'Sertifikat SSL/TLS Diterbitkan Sendiri (Self-Signed)',
+  ssl_expiring_soon: 'Sertifikat SSL/TLS Mendekati Batas Masa Aktif (< 7 Hari)',
+  ssl_very_new: 'Sertifikat SSL/TLS Baru Saja Diterbitkan (< 7 Hari)',
+  ssl_error: 'Kegagalan Verifikasi Koneksi Terenkripsi SSL/TLS',
+  excessive_redirects: 'Pengalihan Tautan Berantai Berlebihan (> 3 Kali)',
+  missing_security_headers: 'Header Proteksi Keamanan Web (X-Frame/Options) Tidak Lengkap',
+  password_form_insecure: 'Formulir Login / Password Menggunakan Metode Tidak Aman',
+  hidden_iframe: 'Elemen Iframe Tersembunyi (Potensi Clickjacking)',
   otp_request: 'Permintaan Kode Rahasia / OTP',
   advance_fee: 'Permintaan Biaya atau Uang di Muka',
   threat_link: 'Tautan Disertai Ancaman Pemblokiran Akun',
@@ -69,6 +99,7 @@ export const INDICATOR_DEFAULT_SOURCES: Record<string, IndicatorSource> = {
   safe_browsing_match: 'threat_db',
   typosquatting: 'url_structure',
   punycode_homograph: 'url_structure',
+  homograph_cyrillic: 'url_structure',
   brand_in_subdomain: 'url_structure',
   ip_host: 'url_structure',
   userinfo_in_url: 'url_structure',
@@ -78,7 +109,20 @@ export const INDICATOR_DEFAULT_SOURCES: Record<string, IndicatorSource> = {
   no_https: 'url_structure',
   sensitive_keywords: 'url_structure',
   unusual_port: 'url_structure',
+  consecutive_hyphens: 'url_structure',
   long_encoded_url: 'url_structure',
+  very_new_domain: 'reputation',
+  recently_registered_domain: 'reputation',
+  ip_private_host: 'reputation',
+  ssl_expired: 'reputation',
+  ssl_self_signed: 'reputation',
+  ssl_expiring_soon: 'reputation',
+  ssl_very_new: 'reputation',
+  ssl_error: 'reputation',
+  excessive_redirects: 'reputation',
+  missing_security_headers: 'reputation',
+  password_form_insecure: 'reputation',
+  hidden_iframe: 'reputation',
   otp_request: 'ai',
   advance_fee: 'ai',
   threat_link: 'ai',
@@ -98,21 +142,19 @@ export const SENSITIVE_QUERY_PARAMS = [
   'key',
   'secret',
   'password',
+  'pass',
+  'pwd',
   'otp',
-  'code',
-  'session',
-  'sid',
+  'pin',
   'auth',
-  'signature',
+  'session',
+  'ssid',
+  'credit_card',
+  'cvv',
 ];
 
 export function getSeverityFromWeight(weight: number): IndicatorSeverity {
-  if (weight >= 30) {
-    return 'high';
-  }
-  if (weight >= 15) {
-    return 'medium';
-  }
+  if (weight >= 30) return 'high';
+  if (weight >= 15) return 'medium';
   return 'low';
 }
-
