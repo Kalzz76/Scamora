@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BookOpen,
   Plus,
   Trash2,
   Eye,
   CheckCircle2,
-  AlertCircle,
+  AlertTriangle,
   X,
-  FileText,
-  Tag,
+  Search,
+  Filter,
+  Copy,
+  Check,
+  Users,
+  ShieldAlert,
+  Sparkles,
+  ArrowRight,
+  Clock,
+  Layers,
+  ExternalLink,
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import type { KnowledgeArticleItem, ScamCategoryItem } from '../../types/admin';
@@ -19,14 +28,28 @@ export const KnowledgeBasePage: React.FC = () => {
   const [categories, setCategories] = useState<ScamCategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal State
+  // Active Article for Detail Popup Modal
+  const [activeDetailArticle, setActiveDetailArticle] = useState<KnowledgeArticleItem | null>(null);
+
+  // Filters & Search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+
+  // Copy state
+  const [isCopied, setIsCopied] = useState(false);
+
+  // Modal State for New Article
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formCategory, setFormCategory] = useState('apk_malware');
   const [formTitle, setFormTitle] = useState('');
   const [formSummary, setFormSummary] = useState('');
   const [formVictims, setFormVictims] = useState('');
-  const [formRedFlags, setFormRedFlags] = useState('');
-  const [formSteps, setFormSteps] = useState('');
+  const [redFlagsList, setRedFlagsList] = useState<string[]>([]);
+  const [currentRedFlagInput, setCurrentRedFlagInput] = useState('');
+  const [stepsList, setStepsList] = useState<string[]>([]);
+  const [currentStepInput, setCurrentStepInput] = useState('');
+  const [formStatus, setFormStatus] = useState<'published' | 'draft'>('published');
 
   useEffect(() => {
     loadData();
@@ -43,287 +66,752 @@ export const KnowledgeBasePage: React.FC = () => {
     setLoading(false);
   };
 
-  const handleCreateArticle = async (e: React.FormEvent) => {
+  // Filtered Articles
+  const filteredArticles = useMemo(() => {
+    return articles.filter((art) => {
+      if (selectedCategory !== 'all' && art.categoryCode !== selectedCategory) {
+        return false;
+      }
+      if (statusFilter !== 'all' && art.status !== statusFilter) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const inTitle = art.title.toLowerCase().includes(q);
+        const inSummary = art.summary.toLowerCase().includes(q);
+        const inCategory = art.categoryName.toLowerCase().includes(q);
+        const inVictim = art.targetVictims.toLowerCase().includes(q);
+        const inFlags = art.redFlags.some((f) => f.toLowerCase().includes(q));
+        return inTitle || inSummary || inCategory || inVictim || inFlags;
+      }
+      return true;
+    });
+  }, [articles, selectedCategory, statusFilter, searchQuery]);
+
+  // Copy full article guide to clipboard
+  const handleCopyGuide = (art: KnowledgeArticleItem) => {
+    const text = `🚨 [PANDUAN WASPADA SIBER: ${art.title.toUpperCase()}]\n\nKategori: ${art.categoryName}\nTarget Korban: ${art.targetVictims}\n\nRingkasan Kasus:\n${art.summary}\n\n⚠️ TANDA BAHAYA (RED FLAGS):\n${art.redFlags.map((f, i) => `${i + 1}. ${f}`).join('\n')}\n\n🛡️ PROTOKOL MITIGASI DARURAT:\n${art.responseSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nSumber: Scamora Cyber Incident Intelligence`;
+    navigator.clipboard.writeText(text);
+    setIsCopied(true);
+    toast.success('Format panduan lengkap telah disalin ke clipboard!');
+    setTimeout(() => setIsCopied(false), 2500);
+  };
+
+  // Toggle Published / Draft status
+  const handleToggleStatus = async (art: KnowledgeArticleItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextStatus = art.status === 'published' ? 'draft' : 'published';
+    const updated = await adminService.updateArticle(art.id, { status: nextStatus });
+    if (activeDetailArticle && activeDetailArticle.id === art.id && updated) {
+      setActiveDetailArticle(updated);
+    }
+    toast.success(`Status materi diubah menjadi ${nextStatus.toUpperCase()}`);
+    await loadData();
+  };
+
+  // Delete article
+  const handleDeleteArticle = async (id: string, title: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (confirm(`Hapus materi edukasi "${title}"?`)) {
+      await adminService.deleteArticle(id);
+      toast.info('Materi edukasi telah dihapus.');
+      if (activeDetailArticle && activeDetailArticle.id === id) {
+        setActiveDetailArticle(null);
+      }
+      await loadData();
+    }
+  };
+
+  // Chip helpers for Modal Form
+  const addRedFlagChip = () => {
+    if (currentRedFlagInput.trim()) {
+      setRedFlagsList([...redFlagsList, currentRedFlagInput.trim()]);
+      setCurrentRedFlagInput('');
+    }
+  };
+
+  const removeRedFlagChip = (index: number) => {
+    setRedFlagsList(redFlagsList.filter((_, i) => i !== index));
+  };
+
+  const addStepChip = () => {
+    if (currentStepInput.trim()) {
+      setStepsList([...stepsList, currentStepInput.trim()]);
+      setCurrentStepInput('');
+    }
+  };
+
+  const removeStepChip = (index: number) => {
+    setStepsList(stepsList.filter((_, i) => i !== index));
+  };
+
+  // Quick Preset Templates
+  const applyPreset = (type: 'bank' | 'apk' | 'job') => {
+    if (type === 'bank') {
+      setFormCategory('bank_phishing');
+      setFormTitle('Pencurian Kredensial via Situs Web Internet Banking Tiruan');
+      setFormSummary('Pelaku menyebarkan tautan SMS/WhatsApp dengan manipulasi kepanikan (rekening diblokir atau kenaikan biaya transfer) menuju form login bank tiruan untuk merebut nomor kartu, PIN, dan kode OTP.');
+      setFormVictims('Nasabah perbankan online & pengguna m-banking');
+      setRedFlagsList([
+        'Alamat website bukan domain resmi perbankan (menggunakan domain murah/aneh)',
+        'Formulir meminta data rahasia seperti CVV/CVC kartu dan kode OTP SMS',
+        'Pemberitahuan disertai ancaman pembekuan rekening jika tidak verifikasi dalam 1 jam',
+      ]);
+      setStepsList([
+        'Jangan masukkan kode OTP, PIN, atau nomor kartu ATM pada halaman dari tautan',
+        'Bila sempat mengisi, segera buka aplikasi m-banking resmi dan ubah kata sandi / kunci kartu',
+        'Hubungi call center resmi bank terkait untuk membekukan akses transaksi',
+      ]);
+    } else if (type === 'apk') {
+      setFormCategory('apk_malware');
+      setFormTitle('Penyusupan Trojan SMS Berkedok Undangan Nikah / Resi Paket (.APK)');
+      setFormSummary('Pelaku mengirim berkas aplikasi Android (.apk) berpura-pura menjadi dokumen surat undangan atau foto paket kurir. Saat diinstal, malware membajak izin aksesibilitas untuk meneruskan SMS OTP perbankan ke server pelaku.');
+      setFormVictims('Masyarakat umum pemilik smartphone Android');
+      setRedFlagsList([
+        'Berkas yang dikirim berekstensi .apk bukan gambar (.jpg) atau PDF (.pdf)',
+        'Aplikasi meminta izin berlebih saat dipasang (membaca SMS & aksesibilitas)',
+        'Pengirim adalah nomor asing yang berpura-pura menjadi kurir atau kerabat',
+      ]);
+      setStepsList([
+        'Jangan buka atau klik pasang file .APK yang dikirim oleh pihak tak dikenal',
+        'Jika sudah terpasang, segera aktifkan Mode Pesawat (Airplane Mode) untuk memutus koneksi',
+        'Hapus aplikasi melalui menu Pengaturan > Aplikasi, lalu cabut semua izin aksesibilitas',
+        'Amankan akun perbankan melalui perangkat lain yang bersih',
+      ]);
+    } else {
+      setFormCategory('fake_job');
+      setFormTitle('Penipuan Kerja Paruh Waktu / Komisi Like Video (Task Scam)');
+      setFormSummary('Korban dijanjikan penghasilan jutaan per hari dengan tugas mudah like video atau ulasan produk. Setelah diberikan komisi kecil di awal sebagai umpan, korban diwajibkan mentransfer deposit jutaan rupiah yang kemudian dibawa kabur.');
+      setFormVictims('Pencari kerja tambahan, mahasiswa, ibu rumah tangga');
+      setRedFlagsList([
+        'Gaji harian tidak masuk akal untuk tugas yang sangat remeh',
+        'Komunikasi diarahkan ke grup Telegram anonim dengan testimoni palsu',
+        'Diminta menyetor uang jaminan (deposit) sebelum komisi bisa dicairkan',
+      ]);
+      setStepsList([
+        'Tolak segala bentuk transfer uang dalam proses rekrutmen kerja online',
+        'Tinggalkan dan blokir grup Telegram atau nomor WhatsApp pihak perekrut',
+        'Laporkan nomor rekening penipu ke portal CekRekening.id',
+      ]);
+    }
+  };
+
+  // Submit Article Form
+  const handleSubmitArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim() || !formSummary.trim()) {
-      toast.error('Judul dan ringkasan artikel wajib diisi!');
+      toast.error('Judul dan ringkasan materi wajib diisi!');
       return;
     }
 
     const catObj = categories.find((c) => c.code === formCategory);
 
-    await adminService.createArticle({
+    const created = await adminService.createArticle({
       categoryCode: formCategory,
       categoryName: catObj ? catObj.name : formCategory,
       title: formTitle,
       summary: formSummary,
-      targetVictims: formVictims || 'Masyarakat umum pengguna smartphone',
-      redFlags: formRedFlags.split('\n').filter((l) => l.trim()),
-      responseSteps: formSteps.split('\n').filter((l) => l.trim()),
-      status: 'published',
+      targetVictims: formVictims || 'Masyarakat umum pengguna smartphone & perbankan',
+      redFlags: redFlagsList.length > 0 ? redFlagsList : ['Permintaan data sensitif atau transfer dana tergesa-gesa'],
+      responseSteps: stepsList.length > 0 ? stepsList : ['Hentikan komunikasi dan amankan akun perbankan'],
+      status: formStatus,
     });
 
-    toast.success('Artikel edukasi baru berhasil diterbitkan!');
+    toast.success('Materi edukasi baru berhasil disimpan!');
     setIsModalOpen(false);
-    // Reset form
+
+    // Reset Form
     setFormTitle('');
     setFormSummary('');
     setFormVictims('');
-    setFormRedFlags('');
-    setFormSteps('');
+    setRedFlagsList([]);
+    setStepsList([]);
     await loadData();
   };
 
-  const handleDelete = async (id: string, title: string) => {
-    if (confirm(`Hapus artikel "${title}"?`)) {
-      await adminService.deleteArticle(id);
-      toast.info('Artikel telah dihapus.');
-      await loadData();
-    }
-  };
-
   return (
-    <div className="p-6 sm:p-8 space-y-8 w-full">
-      {/* HEADER CONTROLS */}
+    <div className="p-6 sm:p-8 space-y-6 w-full max-w-7xl mx-auto">
+      
+      {/* 1. TOP BAR: TITLE & PRIMARY ACTION */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black text-[#1A202C] tracking-tight">Pusat Pengetahuan &amp; Ensiklopedia Modus</h2>
-          <p className="text-xs text-[#476072] mt-0.5">
-            Kelola artikel panduan respon insiden dan kategori penipuan yang tampil di halaman Ensiklopedia.
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold tracking-wider uppercase">
+              Pusat Intelijen Edukasi
+            </span>
+            <span className="text-[#476072] text-xs">&bull;</span>
+            <span className="text-xs text-[#476072] font-medium">Scam Taxonomy &amp; Incident Protocols</span>
+          </div>
+          <h1 className="text-2xl font-black text-[#1A202C] tracking-tight">
+            Pusat Pengetahuan &amp; Ensiklopedia Modus
+          </h1>
+          <p className="text-xs text-[#476072]">
+            Kelola anatomi penipuan digital, panduan mitigasi korban, dan tanda bahaya yang terhubung ke platform publik.
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="btn-primary cursor-pointer text-xs"
+          className="px-4 py-2.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto"
         >
-          <Plus className="w-4 h-4" />
-          <span>Tulis Artikel Baru</span>
+          <Plus className="w-4 h-4 text-emerald-400" />
+          <span>Tulis Materi Baru</span>
         </button>
       </div>
 
-      {/* CATEGORIES OVERVIEW GRID */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-bold text-[#476072] uppercase tracking-wider font-mono">
-          Kategori Modus Terdaftar ({categories.length})
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((cat) => (
-            <div key={cat.id} className="admin-card p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] font-bold text-[#334257] bg-[#548CA8]/15 px-2 py-0.5 rounded-md">
-                  {cat.code}
-                </span>
-                <span
-                  className={`text-[9px] font-bold font-mono px-2 py-0.5 rounded-full ${cat.riskTier === 'CRITICAL'
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200'
-                    }`}
-                >
-                  {cat.riskTier}
-                </span>
-              </div>
-              <h4 className="text-xs font-bold text-[#1A202C]">{cat.name}</h4>
-              <p className="text-[11px] text-[#476072] line-clamp-2 leading-relaxed">
-                {cat.description}
-              </p>
-              <div className="text-[10px] font-mono text-[#476072] pt-1 border-t border-[#D8E0E7] flex items-center justify-between">
-                <span>{cat.articleCount} Artikel Edukasi</span>
-                <span>{cat.quizCount} Bank Soal</span>
-              </div>
-            </div>
-          ))}
+      {/* 2. CATEGORY PILLS BAR (Minimalist, Scrollable) */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        <button
+          onClick={() => setSelectedCategory('all')}
+          className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 ${
+            selectedCategory === 'all'
+              ? 'bg-[#334257] text-white shadow-xs'
+              : 'bg-white hover:bg-slate-100 text-[#476072] border border-slate-200'
+          }`}
+        >
+          <span>Semua Kategori</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+            selectedCategory === 'all' ? 'bg-white/20 text-white' : 'bg-slate-100 text-[#476072]'
+          }`}>
+            {articles.length}
+          </span>
+        </button>
+
+        {categories.map((cat) => {
+          const isSelected = selectedCategory === cat.code;
+          const isCritical = cat.riskTier === 'CRITICAL';
+          const count = articles.filter((a) => a.categoryCode === cat.code).length;
+
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.code)}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-2 ${
+                isSelected
+                  ? 'bg-[#334257] text-white shadow-xs'
+                  : 'bg-white hover:bg-slate-100 text-[#476072] border border-slate-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${isCritical ? 'bg-rose-500' : 'bg-amber-500'}`} />
+              <span>{cat.name}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                isSelected ? 'bg-white/20 text-white' : 'bg-slate-100 text-[#476072]'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. SEARCH & STATUS FILTER CONTROLS */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-3.5 h-3.5 text-[#476072] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Cari materi edukasi, judul, atau kata kunci tanda bahaya..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-7 py-2 rounded-xl bg-white border border-slate-200 text-xs text-[#1A202C] placeholder-[#476072]/60 focus:outline-hidden focus:border-[#548CA8]"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-mono text-[#476072] font-semibold">Status:</span>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-[#334257] focus:outline-hidden cursor-pointer"
+          >
+            <option value="all">Semua Status ({articles.length})</option>
+            <option value="published">Terbit ({articles.filter(a => a.status === 'published').length})</option>
+            <option value="draft">Draf ({articles.filter(a => a.status === 'draft').length})</option>
+          </select>
         </div>
       </div>
 
-      {/* ARTICLES LIST */}
-      <div className="space-y-4">
-        <h3 className="text-xs font-bold text-[#476072] uppercase tracking-wider font-mono">
-          Daftar Artikel Diterbitkan ({articles.length})
-        </h3>
+      {/* 4. FULL-WIDTH RESPONSIVE CARD GRID FOR ARTICLES */}
+      {loading ? (
+        <div className="p-12 text-center text-xs font-mono text-[#476072] bg-white rounded-2xl border border-slate-200">
+          Memuat basis materi edukasi...
+        </div>
+      ) : filteredArticles.length === 0 ? (
+        <div className="p-12 text-center rounded-2xl bg-white border border-slate-200 space-y-2">
+          <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-sm font-bold text-[#1A202C]">Tidak ada materi yang cocok</h3>
+          <p className="text-xs text-[#476072] max-w-sm mx-auto">
+            Coba sesuaikan kata kunci pencarian atau reset filter kategori.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredArticles.map((art) => {
+            const isPublished = art.status === 'published';
 
-        {loading ? (
-          <div className="p-8 text-center text-xs font-mono text-[#476072]">Memuat artikel...</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            {articles.map((art) => (
-              <div key={art.id} className="admin-card p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono bg-[#548CA8]/15 text-[#334257]">
+            return (
+              <div
+                key={art.id}
+                onClick={() => setActiveDetailArticle(art)}
+                className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-[#548CA8] shadow-2xs hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between group space-y-4 relative"
+              >
+                {/* Card Top Meta */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257]">
                       {art.categoryName}
                     </span>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 font-bold">
-                      {art.status.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-mono text-[#476072] flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>{art.views.toLocaleString()} views</span>
-                    </span>
-
                     <button
-                      onClick={() => handleDelete(art.id, art.title)}
-                      className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
-                      title="Hapus artikel"
+                      onClick={(e) => handleToggleStatus(art, e)}
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md transition cursor-pointer ${
+                        isPublished
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                      }`}
+                      title="Klik untuk mengubah status"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      {art.status.toUpperCase()}
                     </button>
                   </div>
+
+                  {/* Title */}
+                  <h3 className="text-sm font-bold text-[#1A202C] group-hover:text-[#548CA8] transition-colors leading-snug line-clamp-2">
+                    {art.title}
+                  </h3>
+
+                  {/* Summary Snippet */}
+                  <p className="text-xs text-[#476072] line-clamp-2 leading-relaxed">
+                    {art.summary}
+                  </p>
                 </div>
 
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#1A202C]">{art.title}</h4>
-                  <p className="text-xs text-[#476072] leading-relaxed">{art.summary}</p>
-                </div>
-
-                {/* Red Flags & Steps Preview */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] space-y-1.5">
-                    <span className="font-bold text-[#1A202C] text-[11px] block text-rose-700">
-                      Tanda Bahaya (Red Flags):
+                {/* Card Footer: Metadata & Trigger */}
+                <div className="space-y-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-[11px] text-[#476072]">
+                    <span className="flex items-center gap-1 text-[11px] font-medium truncate max-w-[170px]">
+                      <Users className="w-3.5 h-3.5 text-[#548CA8] shrink-0" />
+                      <span className="truncate">{art.targetVictims}</span>
                     </span>
-                    <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-[#476072]">
-                      {art.redFlags.map((flag, i) => (
-                        <li key={i}>{flag}</li>
-                      ))}
-                    </ul>
+
+                    <span className="flex items-center gap-1 font-mono text-[11px]">
+                      <Eye className="w-3.5 h-3.5 text-[#548CA8]" />
+                      <span>{art.views.toLocaleString()}</span>
+                    </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] space-y-1.5">
-                    <span className="font-bold text-[11px] block text-[#334257]">
-                      Langkah Tanggap Darurat:
+                  {/* Open Detail Button Pill */}
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] font-mono text-[#5E6D7E]">
+                      {art.redFlags.length} flags &bull; {art.responseSteps.length} langkah
                     </span>
-                    <ul className="list-decimal pl-4 space-y-0.5 text-[11px] text-[#476072]">
-                      {art.responseSteps.map((step, i) => (
-                        <li key={i}>{step}</li>
-                      ))}
-                    </ul>
+                    <span className="text-xs font-bold text-[#548CA8] group-hover:text-[#334257] flex items-center gap-1 transition-colors">
+                      <span>Lihat Detail Ilmu</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* CREATE ARTICLE MODAL */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#D8E0E7] pb-4">
-              <h3 className="text-base font-bold text-[#1A202C]">Tulis Materi Edukasi Modus Baru</h3>
+      {/* 5. DETAIL POPUP MODAL (Menggantikan display sebelah kanan) */}
+      {activeDetailArticle && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            {/* Modal Header Actions */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257] font-mono text-xs font-bold">
+                  {activeDetailArticle.categoryName}
+                </span>
+                <button
+                  onClick={() => handleToggleStatus(activeDetailArticle)}
+                  className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition cursor-pointer ${
+                    activeDetailArticle.status === 'published'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                  }`}
+                  title="Klik untuk mengubah status terbit"
+                >
+                  {activeDetailArticle.status.toUpperCase()}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleCopyGuide(activeDetailArticle)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  title="Salin panduan lengkap untuk dibagikan"
+                >
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{isCopied ? 'Tersalin' : 'Salin Teks'}</span>
+                </button>
+
+                <button
+                  onClick={() => handleDeleteArticle(activeDetailArticle.id, activeDetailArticle.title)}
+                  className="p-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                  title="Hapus materi ini"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setActiveDetailArticle(null)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer"
+                  title="Tutup pop-up"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Title & Audience */}
+            <div className="space-y-2">
+              <h2 className="text-xl sm:text-2xl font-black text-[#1A202C] leading-snug tracking-tight">
+                {activeDetailArticle.title}
+              </h2>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[#476072]">
+                <span className="flex items-center gap-1 font-medium">
+                  <Users className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <span>Sasaran Korban: <strong className="text-[#1A202C]">{activeDetailArticle.targetVictims}</strong></span>
+                </span>
+                <span>&bull;</span>
+                <span className="flex items-center gap-1 font-mono">
+                  <Eye className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <span>{activeDetailArticle.views.toLocaleString()} tayangan</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Summary Description */}
+            <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
+              <span className="text-[10px] font-bold font-mono text-[#476072] uppercase tracking-wider block">
+                Ringkasan &amp; Cara Kerja Modus:
+              </span>
+              <p className="text-xs text-[#334257] leading-relaxed">
+                {activeDetailArticle.summary}
+              </p>
+            </div>
+
+            {/* Red Flags & Emergency Protocol Blocks */}
+            <div className="space-y-4">
+              
+              {/* 1. Tanda Bahaya (Red Flags) */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-rose-800">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
+                    Ciri Khas &amp; Tanda Bahaya ({activeDetailArticle.redFlags.length} Indikator):
+                  </h3>
+                </div>
+                <div className="space-y-1.5">
+                  {activeDetailArticle.redFlags.map((flag, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2.5 rounded-xl bg-rose-50/60 border border-rose-200/80 text-xs text-rose-950 flex items-start gap-2.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-1.5" />
+                      <span className="leading-relaxed font-medium">{flag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Protokol Tanggap Darurat */}
+              <div className="space-y-2 pt-2">
+                <div className="flex items-center gap-2 text-emerald-900">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
+                    Protokol Respon Darurat Korban ({activeDetailArticle.responseSteps.length} Langkah):
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  {activeDetailArticle.responseSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs text-emerald-950 flex items-start gap-3"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-[#334257] text-white font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {idx + 1}
+                      </span>
+                      <span className="leading-relaxed font-medium">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className="text-[11px] font-mono text-[#476072]">
+                ID: {activeDetailArticle.id} &bull; Diperbarui: {new Date(activeDetailArticle.updatedAt).toLocaleDateString('id-ID')}
+              </span>
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 cursor-pointer"
+                type="button"
+                onClick={() => setActiveDetailArticle(null)}
+                className="px-4 py-2 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                Tutup Detail
               </button>
             </div>
 
-            <form onSubmit={handleCreateArticle} className="space-y-4">
-              {/* Category */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#1A202C]">Kategori Modus:</label>
-                <select
-                  value={formCategory}
-                  onChange={(e) => setFormCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-bold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
-                >
-                  {categories.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+          </div>
+        </div>
+      )}
+
+      {/* 6. MODAL FORM: TULIS MATERI BARU */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                  Editor Pengetahuan Modus
+                </span>
+                <h3 className="text-base font-bold text-[#1A202C]">
+                  Tulis Materi Edukasi Penipuan Baru
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Templates Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <span className="text-[11px] font-bold text-[#476072] font-mono shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                Template Cepat:
+              </span>
+              <button
+                type="button"
+                onClick={() => applyPreset('bank')}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+              >
+                🏦 Phishing Bank
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('apk')}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+              >
+                📦 Berkas APK
+              </button>
+              <button
+                type="button"
+                onClick={() => applyPreset('job')}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+              >
+                💼 Lowongan Palsu
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitArticle} className="space-y-4">
+              
+              {/* Category & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#1A202C]">Kategori Modus:</label>
+                  <select
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} ({c.riskTier})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#1A202C]">Status Publikasi:</label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  >
+                    <option value="published">Langsung Terbitkan (Published)</option>
+                    <option value="draft">Simpan sebagai Draf (Draft)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Title */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#1A202C]">Judul Artikel:</label>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#1A202C]">Judul Materi Edukasi:</label>
                 <input
                   type="text"
                   required
                   placeholder="Contoh: Modus Penipuan Undian Berhadiah Mengatasnamakan Bank"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] font-semibold"
                 />
               </div>
 
-              {/* Summary */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#1A202C]">Ringkasan Materi:</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="Jelaskan secara ringkas bagaimana penipuan ini bekerja..."
-                  value={formSummary}
-                  onChange={(e) => setFormSummary(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
-                ></textarea>
-              </div>
-
               {/* Target Victims */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <label className="text-xs font-bold text-[#1A202C]">Sasaran Korban:</label>
                 <input
                   type="text"
                   placeholder="Contoh: Nasabah bank, lansia, pengguna belanja online"
                   value={formVictims}
                   onChange={(e) => setFormVictims(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
                 />
               </div>
 
-              {/* Red Flags (per line) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#1A202C]">
-                  Tanda Bahaya (Tulis 1 per baris):
-                </label>
+              {/* Summary */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#1A202C]">Ringkasan / Cara Kerja Modus:</label>
                 <textarea
-                  rows={3}
-                  placeholder="Meminta biaya pajak hadiah di muka&#10;Nomor pengirim berupa nomor HP pribadi&#10;Memberikan tenggat waktu tergesa-gesa"
-                  value={formRedFlags}
-                  onChange={(e) => setFormRedFlags(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  rows={2}
+                  required
+                  placeholder="Jelaskan secara ringkas bagaimana penipuan ini bekerja..."
+                  value={formSummary}
+                  onChange={(e) => setFormSummary(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] leading-relaxed"
                 ></textarea>
               </div>
 
-              {/* Steps (per line) */}
+              {/* Red Flags Input */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#1A202C]">
-                  Langkah Tanggap Darurat (Tulis 1 per baris):
+                <label className="text-xs font-bold text-[#1A202C] flex items-center justify-between">
+                  <span>Tanda Bahaya (Red Flags):</span>
+                  <span className="text-[10px] text-[#476072] font-normal">Tekan Enter atau klik Tambah</span>
                 </label>
-                <textarea
-                  rows={3}
-                  placeholder="Jangan pernah mentransfer biaya administrasi&#10;Konfirmasi ke call center resmi perusahaan&#10;Laporkan nomor kontak penipu"
-                  value={formSteps}
-                  onChange={(e) => setFormSteps(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
-                ></textarea>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Contoh: Meminta biaya pajak hadiah di muka..."
+                    value={currentRedFlagInput}
+                    onChange={(e) => setCurrentRedFlagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addRedFlagChip();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addRedFlagChip}
+                    className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-[#334257] cursor-pointer"
+                  >
+                    Tambah
+                  </button>
+                </div>
+                {redFlagsList.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {redFlagsList.map((rf, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs"
+                      >
+                        <span>{rf}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeRedFlagChip(idx)}
+                          className="text-rose-500 hover:text-rose-700 ml-1 cursor-pointer font-bold"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#D8E0E7]">
+              {/* Response Steps Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#1A202C] flex items-center justify-between">
+                  <span>Langkah Tanggap Darurat:</span>
+                  <span className="text-[10px] text-[#476072] font-normal">Tekan Enter atau klik Tambah</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Contoh: Jangan pernah mentransfer biaya administrasi..."
+                    value={currentStepInput}
+                    onChange={(e) => setCurrentStepInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addStepChip();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addStepChip}
+                    className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-[#334257] cursor-pointer"
+                  >
+                    Tambah
+                  </button>
+                </div>
+                {stepsList.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    {stepsList.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-950"
+                      >
+                        <span>{idx + 1}. {step}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeStepChip(idx)}
+                          className="text-rose-500 hover:text-rose-700 font-bold px-1 cursor-pointer"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn-outline cursor-pointer text-xs"
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-[#476072] hover:bg-slate-50 cursor-pointer"
                 >
                   Batal
                 </button>
-                <button type="submit" className="btn-primary cursor-pointer text-xs">
-                  Terbitkan Materi
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  Simpan Materi
                 </button>
               </div>
+
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 };
-
-

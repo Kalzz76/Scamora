@@ -280,6 +280,16 @@ export const adminService = {
     return newArt;
   },
 
+  async updateArticle(id: string, updates: Partial<KnowledgeArticleItem>): Promise<KnowledgeArticleItem | null> {
+    const list = await this.getArticles();
+    const idx = list.findIndex((a) => a.id === id);
+    if (idx === -1) return null;
+    list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
+    setStored(STORAGE_KEYS.ARTICLES, list);
+    await this.logAction('UPDATE_ARTICLE', list[idx].title, 'Artikel diperbarui');
+    return list[idx];
+  },
+
   async deleteArticle(id: string): Promise<boolean> {
     const list = await this.getArticles();
     const filtered = list.filter((a) => a.id !== id);
@@ -308,6 +318,16 @@ export const adminService = {
     setStored(STORAGE_KEYS.QUESTIONS, list);
     await this.logAction('CREATE_QUIZ_QUESTION', newQ.scenario.slice(0, 30), `Poin: ${newQ.points}`);
     return newQ;
+  },
+
+  async updateQuestion(id: string, updates: Partial<QuizQuestionItem>): Promise<QuizQuestionItem | null> {
+    const list = await this.getQuestions();
+    const idx = list.findIndex((q) => q.id === id);
+    if (idx === -1) return null;
+    list[idx] = { ...list[idx], ...updates };
+    setStored(STORAGE_KEYS.QUESTIONS, list);
+    await this.logAction('UPDATE_QUIZ_QUESTION', list[idx].scenario.slice(0, 30), `Poin: ${list[idx].points}`);
+    return list[idx];
   },
 
   async deleteQuestion(id: string): Promise<boolean> {
