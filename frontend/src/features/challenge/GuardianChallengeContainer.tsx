@@ -121,7 +121,11 @@ export const GuardianChallengeContainer: React.FC = () => {
       setSelectedOptionId(null);
       setViewMode('simulation');
 
-      toast.success(`Simulasi chat tingkat ${diff === 'easy' ? 'Pemula' : diff === 'medium' ? 'Menengah' : 'Mahir'} dimulai!`);
+      if (targetScenario.isAiGenerated) {
+        toast.success(`Simulasi chat baru berhasil dirancang oleh Gemini AI!`);
+      } else {
+        toast.info(`Mode kurasi aktif. Pasang GEMINI_API_KEY di backend/.env untuk generate variasi baru via AI.`);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Gagal memulai simulasi chat.');
     } finally {
@@ -149,7 +153,11 @@ export const GuardianChallengeContainer: React.FC = () => {
       setSelectedOptionId(null);
       setViewMode('simulation');
 
-      toast.success(`Simulasi chat ${targetScenario.title} dimulai!`);
+      if (targetScenario.isAiGenerated) {
+        toast.success(`Simulasi chat baru "${targetScenario.title}" dirancang oleh Gemini AI!`);
+      } else {
+        toast.info(`Mode kurasi aktif. Pasang GEMINI_API_KEY di backend/.env untuk generate variasi baru via AI.`);
+      }
     } catch (err: any) {
       toast.error(err.message || 'Gagal memulai simulasi.');
     } finally {
