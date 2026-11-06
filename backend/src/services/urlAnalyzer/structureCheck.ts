@@ -178,6 +178,27 @@ export function checkUrlStructure(
     );
   }
 
+  const cyrillicLookalikes = /[\u0430\u0435\u043E\u0440\u0441\u0445\u0443\u0456\u0458\u0400-\u04FF]/i;
+  if (cyrillicLookalikes.test(hostname) || cyrillicLookalikes.test(originalUrl)) {
+    indicators.push(
+      buildIndicator(
+        'homograph_cyrillic',
+        hostname,
+        'Domain menggunakan karakter Cyrillic tersembunyi yang menyerupai alfabet Latin (Homograph Attack).'
+      )
+    );
+  }
+
+  if (/-{2,}/.test(hostname)) {
+    indicators.push(
+      buildIndicator(
+        'consecutive_hyphens',
+        hostname,
+        'Domain menggunakan tanda hubung ganda atau beruntun yang lazim dipakai untuk mengelabui nama domain resmi.'
+      )
+    );
+  }
+
   if (hostParts.length >= 2) {
     const mainDomain = hostParts.slice(-2, -1)[0] || '';
     for (const brand of KNOWN_BRANDS) {

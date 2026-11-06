@@ -13,6 +13,8 @@ const envSchema = z.object({
   GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
   AI_PROVIDER: z.enum(['auto', 'gemini', 'anthropic']).default('auto'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
+  SUPABASE_URL: z.string().default(''),
+  SUPABASE_KEY: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);

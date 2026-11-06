@@ -13,19 +13,34 @@ import { isEvidenceInText } from '../chatAnalyzer/validateEvidence';
 import { calculateRiskScore } from '../riskScoring';
 import { requestClaudePageAnalysis } from './claudePageAnalyzer';
 import { scanCrawlHeuristics } from './crawlerHeuristics';
+import { inspectDomainAndDns } from './domainInspector';
 import { crawlWebPage } from './pageCrawler';
 import { checkSafeBrowsing } from './safeBrowsing';
 import { sanitizeUrl } from './sanitizeUrl';
+import { inspectSslCertificate } from './sslInspector';
 import { checkUrlStructure } from './structureCheck';
 
 export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
   const { cleanUrl, hasUserInfo, hasCleanedParams } = sanitizeUrl(rawUrl);
-
   const parsed = new URL(cleanUrl);
+
+  // 1. Lapisan 1: Analisis Struktur URL & Heuristik
   const rawIndicators: Indicator[] = checkUrlStructure(parsed, hasUserInfo, rawUrl);
 
-  // 1. Google Safe Browsing Check
-  const safeBrowsing = await checkSafeBrowsing(cleanUrl);
+  // 2. Lapisan 2 - 5: Jalankan Pengecekan Jaringan, SSL, Domain & Konten secara Paralel
+  const [safeBrowsingRes, domainRes, sslRes, crawlRes] = await Promise.allSettled([
+    checkSafeBrowsing(cleanUrl),
+    inspectDomainAndDns(parsed.hostname),
+    inspectSslCertificate(parsed.hostname),
+    crawlWebPage(cleanUrl),
+  ]);
+
+  // Safe Browsing
+  const safeBrowsing =
+    safeBrowsingRes.status === 'fulfilled'
+      ? safeBrowsingRes.value
+      : { isThreat: false, status: 'failed' as const, note: 'Pengecekan Google Safe Browsing gagal.' };
+
   if (safeBrowsing.isThreat) {
     rawIndicators.push({
       type: 'safe_browsing_match',
@@ -38,10 +53,42 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     });
   }
 
-  // 2. Safe Web Page Crawling (Fetching DOM, forms, sensitive inputs & text)
-  const crawl = await crawlWebPage(cleanUrl);
+  // Lapisan 2: Domain DNS & Usia Domain
+  const domainData =
+    domainRes.status === 'fulfilled'
+      ? domainRes.value
+      : {
+          indicators: [],
+          dnsStatus: 'failed' as const,
+          dnsNote: 'Inspeksi DNS gagal dijalankan.',
+          ageStatus: 'failed' as const,
+          ageNote: 'Inspeksi RDAP usia domain gagal dijalankan.',
+        };
+  rawIndicators.push(...domainData.indicators);
 
-  // 3. Local Crawler DOM Heuristics
+  // Lapisan 3: SSL/TLS
+  const sslData =
+    sslRes.status === 'fulfilled'
+      ? sslRes.value
+      : {
+          indicators: [],
+          status: 'failed' as const,
+          note: 'Inspeksi koneksi SSL/TLS gagal dijalankan.',
+        };
+  rawIndicators.push(...sslData.indicators);
+
+  // Lapisan 4: Safe Web Page Crawling & DOM Heuristics
+  const crawl =
+    crawlRes.status === 'fulfilled'
+      ? crawlRes.value
+      : {
+          status: 'failed' as const,
+          note: 'Perayapan konten halaman gagal dijalankan.',
+          extractedText: '',
+          forms: [],
+          detectedApks: [],
+        };
+
   if (crawl.status === 'completed') {
     const crawlerIndicators = scanCrawlHeuristics(parsed, crawl);
     for (const ind of crawlerIndicators) {
@@ -49,7 +96,7 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     }
   }
 
-  // 4. Claude AI Semantic Reasoning on Crawled Content
+  // Lapisan 5: AI Semantic Reasoning on Crawled Content
   const aiResult = await requestClaudePageAnalysis(cleanUrl, crawl);
 
   let canConclude = true;
@@ -68,7 +115,17 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
       note: safeBrowsing.note,
     },
     {
-      name: 'crawler',
+      name: 'domain_age',
+      status: domainData.ageStatus,
+      note: domainData.ageNote,
+    },
+    {
+      name: 'ssl_certificate',
+      status: sslData.status,
+      note: sslData.note,
+    },
+    {
+      name: 'live_content',
       status: crawl.status,
       note: crawl.note,
     },
@@ -108,10 +165,10 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
         hasDroppedQuotes = true;
       }
     }
-  } else {
+  } else if (crawl.extractedText) {
     checks.push({
       name: 'content_ai',
-      status: crawl.status === 'completed' && !crawl.extractedText ? 'skipped' : 'partial',
+      status: 'partial',
       note:
         aiResult.error ||
         'Layanan AI belum dikonfigurasi atau konten web statis; dialihkan ke heuristik perayapan lokal.',

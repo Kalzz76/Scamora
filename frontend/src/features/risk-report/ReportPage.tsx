@@ -1,536 +1,460 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ShieldAlert, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Copy, 
-  Check, 
-  RotateCcw, 
-  FileText, 
-  HelpCircle,
-  ArrowRight,
-  MessageSquare
+  Search, 
+  ArrowRight, 
+  Layers,
+  PlusCircle,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { RISK_CATEGORIES } from '../../lib/constants';
-import { formatDateTime } from '../../lib/utils';
-import type { AnalysisResult } from '../../types/analysis';
+import { directoryService, type ScannedDomain } from '../../services/directoryService';
 
-interface ReportPageProps {
-  result: AnalysisResult | null;
-}
-
-// Micro-Component 1: Animated Rolling Number
-function AnimatedScore({ target }: { target: number }) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let current = 0;
-    const duration = 750; // ms
-    const stepTime = 16;
-    const totalSteps = duration / stepTime;
-    const increment = target / totalSteps;
-
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= target) {
-        setCount(target);
-        clearInterval(timer);
-      } else {
-        setCount(Math.round(current));
-      }
-    }, stepTime);
-
-    return () => clearInterval(timer);
-  }, [target]);
-
-  return <span>{count}</span>;
-}
-
-// Micro-Component 2: Visual URL Deconstructor (Anti-Slop Craft)
-function UrlDeconstructor({ rawUrl }: { rawUrl: string }) {
-  let scheme = '';
-  let subdomain = '';
-  let domain = '';
-  let tld = '';
-  let pathQuery = '';
-
-  try {
-    const parsed = new URL(rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`);
-    scheme = parsed.protocol; // 'https:'
-    const host = parsed.hostname; // e.g. bca-klik.com.secure-login-update.xyz
-    pathQuery = parsed.pathname + parsed.search;
-
-    const parts = host.split('.');
-    if (parts.length >= 2) {
-      tld = '.' + parts.slice(-1)[0];
-      domain = parts.slice(-2, -1)[0];
-      if (parts.length > 2) {
-        subdomain = parts.slice(0, -2).join('.');
-      }
-    } else {
-      domain = host;
-    }
-  } catch {
-    return <span className="font-mono text-xs text-on-surface">{rawUrl}</span>;
-  }
-
-  const isRiskyTld = ['.xyz', '.top', '.work', '.click', '.zip', '.fit'].includes(tld.toLowerCase());
-  const hasSubdomainWarning = subdomain.toLowerCase().includes('bca') || subdomain.toLowerCase().includes('bank') || subdomain.toLowerCase().includes('shopee');
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
-        {/* Scheme */}
-        <span className={`px-2 py-1 rounded-md font-bold ${
-          scheme.toLowerCase() === 'https:' ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-error-container text-error'
-        }`} title="Protokol Keamanan">
-          {scheme}//
-        </span>
-
-        {/* Subdomain */}
-        {subdomain && (
-          <span className={`px-2 py-1 rounded-md font-semibold ${
-            hasSubdomainWarning ? 'bg-error-container text-error border border-error/30' : 'bg-surface-container text-on-surface'
-          }`} title={hasSubdomainWarning ? 'Subdomain mencatut merek resmi!' : 'Subdomain'}>
-            {subdomain}.
-          </span>
-        )}
-
-        {/* Domain Root */}
-        <span className="px-2 py-1 rounded-md bg-surface-container-high text-on-surface font-extrabold" title="Nama Domain Utama">
-          {domain}
-        </span>
-
-        {/* TLD */}
-        <span className={`px-2 py-1 rounded-md font-bold ${
-          isRiskyTld ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-surface-container text-on-surface'
-        }`} title={isRiskyTld ? 'TLD berisiko tinggi penyalahgunaan' : 'Ekstensi Domain (TLD)'}>
-          {tld}
-        </span>
-
-        {/* Path & Query */}
-        {pathQuery && (
-          <span className="px-2 py-1 rounded-md bg-surface-container text-on-surface-variant truncate max-w-xs" title="Path dan Parameter">
-            {pathQuery}
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 text-[10px] text-on-surface-variant font-mono">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-secondary"></span>
-          <span>Anatomi URL Terurai</span>
-        </span>
-        {hasSubdomainWarning && (
-          <span className="text-error font-semibold">&bull; Terdeteksi nama institusi disamarkan di subdomain</span>
-        )}
-        {isRiskyTld && (
-          <span className="text-amber-300 font-semibold">&bull; Ekstensi domain murah berisiko ({tld})</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Micro-Component 3: Forensic Chat Canvas (Anti-Slop Craft)
-function ForensicChatCanvas({ text, evidenceList }: { text: string; evidenceList: string[] }) {
-  // Render highlighted spans
-  return (
-    <div className="p-4 sm:p-5 rounded-2xl bg-surface-container-low border border-outline-variant space-y-3">
-      <div className="flex items-center justify-between border-b border-outline-variant/40 pb-2">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-secondary" />
-          <span className="text-xs font-bold text-on-surface">Forensic WhatsApp Transcript View</span>
-        </div>
-        <span className="text-[10px] font-mono text-on-surface-variant">Annotated Evidence In-Situ</span>
-      </div>
-
-      <div className="max-w-xl p-4 rounded-2xl rounded-tl-none bg-surface-container shadow-2xs border border-outline-variant/40 text-xs text-on-surface leading-relaxed whitespace-pre-wrap font-sans relative">
-        <p>
-          {text}
-        </p>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 pt-1">
-        <span className="text-[10px] font-mono text-on-surface-variant uppercase font-bold">Kutipan Berbahaya Terekstrak:</span>
-        {evidenceList.map((ev, i) => (
-          <span key={i} className="px-2 py-0.5 rounded-md bg-error-container text-error text-[11px] font-mono font-semibold border border-error/20">
-            "{ev}"
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export const ReportPage: React.FC<ReportPageProps> = ({ result }) => {
-  const [copied, setCopied] = useState(false);
+export const ReportPage: React.FC = () => {
+  const [domains, setDomains] = useState<ScannedDomain[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState<'all' | 'high' | 'review' | 'low'>('all');
+  const [stats, setStats] = useState({ totalDomains: 1248, highRiskPercent: 31, checksToday: 86 });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [reportInput, setReportInput] = useState('');
+  const [reportCategory, setReportCategory] = useState('Phishing Perbankan');
+  const [reportNotes, setReportNotes] = useState('');
   const navigate = useNavigate();
 
-  if (!result) {
-    return (
-      <div className="max-w-2xl mx-auto py-24 px-4 text-center space-y-5">
-        <div className="w-16 h-16 rounded-2xl bg-surface-container flex items-center justify-center text-secondary mx-auto">
-          <FileText className="w-8 h-8 text-secondary" />
-        </div>
-        <div className="space-y-1.5">
-          <h2 className="text-2xl font-bold tracking-tight text-on-surface">Belum Ada Hasil Analisis</h2>
-          <p className="text-xs sm:text-sm text-on-surface-variant max-w-md mx-auto leading-relaxed">
-            Silakan masukkan alamat tautan atau tempelkan percakapan WhatsApp mencurigakan untuk memulai pemindaian indikasi risiko.
-          </p>
-        </div>
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <Link
-            to="/url"
-            className="px-5 py-2.5 rounded-xl bg-secondary text-white text-xs font-semibold hover:bg-secondary-container transition-all shadow-xs"
-          >
-            Periksa Tautan (URL)
-          </Link>
-          <Link
-            to="/chat"
-            className="px-5 py-2.5 rounded-xl bg-surface-container text-on-surface text-xs font-semibold hover:bg-surface-container-high transition-all"
-          >
-            Analisis Chat WhatsApp
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    setDomains(directoryService.getDomains());
+    setStats(directoryService.getStats());
+  }, []);
 
-  const categoryMeta = result.risk_level ? RISK_CATEGORIES[result.risk_level] : RISK_CATEGORIES.review;
-  const isPartial = result.analysis_status === 'partial';
-
-  const handleCopy = () => {
-    let reportText = `[LAPORAN INDIKASI RISIKO KEAMANAN SIBER SCAMORA]\n`;
-    reportText += `Waktu Pemeriksaan : ${formatDateTime(result.timestamp)}\n`;
-    reportText += `Tipe Analisis     : ${result.analysis_type.toUpperCase()}\n`;
-    reportText += `Kategori Evaluasi : ${result.risk_level ? RISK_CATEGORIES[result.risk_level].label.toUpperCase() : 'N/A'}\n`;
-    reportText += `Skor Risiko       : ${result.risk_score} / 100 (Raw: ${result.raw_score})\n`;
-    reportText += `Kategori Modus    : ${result.scam_type || 'Belum terklasifikasi'}\n\n`;
-
-    reportText += `--- TANDA BAHAYA TERVERIFIKASI ---\n`;
-    if (result.indicators.length === 0) {
-      reportText += `Tidak ditemukan indikator ancaman signifikan.\n`;
-    } else {
-      result.indicators.forEach((ind, i) => {
-        reportText += `${i + 1}. [${ind.severity.toUpperCase()}] ${ind.title} (+${ind.weight} poin)\n`;
-        reportText += `   Kutipan Bukti: "${ind.evidence}"\n`;
-        reportText += `   Penjelasan   : ${ind.description}\n\n`;
-      });
+  const handleManualReportSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportInput.trim()) {
+      toast.error('Masukkan alamat tautan atau domain yang dilaporkan.');
+      return;
     }
 
-    reportText += `--- PANDUAN TINDAKAN MITIGASI ---\n`;
-    result.recommended_actions.forEach((act, i) => {
-      reportText += `${i + 1}. ${act}\n`;
-    });
-
-    reportText += `\nPenafian: Hasil ini berupa indikasi risiko berbasis AI, bukan vonis mutlak hukum.`;
-
-    navigator.clipboard.writeText(reportText);
-    setCopied(true);
-    toast.success('Laporan insiden berhasil disalin ke clipboard');
-    setTimeout(() => setCopied(false), 2500);
+    directoryService.addManualReport(reportInput.trim(), reportCategory, reportNotes.trim());
+    setDomains(directoryService.getDomains());
+    setStats(directoryService.getStats());
+    toast.success('Laporan berhasil dicatat ke Pemindaian Publik!');
+    setReportInput('');
+    setReportNotes('');
+    setIsModalOpen(false);
   };
 
-  const evidenceQuotes = result.indicators.map((ind) => ind.evidence).filter(Boolean);
+  const filteredDomains = domains.filter((d) => {
+    const matchesSearch = d.domain.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const matchesCategory = filterCategory === 'all' || d.category === filterCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const categoryStyles = {
+    high: {
+      bar: '#D92D20',
+      badge: 'bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B]',
+      text: 'Risiko Tinggi',
+      dot: 'bg-[#D92D20]',
+    },
+    review: {
+      bar: '#F79009',
+      badge: 'bg-[#FEF0C7] text-[#93370D] border border-[#FDB022]',
+      text: 'Perlu Ditinjau',
+      dot: 'bg-[#F79009]',
+    },
+    low: {
+      bar: '#12B76A',
+      badge: 'bg-[#DCFAE6] text-[#067647] border border-[#75E0A7]',
+      text: 'Rendah',
+      dot: 'bg-[#12B76A]',
+    },
+  };
 
   return (
-    <div className="flex flex-col w-full pb-20">
-      
-      {/* HEADER BANNER - Pomaii Deep Green Style */}
-      <section className="w-full bg-[#143826] text-white py-12 border-b border-[#1D4E36]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
-          
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-[#EAF2ED] text-[#143826] text-xs font-bold uppercase tracking-wider font-mono">
-                Laporan Telemetri Risiko
-              </span>
-              <span className="text-[#CFDDD5] text-xs">&bull;</span>
-              <span className="text-xs text-[#EAF2ED] font-medium">
-                {result.analysis_type === 'url' ? 'Pemeriksaan Tautan' : 'Analisis Chat WhatsApp'}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={handleCopy}
-                type="button"
-                className="btn-animate inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-xs font-bold text-white transition-all shadow-sm"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-[#E86A33]" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Tersalin' : 'Salin Laporan'}</span>
-              </button>
-
-              <button
-                onClick={() => navigate(result.analysis_type === 'url' ? '/url' : '/chat')}
-                type="button"
-                className="btn-animate inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#E86A33] hover:bg-[#D75922] text-white text-xs font-bold transition-all shadow-md shadow-orange-500/20"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Pemeriksaan Baru</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-1 pt-1">
-            <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-              Hasil Analisis &amp; Indikasi Risiko
-            </h1>
-            <p className="text-sm text-gray-200 max-w-2xl leading-relaxed">
-              Disusun secara otomatis berdasarkan parameter teknis dan penalaran semantik tanpa klaim vonis mutlak.
-            </p>
-            <p className="text-xs font-mono text-[#E86A33] pt-1">
-              Waktu Pemeriksaan: {formatDateTime(result.timestamp)}
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* REPORT CONTENT */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+    <div className="flex flex-col w-full bg-[#F5F3EE] text-[#14130F] min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1120px] mx-auto w-full space-y-8">
         
-        {/* PARTIAL OUTAGE ALERT BANNER */}
-        {isPartial && (
-          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 flex items-start gap-3 animate-in fade-in">
-            <AlertTriangle className="w-5 h-5 text-[#FFB162] shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-xs">
-              <h4 className="font-bold text-amber-100">Peringatan: Analisis Parsial (Sebagian Layanan Eksternal Mengalami Gangguan)</h4>
-              <p className="text-amber-200/90 leading-relaxed">
-                Salah satu pemeriksaan eksternal tidak dapat diselesaikan. Sesuai prinsip etika sistem, status aman (<em>low risk</em>) tidak diperbolehkan muncul dan hasil dialihkan ke peninjauan (<em>review</em>).
-              </p>
+        {/* HEADER SECTION */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEEAE0] text-xs font-bold text-[#14130F]">
+              <Layers className="w-3.5 h-3.5 text-[#14130F]" />
+              <span>DIREKTORI PEMINDAIAN PUBLIK</span>
             </div>
-          </div>
-        )}
-
-        {/* PRIMARY RISK VERDICT CARD */}
-        <div className={`rounded-3xl p-6 sm:p-10 border shadow-xs ${categoryMeta.containerBg} ${categoryMeta.borderColor} space-y-6`}>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            {/* Verdict Info */}
-            <div className="lg:col-span-8 space-y-3.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase font-mono ${categoryMeta.badgeBg} ${categoryMeta.badgeText}`}>
-                  {categoryMeta.label}
-                </span>
-                {result.scam_type && result.scam_type !== 'unknown' && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-surface-container-lowest font-mono text-[11px] font-bold text-on-surface border border-outline-variant/60">
-                    Modus: {result.scam_type.replace('_', ' ').toUpperCase()}
-                  </span>
-                )}
-                {result.is_simulation && (
-                  <span className="px-2.5 py-0.5 rounded-full bg-surface-container text-secondary text-[10px] font-mono font-bold">
-                    [DATA SIMULASI]
-                  </span>
-                )}
-              </div>
-
-              <h2 className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
-                {result.risk_level === 'high'
-                  ? 'Peringatan: Indikasi Kuat Ancaman Penipuan Digital'
-                  : result.risk_level === 'review'
-                  ? 'Perhatian: Diperlukan Verifikasi Mandiri Lebih Lanjut'
-                  : 'Indikasi Risiko Rendah: Tidak Ditemukan Anomali Signifikan'}
-              </h2>
-
-              <p className="text-sm text-on-surface-variant leading-relaxed">
-                {result.explanation || categoryMeta.description}
-              </p>
-
-              {/* Anti-Slop: Visual Deconstructor for URL or Chat Canvas */}
-              {result.analysis_type === 'url' ? (
-                <div className="p-4 rounded-2xl bg-surface-container-lowest/90 border border-outline-variant space-y-2">
-                  <UrlDeconstructor rawUrl={result.input_sanitized} />
-                </div>
-              ) : (
-                <ForensicChatCanvas text={result.input_sanitized} evidenceList={evidenceQuotes} />
-              )}
-            </div>
-
-            {/* Score Dial / Calibrated Gauge */}
-            <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 bg-surface-container-lowest rounded-2xl border border-outline-variant shadow-xs">
-              <span className="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mb-3 font-bold">
-                Skor Risiko Terverifikasi
-              </span>
-              
-              <div className="relative flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full border-8 border-surface-container flex flex-col items-center justify-center relative">
-                  <span className="text-4xl font-black text-on-surface tracking-tight">
-                    <AnimatedScore target={result.risk_score || 0} />
-                  </span>
-                  <span className="text-[10px] font-mono text-on-surface-variant font-bold">
-                    DARI 100
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-3 text-center">
-                <span className="text-[11px] font-mono text-on-surface-variant">
-                  Raw Score: {result.raw_score} (Dibatasi maks. 100)
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* VERIFIED INDICATORS WITH AUTHENTIC EVIDENCE */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-outline-variant pb-4">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-5 h-5 text-secondary" />
-              <h3 className="text-lg font-bold text-on-surface tracking-tight">
-                Tanda Bahaya &amp; Bukti Terverifikasi ({result.indicators.length})
-              </h3>
-            </div>
-            <span className="text-xs text-on-surface-variant hidden sm:inline">
-              Setiap indikator wajib didukung kutipan kalimat asli
-            </span>
-          </div>
-
-          {result.indicators.length === 0 ? (
-            <div className="apple-card p-8 text-center space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-on-tertiary-container mx-auto" />
-              <h4 className="text-sm font-bold text-on-surface">Nol Indikator Bahaya Terdeteksi</h4>
-              <p className="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
-                Pemeriksaan terhadap parameter umum phishing, typosquatting, dan manipulasi bahasa tidak menemukan anomali pada masukan ini.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {result.indicators.map((ind, idx) => (
-                <div
-                  key={idx}
-                  className="apple-card p-5 space-y-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase font-mono ${
-                        ind.severity === 'high'
-                          ? 'bg-error-container text-error'
-                          : ind.severity === 'medium'
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : 'bg-surface-container text-on-surface'
-                      }`}>
-                        {ind.severity} severity
-                      </span>
-                      <h4 className="text-sm font-bold text-on-surface">{ind.title}</h4>
-                    </div>
-                    <span className="text-xs font-mono font-bold text-secondary">
-                      +{ind.weight} Poin
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-on-surface-variant leading-relaxed">
-                    {ind.description}
-                  </p>
-
-                  {/* Quoted Evidence */}
-                  <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/60 space-y-1">
-                    <span className="text-[10px] font-mono font-bold text-on-surface-variant uppercase">
-                      Kutipan Bukti pada Masukan:
-                    </span>
-                    <p className="font-mono text-xs text-secondary font-semibold italic">
-                      "{ind.evidence}"
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* PIPELINE CHECKS BREAKDOWN */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-bold text-on-surface font-mono uppercase tracking-wider">
-            Status Pemeriksaan Komponen Sistem:
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {result.checks.map((check, idx) => (
-              <div
-                key={idx}
-                className="apple-card p-4 flex items-start gap-3"
-              >
-                <div className="mt-0.5">
-                  {check.status === 'completed' ? (
-                    <CheckCircle2 className="w-4 h-4 text-on-tertiary-container" />
-                  ) : check.status === 'failed' ? (
-                    <AlertTriangle className="w-4 h-4 text-error" />
-                  ) : (
-                    <HelpCircle className="w-4 h-4 text-amber-700" />
-                  )}
-                </div>
-                <div className="space-y-0.5 text-xs">
-                  <div className="font-bold text-on-surface uppercase font-mono text-[11px]">
-                    {check.name.replace('_', ' ')}
-                  </div>
-                  <div className="text-[11px] text-on-surface-variant">{check.note}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RECOMMENDED ACTIONS (SAFETY GUIDE) */}
-        <div className="apple-card p-6 sm:p-8 space-y-5">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-secondary" />
-            <h3 className="text-base font-bold text-on-surface">
-              Panduan Tindakan yang Disarankan (Safety Action Guide)
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {result.recommended_actions.map((action, idx) => (
-              <div
-                key={idx}
-                className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/60 flex items-start gap-3 text-xs"
-              >
-                <span className="w-5 h-5 rounded-full bg-secondary text-white font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
-                  {idx + 1}
-                </span>
-                <span className="text-on-surface font-medium leading-relaxed">{action}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* LIMITATIONS DISCLAIMER */}
-        <div className="apple-card p-5 space-y-2 text-xs text-on-surface-variant">
-          <span className="font-bold text-on-surface uppercase font-mono text-[11px]">
-            Keterbatasan &amp; Batasan Analisis Sistem:
-          </span>
-          <ul className="list-disc pl-5 space-y-1 text-[11px] leading-relaxed">
-            {result.limitations.map((lim, idx) => (
-              <li key={idx}>{lim}</li>
-            ))}
-          </ul>
-        </div>
-
-        {/* CTA TO EDUCATIONAL MODULES */}
-        <div className="apple-card p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="space-y-1 text-center sm:text-left">
-            <h4 className="text-sm font-bold text-on-surface">Ingin Mengasah Kemampuan Mendeteksi Penipuan?</h4>
-            <p className="text-xs text-on-surface-variant">
-              Ikuti Tantangan Guardian Challenge dan pelajari modus operandi penipuan digital terkini.
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-[#14130F] tracking-tight">
+              Pemindaian Publik
+            </h1>
+            <p className="text-base sm:text-lg text-[#5B5850] max-w-2xl leading-relaxed">
+              Daftar domain yang telah diperiksa oleh pengguna lain, lengkap dengan frekuensi pengecekan dan persentase indikasi risikonya.
             </p>
           </div>
-          <Link
-            to="/kuis"
-            className="px-5 py-2.5 rounded-xl bg-secondary text-white text-xs font-semibold hover:bg-secondary-container transition-all inline-flex items-center gap-1.5 shadow-xs shrink-0"
+
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#14130F] hover:bg-[#2A2721] text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
           >
-            <span>Mulai Tantangan Kuis</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+            <PlusCircle className="w-4 h-4" />
+            <span>Laporkan Domain Baru</span>
+          </button>
+        </div>
+
+        {/* STATS OVERVIEW CARDS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <span className="text-xs font-bold font-mono text-[#706C62] uppercase tracking-wider">
+              Total Domain Diperiksa
+            </span>
+            <div className="font-display font-black text-3xl sm:text-4xl text-[#14130F] mt-2">
+              {stats.totalDomains.toLocaleString('id-ID')}
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <span className="text-xs font-bold font-mono text-[#706C62] uppercase tracking-wider">
+              Indikasi Risiko Tinggi
+            </span>
+            <div className="font-display font-black text-3xl sm:text-4xl text-[#B42318] mt-2">
+              {stats.highRiskPercent}%
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between">
+            <span className="text-xs font-bold font-mono text-[#706C62] uppercase tracking-wider">
+              Pemeriksaan Hari Ini
+            </span>
+            <div className="font-display font-black text-3xl sm:text-4xl text-[#067647] mt-2">
+              {stats.checksToday}
+            </div>
+          </div>
+        </div>
+
+        {/* MAIN TABLE CONTAINER */}
+        <div className="bg-white border border-[#E4E0D6] rounded-2xl overflow-hidden shadow-xs">
+          
+          {/* TOOLBAR: SEARCH & FILTER CHIPS */}
+          <div className="p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-[#EEEAE0]">
+            
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-[#8C887B] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari nama domain (contoh: bca, xyz, login)..."
+                className="w-full h-11 pl-10 pr-4 rounded-xl border border-[#D5D0C3] bg-white text-sm text-[#14130F] placeholder:text-[#8C887B] focus:outline-2 focus:outline-[#14130F] focus:outline-offset-1 transition-all"
+              />
+            </div>
+
+            {/* Filter Chips */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                onClick={() => setFilterCategory('all')}
+                className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  filterCategory === 'all'
+                    ? 'bg-[#14130F] text-white'
+                    : 'bg-[#FAF8F5] text-[#5B5850] hover:bg-[#EEEAE0] border border-[#EAE6DC]'
+                }`}
+              >
+                Semua
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterCategory('high')}
+                className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  filterCategory === 'high'
+                    ? 'bg-[#14130F] text-white'
+                    : 'bg-[#FAF8F5] text-[#B42318] hover:bg-[#FEE4E2] border border-[#FDA29B]'
+                }`}
+              >
+                Risiko Tinggi
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterCategory('review')}
+                className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  filterCategory === 'review'
+                    ? 'bg-[#14130F] text-white'
+                    : 'bg-[#FAF8F5] text-[#93370D] hover:bg-[#FEF0C7] border border-[#FDB022]'
+                }`}
+              >
+                Perlu Ditinjau
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterCategory('low')}
+                className={`h-9 px-3.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  filterCategory === 'low'
+                    ? 'bg-[#14130F] text-white'
+                    : 'bg-[#FAF8F5] text-[#067647] hover:bg-[#DCFAE6] border border-[#75E0A7]'
+                }`}
+              >
+                Rendah
+              </button>
+            </div>
+          </div>
+
+          {/* MOBILE VIEW: DEDICATED RESPONSIVE CARD LIST (md:hidden) */}
+          <div className="md:hidden divide-y divide-[#F0ECE3]">
+            {filteredDomains.length === 0 ? (
+              <div className="py-12 px-4 text-center text-xs text-[#706C62]">
+                Tidak ada domain yang cocok dengan pencarian kata kunci "{searchQuery}".
+              </div>
+            ) : (
+              filteredDomains.map((item, idx) => {
+                const style = categoryStyles[item.category] || categoryStyles.review;
+                return (
+                  <div key={idx} className="p-4 space-y-3 hover:bg-[#FAF8F4] transition-colors">
+                    {/* Top Row: Domain & Category Badge */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-mono font-bold text-sm text-[#14130F] block truncate">
+                          {item.domain}
+                        </span>
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-[#706C62] mt-0.5">
+                          <span>Diperiksa {item.count}&times;</span>
+                          <span>&bull;</span>
+                          <span>{item.lastChecked}</span>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] shrink-0 ${style.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                        <span>{style.text}</span>
+                      </span>
+                    </div>
+
+                    {/* Middle Row: Progress Bar & Risk Percentage */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-[#EAE6DC] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${item.riskPercent}%`,
+                            backgroundColor: style.bar,
+                          }}
+                        />
+                      </div>
+                      <span className="font-mono font-bold text-xs text-[#14130F] tabular-nums shrink-0">
+                        {item.riskPercent}% Bahaya
+                      </span>
+                    </div>
+
+                    {/* Bottom Action Button */}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FAF8F5] hover:bg-[#14130F] hover:text-white text-[#14130F] border border-[#D5D0C3] font-semibold text-xs transition-all cursor-pointer shadow-2xs"
+                      >
+                        <span>Periksa Domain Ini</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* DESKTOP VIEW: FULL 6-COLUMN TABLE (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-[#FAF8F4] border-b border-[#E4E0D6] text-[11px] font-bold font-mono uppercase text-[#767165] tracking-wider">
+                  <th className="py-3.5 px-5">Domain</th>
+                  <th className="py-3.5 px-4">Diperiksa</th>
+                  <th className="py-3.5 px-5">Tingkat Risiko (% Bahaya)</th>
+                  <th className="py-3.5 px-4">Kategori</th>
+                  <th className="py-3.5 px-4">Terakhir</th>
+                  <th className="py-3.5 px-5 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F0ECE3]">
+                {filteredDomains.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-sm text-[#706C62]">
+                      Tidak ada domain yang cocok dengan pencarian kata kunci "{searchQuery}".
+                    </td>
+                  </tr>
+                ) : (
+                  filteredDomains.map((item, idx) => {
+                    const style = categoryStyles[item.category] || categoryStyles.review;
+                    return (
+                      <tr key={idx} className="hover:bg-[#FAF8F4] transition-colors group">
+                        
+                        {/* Domain Column */}
+                        <td className="py-4 px-5">
+                          <span className="font-mono font-bold text-sm text-[#14130F]">
+                            {item.domain}
+                          </span>
+                        </td>
+
+                        {/* Frequency Column */}
+                        <td className="py-4 px-4 font-mono font-semibold text-[#5B5850]">
+                          {item.count}&times;
+                        </td>
+
+                        {/* Risk Percentage Bar Column */}
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 max-w-[140px] h-2 bg-[#EAE6DC] rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-500"
+                                style={{
+                                  width: `${item.riskPercent}%`,
+                                  backgroundColor: style.bar,
+                                }}
+                              />
+                            </div>
+                            <span className="font-mono font-bold text-xs text-[#14130F] tabular-nums">
+                              {item.riskPercent}%
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Category Badge Column */}
+                        <td className="py-4 px-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[11px] ${style.badge}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                            <span>{style.text}</span>
+                          </span>
+                        </td>
+
+                        {/* Last Checked Column */}
+                        <td className="py-4 px-4 text-[#706C62] font-mono text-[11px]">
+                          {item.lastChecked}
+                        </td>
+
+                        {/* Action Column */}
+                        <td className="py-4 px-5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
+                            }}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FAF8F5] group-hover:bg-[#14130F] group-hover:text-white text-[#14130F] border border-[#D5D0C3] group-hover:border-[#14130F] font-semibold text-xs transition-all cursor-pointer"
+                          >
+                            <span>Periksa</span>
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* FOOTER NOTICE */}
+          <div className="p-4 bg-[#FAF8F4] border-t border-[#E4E0D6] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#706C62]">
+            <span>
+              💡 Data di atas bersifat anonim dan dihimpun dari partisipasi pemindaian komunitas Scamora.
+            </span>
+            <Link
+              to="/"
+              className="text-[#14130F] font-bold hover:underline inline-flex items-center gap-1 shrink-0"
+            >
+              <span>Periksa Tautan Lain di Beranda</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
       </div>
 
+      {/* MODAL LAPORAN KOMUNITAS */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#14130F]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#E4E0D6] shadow-xl max-w-md w-full p-6 sm:p-7 relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-5 right-5 text-[#8C887B] hover:text-[#14130F] p-1.5 rounded-full hover:bg-[#F5F3EE] transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2 text-xs font-bold font-mono text-[#B42318] mb-1">
+              <AlertTriangle className="w-4 h-4" />
+              <span>LAPORKAN PENIPUAN BARU</span>
+            </div>
+            <h2 className="text-xl font-bold font-display text-[#14130F] mb-1.5">
+              Laporkan ke Komunitas
+            </h2>
+            <p className="text-xs text-[#5B5850] leading-relaxed mb-5">
+              Bantu lindungi pengguna lain dengan melaporkan domain atau tautan mencurigakan yang baru saja Anda temui.
+            </p>
+
+            <form onSubmit={handleManualReportSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="font-semibold text-[#14130F] block mb-1">
+                  Alamat Tautan / Domain:
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={reportInput}
+                  onChange={(e) => setReportInput(e.target.value)}
+                  placeholder="contoh: bank-palsu-login.xyz atau bit.ly/..."
+                  className="w-full h-10 px-3 rounded-xl border border-[#D5D0C3] text-sm focus:outline-2 focus:outline-[#14130F]"
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-[#14130F] block mb-1">
+                  Jenis Modus:
+                </label>
+                <select
+                  value={reportCategory}
+                  onChange={(e) => setReportCategory(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-[#D5D0C3] text-xs bg-white focus:outline-2 focus:outline-[#14130F]"
+                >
+                  <option value="Phishing Perbankan">Phishing Perbankan / Akun</option>
+                  <option value="Undangan Pernikahan APK">Undangan Pernikahan APK</option>
+                  <option value="Paket / Resi Tertahan">Paket / Resi Ekspedisi Palsu</option>
+                  <option value="Hadiah / Undian">Hadiah / Undian Belanja Palsu</option>
+                  <option value="Lowongan Kerja Palsu">Lowongan Kerja / Investasi Palsu</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-semibold text-[#14130F] block mb-1">
+                  Catatan Tambahan (Opsional):
+                </label>
+                <textarea
+                  rows={3}
+                  value={reportNotes}
+                  onChange={(e) => setReportNotes(e.target.value)}
+                  placeholder="Ceritakan singkat pesan atau indikasi yang mencurigakan..."
+                  className="w-full p-2.5 rounded-xl border border-[#D5D0C3] text-xs resize-none focus:outline-2 focus:outline-[#14130F]"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 rounded-full border border-[#D5D0C3] text-[#5B5850] hover:bg-[#F5F3EE] font-semibold cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-[#14130F] hover:bg-[#2A2721] text-white font-semibold cursor-pointer shadow-2xs"
+                >
+                  Kirim Laporan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

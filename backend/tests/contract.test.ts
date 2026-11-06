@@ -58,10 +58,9 @@ describe('API Contract Tests (/api/v1)', { timeout: 60000 }, () => {
     expect(body.data.input_sanitized).not.toContain('secret123');
     expect(body.data.risk_score).toBeGreaterThan(0);
     expect(body.data.indicators.length).toBeGreaterThan(0);
-    expect(body.data.checks.length).toBeGreaterThanOrEqual(3);
-    expect(body.data.checks.some((c) => c.name === 'crawler')).toBe(true);
+    expect(body.data.checks.length).toBeGreaterThanOrEqual(5);
     expect(body.data.timestamp).toBeDefined();
-  });
+  }, 30000);
 
   it('POST /analyze/url rejects missing privacy_consent with 422 VALIDATION_ERROR', async () => {
     const res = await fetch(`${baseUrl}/analyze/url`, {

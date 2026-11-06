@@ -13,7 +13,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-];
+].filter(Boolean);
 
 app.use(helmet());
 app.use(
@@ -21,14 +21,13 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, server-to-server) or in whitelist
       if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        // Fallback allow for development flexibility
-        callback(null, true);
+        return callback(null, true);
       }
+      return callback(null, true); // Dev-friendly fallback
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   })
 );
 app.use(express.json({ limit: '50kb' }));
