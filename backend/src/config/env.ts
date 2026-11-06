@@ -9,7 +9,11 @@ const envSchema = z.object({
   FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
   ANTHROPIC_API_KEY: z.string().default(''),
   CLAUDE_MODEL: z.string().default('claude-3-5-haiku-20241022'),
+  GEMINI_API_KEY: z.string().default(''),
+  GEMINI_MODEL: z.string().default('gemini-3-flash-preview'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
+  SUPABASE_URL: z.string().default(''),
+  SUPABASE_KEY: z.string().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -20,4 +24,3 @@ if (!parsed.success) {
 }
 
 export const env = parsed.data;
-
