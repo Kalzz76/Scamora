@@ -37,7 +37,7 @@ export const ReportPage: React.FC = () => {
     directoryService.addManualReport(reportInput.trim(), reportCategory, reportNotes.trim());
     setDomains(directoryService.getDomains());
     setStats(directoryService.getStats());
-    toast.success('Laporan berhasil dicatat ke Direktori Komunitas!');
+    toast.success('Laporan berhasil dicatat ke Pemindaian Publik!');
     setReportInput('');
     setReportNotes('');
     setIsModalOpen(false);
@@ -82,7 +82,7 @@ export const ReportPage: React.FC = () => {
               <span>DIREKTORI PEMINDAIAN PUBLIK</span>
             </div>
             <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-[#14130F] tracking-tight">
-              Direktori Komunitas
+              Pemindaian Publik
             </h1>
             <p className="text-base sm:text-lg text-[#5B5850] max-w-2xl leading-relaxed">
               Daftar domain yang telah diperiksa oleh pengguna lain, lengkap dengan frekuensi pengecekan dan persentase indikasi risikonya.
@@ -196,8 +196,72 @@ export const ReportPage: React.FC = () => {
             </div>
           </div>
 
-          {/* TABLE OF DOMAINS */}
-          <div className="overflow-x-auto">
+          {/* MOBILE VIEW: DEDICATED RESPONSIVE CARD LIST (md:hidden) */}
+          <div className="md:hidden divide-y divide-[#F0ECE3]">
+            {filteredDomains.length === 0 ? (
+              <div className="py-12 px-4 text-center text-xs text-[#706C62]">
+                Tidak ada domain yang cocok dengan pencarian kata kunci "{searchQuery}".
+              </div>
+            ) : (
+              filteredDomains.map((item, idx) => {
+                const style = categoryStyles[item.category] || categoryStyles.review;
+                return (
+                  <div key={idx} className="p-4 space-y-3 hover:bg-[#FAF8F4] transition-colors">
+                    {/* Top Row: Domain & Category Badge */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-mono font-bold text-sm text-[#14130F] block truncate">
+                          {item.domain}
+                        </span>
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-[#706C62] mt-0.5">
+                          <span>Diperiksa {item.count}&times;</span>
+                          <span>&bull;</span>
+                          <span>{item.lastChecked}</span>
+                        </div>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-semibold text-[10px] shrink-0 ${style.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                        <span>{style.text}</span>
+                      </span>
+                    </div>
+
+                    {/* Middle Row: Progress Bar & Risk Percentage */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-[#EAE6DC] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${item.riskPercent}%`,
+                            backgroundColor: style.bar,
+                          }}
+                        />
+                      </div>
+                      <span className="font-mono font-bold text-xs text-[#14130F] tabular-nums shrink-0">
+                        {item.riskPercent}% Bahaya
+                      </span>
+                    </div>
+
+                    {/* Bottom Action Button */}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-[#FAF8F5] hover:bg-[#14130F] hover:text-white text-[#14130F] border border-[#D5D0C3] font-semibold text-xs transition-all cursor-pointer shadow-2xs"
+                      >
+                        <span>Periksa Domain Ini</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* DESKTOP VIEW: FULL 6-COLUMN TABLE (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-[#FAF8F4] border-b border-[#E4E0D6] text-[11px] font-bold font-mono uppercase text-[#767165] tracking-wider">

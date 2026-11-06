@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
-import { ShieldCheck, Menu, X, Lock } from 'lucide-react';
+import { ShieldCheck, Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   onOpenPrivacy: () => void;
@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
 
   const navLinks = [
     { path: '/', label: 'Beranda' },
-    { path: '/laporan', label: 'Direktori Komunitas' },
+    { path: '/laporan', label: 'Pemindaian Publik' },
     { path: '/panduan', label: 'Panduan' },
     { path: '/kuis', label: 'Tantangan AI' },
     { path: '/pengetahuan', label: 'Edukasi' },
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
           </Link>
 
           {/* Center: Desktop Navigation Bar (Clean & Pure Text, Dead-Center via absolute) */}
-          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 text-[13px] xl:text-sm font-semibold whitespace-nowrap absolute left-1/2 -translate-x-1/2">
+          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-6 text-xs xl:text-sm font-semibold whitespace-nowrap absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
@@ -107,7 +107,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               type="button"
-              className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition text-gray-700 cursor-pointer"
+              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition text-slate-700 cursor-pointer"
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -125,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:hidden border-b border-gray-200 bg-white px-6 pt-3 pb-6 space-y-1 shadow-xl overflow-hidden"
+            className="lg:hidden border-b border-slate-200 bg-white/98 backdrop-blur-lg px-6 pt-3 pb-6 space-y-1 shadow-xl overflow-hidden"
           >
             {navLinks.map((link) => (
               <Link
@@ -134,22 +134,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                 onClick={() => setMobileOpen(false)}
                 className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
                   isActive(link.path)
-                    ? 'bg-[#FDF0E9] text-[#E86A33] font-bold'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-teal-50 text-[#0D9488] font-bold'
+                    : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="pt-4 border-t border-gray-100 mt-2">
+            <div className="pt-4 border-t border-slate-100 mt-2">
               <button
                 onClick={() => {
                   setMobileOpen(false);
                   onOpenPrivacy();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#EAF2ED] text-[#143826] text-xs font-bold cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold cursor-pointer transition"
               >
-                <Lock className="w-4 h-4 text-[#143826]" />
+                <ShieldCheck className="w-4 h-4 text-[#0D9488]" />
                 <span>Pernyataan Privasi &amp; Zero Retention</span>
               </button>
             </div>
