@@ -343,7 +343,7 @@ export const adminService = {
     return getStored<CommunityPostItem[]>(STORAGE_KEYS.POSTS, INITIAL_COMMUNITY_POSTS);
   },
 
-  async updatePostStatus(id: string, status: 'published' | 'hidden'): Promise<boolean> {
+  async updatePostStatus(id: string, status: 'published' | 'hidden' | 'under_review'): Promise<boolean> {
     const list = await this.getCommunityPosts();
     const post = list.find((p) => p.id === id);
     if (!post) return false;
@@ -351,6 +351,40 @@ export const adminService = {
     setStored(STORAGE_KEYS.POSTS, list);
     await this.logAction('MODERATE_POST', post.title, `Status diubah ke ${status}`);
     return true;
+  },
+
+  async updateCommunityPost(updated: CommunityPostItem): Promise<boolean> {
+    const list = await this.getCommunityPosts();
+    const idx = list.findIndex((p) => p.id === updated.id);
+    if (idx === -1) return false;
+    list[idx] = updated;
+    setStored(STORAGE_KEYS.POSTS, list);
+    await this.logAction('UPDATE_COMMUNITY_POST', updated.title, `Postingan komunitas diperbarui oleh admin`);
+    return true;
+  },
+
+  async deleteCommunityPost(id: string): Promise<boolean> {
+    const list = await this.getCommunityPosts();
+    const post = list.find((p) => p.id === id);
+    const filtered = list.filter((p) => p.id !== id);
+    setStored(STORAGE_KEYS.POSTS, filtered);
+    if (post) {
+      await this.logAction('DELETE_COMMUNITY_POST', post.title, `Postingan komunitas dihapus`, 'warning');
+    }
+    return true;
+  },
+
+  async createCommunityPost(data: Omit<CommunityPostItem, 'id' | 'createdAt'>): Promise<CommunityPostItem> {
+    const list = await this.getCommunityPosts();
+    const newPost: CommunityPostItem = {
+      ...data,
+      id: `post-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    list.unshift(newPost);
+    setStored(STORAGE_KEYS.POSTS, list);
+    await this.logAction('CREATE_COMMUNITY_POST', newPost.title, `Postingan baru ditambahkan admin`);
+    return newPost;
   },
 
   async getReports(): Promise<ModerationReportItem[]> {

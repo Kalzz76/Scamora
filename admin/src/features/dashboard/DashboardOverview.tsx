@@ -55,9 +55,9 @@ export const DashboardOverview: React.FC = () => {
   return (
     <div className="p-6 sm:p-8 space-y-8 w-full">
       {/* ========================================================================= */}
-      {/* 1. HEADLINE UTAMA: PERKEMBANGAN SCAN (UNBOXED FULL WIDTH)                  */}
+      {/* 1. HEADLINE UTAMA: PERKEMBANGAN SCAN (FROSTED GLASS PANEL)                 */}
       {/* ========================================================================= */}
-      <section className="space-y-6 pb-8 border-b border-[#D8E0E7]">
+      <section className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
         {/* Headline Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4">
           <div>
@@ -127,9 +127,9 @@ export const DashboardOverview: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 2. KONDISI AI (UNBOXED FULL WIDTH)                                        */}
+      {/* 2. KONDISI AI (FROSTED GLASS PANEL)                                       */}
       {/* ========================================================================= */}
-      <section className="pb-8 border-b border-[#D8E0E7]">
+      <section className="glass-panel rounded-3xl p-6 sm:p-8">
         <AiConditionCard
           telemetry={stats.aiTelemetry}
           modelName="gemini-3.5-flash-lite"
@@ -138,9 +138,9 @@ export const DashboardOverview: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* 3 & 4. TOP PENIPUAN & JUMLAH PENGUNJUNG (UNBOXED SIDE-BY-SIDE)            */}
+      {/* 3 & 4. TOP PENIPUAN & JUMLAH PENGUNJUNG (FROSTED GLASS PANEL)              */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start pb-8 border-b border-[#D8E0E7]">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start glass-panel rounded-3xl p-6 sm:p-8">
         {/* Poin 3: Top Penipuan (Top 5) */}
         <div>
           <TopScamsCard scamTypeBreakdown={stats.scamTypeBreakdown} />
@@ -153,7 +153,7 @@ export const DashboardOverview: React.FC = () => {
       </section>
 
       {/* Bottom Privacy & Compliance Note */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#476072]">
+      <div className="glass-panel-subtle rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#476072]">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
           <span>

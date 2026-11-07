@@ -7,11 +7,13 @@ import { LoginPage } from './features/auth/LoginPage';
 import { adminAuth } from './services/adminAuth';
 import { DashboardOverview } from './features/dashboard/DashboardOverview';
 import { AiEngineConfigPage } from './features/ai-engine/AiEngineConfigPage';
-import { DemoScenariosPage } from './features/demo-scenarios/DemoScenariosPage';
 import { KnowledgeBasePage } from './features/knowledge-base/KnowledgeBasePage';
 import { QuizManagerPage } from './features/quiz-manager/QuizManagerPage';
 import { ModerationQueuePage } from './features/moderation/ModerationQueuePage';
 import { AuditLogsPage } from './features/audit-logs/AuditLogsPage';
+import adminBgLight from './assets/admin-bg.jpg';
+import adminBgDark from './assets/admin-bg-dark.jpg';
+import { ThemeProvider, useTheme } from './services/themeContext';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -80,21 +82,44 @@ const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 const AdminLayout: React.FC = () => {
+  const { isDark } = useTheme();
+
   return (
-    <div className="min-h-screen bg-white flex text-[#1A202C] font-sans">
-      {/* Mini Sidebar Navigation */}
-      <AdminSidebar reportCount={1} />
+    <div className="min-h-screen relative flex flex-col font-sans overflow-x-hidden">
+      {/* Blurred City Landscape Ambient Background (Day / Night depending on theme) */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        <img
+          src={isDark ? adminBgDark : adminBgLight}
+          alt="Admin Ambient Background"
+          className={`w-full h-full object-cover filter blur-[8px] scale-105 transition-all duration-700 ${
+            isDark ? 'opacity-90 brightness-95' : 'opacity-85 brightness-100'
+          }`}
+        />
+        {/* Soft Translucent Frosted Glass Wash */}
+        <div
+          className={`absolute inset-0 transition-colors duration-700 ${
+            isDark
+              ? 'bg-[#0B0F17]/50 backdrop-blur-[2px]'
+              : 'bg-white/45 backdrop-blur-[2px]'
+          }`}
+        />
+      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-white">
-        {/* Top Header */}
-        <AdminHeader />
+      {/* Top Header - Spans 100% Full Screen Width */}
+      <AdminHeader />
 
-        <main className="flex-1 overflow-y-auto pb-12 bg-white">
+      {/* Workspace Body: Fixed Sidebar (Left) + Content (Right) with 64px Top Offset for Fixed Header */}
+      <div className="flex-1 flex min-w-0 pt-[64px] relative z-10 bg-transparent">
+        {/* Fixed Mini Sidebar (74px spacer keeps content aligned) */}
+        <div className="w-[74px] shrink-0 relative z-40">
+          <AdminSidebar reportCount={1} />
+        </div>
+
+        {/* Main Content Area */}
+        <main className="flex-1 min-w-0 overflow-y-auto pb-12 bg-transparent">
           <Routes>
             <Route path="/" element={<DashboardOverview />} />
             <Route path="/engine" element={<AiEngineConfigPage />} />
-            <Route path="/presets" element={<DemoScenariosPage />} />
             <Route path="/knowledge" element={<KnowledgeBasePage />} />
             <Route path="/quiz" element={<QuizManagerPage />} />
             <Route path="/moderation" element={<ModerationQueuePage />} />
@@ -113,19 +138,21 @@ const AdminLayout: React.FC = () => {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
+      <ThemeProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

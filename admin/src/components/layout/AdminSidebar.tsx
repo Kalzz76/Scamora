@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Cpu,
-  PlaySquare,
   BookOpen,
   HelpCircle,
   ShieldCheck,
@@ -22,7 +21,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
   const navItems = [
     { to: '/', label: 'Dashboard Utama', icon: LayoutDashboard },
     { to: '/engine', label: 'AI Engine & Crawler', icon: Cpu, badge: 'Active' },
-    { to: '/presets', label: 'Skenario Demo', icon: PlaySquare },
     { to: '/knowledge', label: 'Pusat Pengetahuan', icon: BookOpen },
     { to: '/quiz', label: 'Guardian Challenge', icon: HelpCircle },
     { to: '/moderation', label: 'Moderasi Komunitas', icon: ShieldCheck, badgeCount: reportCount },
@@ -30,9 +28,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
   ];
 
   return (
-    <aside className="w-[74px] shrink-0 flex flex-col justify-between items-center pt-24 sm:pt-28 pb-4 pl-3 sticky top-0 h-screen z-40 select-none bg-transparent">
-      {/* 1. DOCK MENU ATAS: Height hanya dari icon pertama sampai icon terakhir, dengan gap di bagian atas & antar icon */}
-      <div className="w-[56px] bg-[#334257] border border-[#476072] rounded-3xl py-3 px-1.5 flex flex-col items-center shadow-xl shadow-slate-900/15">
+    <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
+      {/* 1. DOCK MENU AKSES KONTEN: Diketengahkan secara vertikal (my-auto) */}
+      <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center my-auto">
         <nav className="flex flex-col items-center gap-3 w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -85,7 +83,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
       </div>
 
       {/* 2. DOCK BAWAH TERPISAH: Buka Web Publik & Akun (dengan gap) */}
-      <div className="w-[56px] bg-[#334257] border border-[#476072] rounded-3xl py-3 px-1.5 flex flex-col items-center gap-2.5 shadow-xl shadow-slate-900/15">
+      <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center gap-2.5">
         {/* Tombol Buka Web Publik */}
         <a
           href="http://localhost:5173"

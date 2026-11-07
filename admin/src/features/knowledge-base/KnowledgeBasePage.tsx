@@ -18,6 +18,7 @@ import {
   Clock,
   Layers,
   ExternalLink,
+  Pencil,
 } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 import type { KnowledgeArticleItem, ScamCategoryItem } from '../../types/admin';
@@ -50,6 +51,19 @@ export const KnowledgeBasePage: React.FC = () => {
   const [stepsList, setStepsList] = useState<string[]>([]);
   const [currentStepInput, setCurrentStepInput] = useState('');
   const [formStatus, setFormStatus] = useState<'published' | 'draft'>('published');
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
+  const [editCategory, setEditCategory] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editSummary, setEditSummary] = useState('');
+  const [editVictims, setEditVictims] = useState('');
+  const [editStatus, setEditStatus] = useState<'published' | 'draft' | 'archived'>('published');
+  const [editRedFlags, setEditRedFlags] = useState<string[]>([]);
+  const [currentEditRedFlag, setCurrentEditRedFlag] = useState('');
+  const [editSteps, setEditSteps] = useState<string[]>([]);
+  const [currentEditStep, setCurrentEditStep] = useState('');
 
   useEffect(() => {
     loadData();
@@ -107,6 +121,76 @@ export const KnowledgeBasePage: React.FC = () => {
     }
     toast.success(`Status materi diubah menjadi ${nextStatus.toUpperCase()}`);
     await loadData();
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (art: KnowledgeArticleItem, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setEditingArticleId(art.id);
+    setEditCategory(art.categoryCode);
+    setEditTitle(art.title);
+    setEditSummary(art.summary);
+    setEditVictims(art.targetVictims);
+    setEditStatus(art.status);
+    setEditRedFlags([...art.redFlags]);
+    setEditSteps([...art.responseSteps]);
+    setCurrentEditRedFlag('');
+    setCurrentEditStep('');
+    setIsEditModalOpen(true);
+  };
+
+  // Save Edit
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingArticleId) return;
+    if (!editTitle.trim()) {
+      toast.error('Judul materi wajib diisi');
+      return;
+    }
+    const catObj = categories.find((c) => c.code === editCategory);
+    const updated = await adminService.updateArticle(editingArticleId, {
+      categoryCode: editCategory,
+      categoryName: catObj?.name || editCategory,
+      title: editTitle.trim(),
+      summary: editSummary.trim(),
+      targetVictims: editVictims.trim() || 'Masyarakat umum & pengguna digital',
+      status: editStatus,
+      redFlags: editRedFlags.length > 0 ? editRedFlags : ['Tidak ada indikator spesifik'],
+      responseSteps: editSteps.length > 0 ? editSteps : ['Laporkan ke pihak berwenang'],
+    });
+
+    if (updated) {
+      if (activeDetailArticle && activeDetailArticle.id === editingArticleId) {
+        setActiveDetailArticle(updated);
+      }
+      toast.success('Materi edukasi berhasil diperbarui!');
+      setIsEditModalOpen(false);
+      setEditingArticleId(null);
+      await loadData();
+    }
+  };
+
+  // Edit Chip helpers
+  const addEditRedFlag = () => {
+    if (currentEditRedFlag.trim()) {
+      setEditRedFlags([...editRedFlags, currentEditRedFlag.trim()]);
+      setCurrentEditRedFlag('');
+    }
+  };
+
+  const removeEditRedFlag = (idx: number) => {
+    setEditRedFlags(editRedFlags.filter((_, i) => i !== idx));
+  };
+
+  const addEditStep = () => {
+    if (currentEditStep.trim()) {
+      setEditSteps([...editSteps, currentEditStep.trim()]);
+      setCurrentEditStep('');
+    }
+  };
+
+  const removeEditStep = (idx: number) => {
+    setEditSteps(editSteps.filter((_, i) => i !== idx));
   };
 
   // Delete article
@@ -230,34 +314,35 @@ export const KnowledgeBasePage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 sm:p-8 space-y-6 w-full max-w-7xl mx-auto">
+    <div className="p-6 sm:p-8 space-y-6 w-full">
       
-      {/* 1. TOP BAR: TITLE & PRIMARY ACTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold tracking-wider uppercase">
-              Pusat Intelijen Edukasi
-            </span>
-            <span className="text-[#476072] text-xs">&bull;</span>
-            <span className="text-xs text-[#476072] font-medium">Scam Taxonomy &amp; Incident Protocols</span>
+      {/* 1. TOP BAR: TITLE & PRIMARY ACTION (FROSTED GLASS PANEL) */}
+      <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold tracking-wider uppercase">
+                Pusat Intelijen Edukasi
+              </span>
+              <span className="text-[#476072] text-xs">&bull;</span>
+              <span className="text-xs text-[#476072] font-medium">Scam Taxonomy &amp; Incident Protocols</span>
+            </div>
+            <h1 className="text-2xl font-black text-[#1A202C] tracking-tight">
+              Pusat Pengetahuan &amp; Ensiklopedia Modus
+            </h1>
+            <p className="text-xs text-[#476072]">
+              Kelola anatomi penipuan digital, panduan mitigasi korban, dan tanda bahaya yang terhubung ke platform publik.
+            </p>
           </div>
-          <h1 className="text-2xl font-black text-[#1A202C] tracking-tight">
-            Pusat Pengetahuan &amp; Ensiklopedia Modus
-          </h1>
-          <p className="text-xs text-[#476072]">
-            Kelola anatomi penipuan digital, panduan mitigasi korban, dan tanda bahaya yang terhubung ke platform publik.
-          </p>
-        </div>
 
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="px-4 py-2.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-emerald-400" />
-          <span>Tulis Materi Baru</span>
-        </button>
-      </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="px-4 py-2.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4 text-emerald-400" />
+            <span>Tulis Materi Baru</span>
+          </button>
+        </div>
 
       {/* 2. CATEGORY PILLS BAR (Minimalist, Scrollable) */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
@@ -338,14 +423,15 @@ export const KnowledgeBasePage: React.FC = () => {
           </select>
         </div>
       </div>
+    </div>
 
       {/* 4. FULL-WIDTH RESPONSIVE CARD GRID FOR ARTICLES */}
       {loading ? (
-        <div className="p-12 text-center text-xs font-mono text-[#476072] bg-white rounded-2xl border border-slate-200">
+        <div className="p-12 text-center text-xs font-mono text-[#476072] glass-panel rounded-2xl">
           Memuat basis materi edukasi...
         </div>
       ) : filteredArticles.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-white border border-slate-200 space-y-2">
+        <div className="p-12 text-center rounded-2xl glass-panel space-y-2">
           <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
           <h3 className="text-sm font-bold text-[#1A202C]">Tidak ada materi yang cocok</h3>
           <p className="text-xs text-[#476072] max-w-sm mx-auto">
@@ -361,7 +447,7 @@ export const KnowledgeBasePage: React.FC = () => {
               <div
                 key={art.id}
                 onClick={() => setActiveDetailArticle(art)}
-                className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-[#548CA8] shadow-2xs hover:shadow-xs transition-all cursor-pointer flex flex-col justify-between group space-y-4 relative"
+                className="p-5 rounded-2xl glass-panel hover:border-[#548CA8] shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group space-y-4 relative"
               >
                 {/* Card Top Meta */}
                 <div className="space-y-2">
@@ -369,17 +455,26 @@ export const KnowledgeBasePage: React.FC = () => {
                     <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257]">
                       {art.categoryName}
                     </span>
-                    <button
-                      onClick={(e) => handleToggleStatus(art, e)}
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md transition cursor-pointer ${
-                        isPublished
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
-                          : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
-                      }`}
-                      title="Klik untuk mengubah status"
-                    >
-                      {art.status.toUpperCase()}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => handleOpenEdit(art, e)}
+                        className="p-1 rounded-md border border-slate-200 hover:border-[#548CA8] bg-white/70 hover:bg-white text-[#476072] hover:text-[#548CA8] transition cursor-pointer"
+                        title="Edit materi ini"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={(e) => handleToggleStatus(art, e)}
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md transition cursor-pointer ${
+                          isPublished
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                        }`}
+                        title="Klik untuk mengubah status"
+                      >
+                        {art.status.toUpperCase()}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Title */}
@@ -449,6 +544,15 @@ export const KnowledgeBasePage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleOpenEdit(activeDetailArticle)}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  title="Edit data materi ini"
+                >
+                  <Pencil className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <span>Edit Materi</span>
+                </button>
+
                 <button
                   onClick={() => handleCopyGuide(activeDetailArticle)}
                   className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
@@ -804,6 +908,218 @@ export const KnowledgeBasePage: React.FC = () => {
                   className="px-4 py-2 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
                 >
                   Simpan Materi
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. MODAL FORM: EDIT MATERI EDUKASI */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                  Editor Pengetahuan Modus
+                </span>
+                <h3 className="text-base font-bold text-[#1A202C]">
+                  Edit Materi Edukasi Penipuan
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              
+              {/* Category & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#1A202C]">Kategori Modus:</label>
+                  <select
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  >
+                    {categories.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name} ({c.riskTier})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-[#1A202C]">Status Publikasi:</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as any)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  >
+                    <option value="published">Terbit (Published - Tayang di Web Publik)</option>
+                    <option value="draft">Draf (Hanya Admin Internal)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Title */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#1A202C]">Judul Kasus / Modus Penipuan:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Phishing Web Perbankan..."
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                />
+              </div>
+
+              {/* Target Victims */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#1A202C]">Target Sasaran Korban:</label>
+                <input
+                  type="text"
+                  placeholder="Contoh: Nasabah m-banking, pencari kerja..."
+                  value={editVictims}
+                  onChange={(e) => setEditVictims(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                />
+              </div>
+
+              {/* Summary */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#1A202C]">Ringkasan Anatomi Modus:</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Jelaskan secara ringkas bagaimana penipuan ini beroperasi..."
+                  value={editSummary}
+                  onChange={(e) => setEditSummary(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                />
+              </div>
+
+              {/* Red Flags Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#1A202C] flex items-center justify-between">
+                  <span>Tanda Bahaya (Red Flags):</span>
+                  <span className="text-[10px] text-[#476072] font-normal">Tekan Enter atau klik Tambah</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Contoh: Meminta kode OTP SMS..."
+                    value={currentEditRedFlag}
+                    onChange={(e) => setCurrentEditRedFlag(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addEditRedFlag();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addEditRedFlag}
+                    className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-[#334257] cursor-pointer"
+                  >
+                    Tambah
+                  </button>
+                </div>
+                {editRedFlags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {editRedFlags.map((rf, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs"
+                      >
+                        <span>{rf}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeEditRedFlag(idx)}
+                          className="text-rose-500 hover:text-rose-700 ml-1 cursor-pointer font-bold"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Response Steps Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-[#1A202C] flex items-center justify-between">
+                  <span>Langkah Tanggap Darurat:</span>
+                  <span className="text-[10px] text-[#476072] font-normal">Tekan Enter atau klik Tambah</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Contoh: Jangan pernah mentransfer biaya administrasi..."
+                    value={currentEditStep}
+                    onChange={(e) => setCurrentEditStep(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addEditStep();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addEditStep}
+                    className="px-3 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-[#334257] cursor-pointer"
+                  >
+                    Tambah
+                  </button>
+                </div>
+                {editSteps.length > 0 && (
+                  <div className="space-y-1 pt-1">
+                    {editSteps.map((step, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between gap-2 p-2 rounded-lg bg-emerald-50/60 border border-emerald-200 text-xs text-emerald-950"
+                      >
+                        <span>{idx + 1}. {step}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeEditStep(idx)}
+                          className="text-rose-500 hover:text-rose-700 font-bold px-1 cursor-pointer"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-[#476072] hover:bg-slate-50 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  Simpan Perubahan
                 </button>
               </div>
 

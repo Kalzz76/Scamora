@@ -14,9 +14,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../services/adminAuth';
+import adminBgLight from '../../assets/admin-bg.jpg';
+import adminBgDark from '../../assets/admin-bg-dark.jpg';
+import { useTheme } from '../../services/themeContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
 
   useEffect(() => {
     if (adminAuth.isAuthenticated()) {
@@ -66,8 +70,26 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#EEEEEE] flex flex-col justify-center items-center p-4 sm:p-6 font-sans">
-      <div className="w-full max-w-md">
+    <div className="relative min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
+      {/* Blurred City Landscape Ambient Background specifically for Admin Login */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+        <img
+          src={isDark ? adminBgDark : adminBgLight}
+          alt=""
+          aria-hidden="true"
+          className={`w-full h-full object-cover filter blur-[8px] scale-105 transition-all duration-700 ${
+            isDark ? 'opacity-90 brightness-95' : 'opacity-85 brightness-100'
+          }`}
+        />
+        {/* Soft Translucent Frosted Glass Wash */}
+        <div
+          className={`absolute inset-0 transition-colors duration-700 ${
+            isDark ? 'bg-[#0B0F17]/50 backdrop-blur-[2px]' : 'bg-white/45 backdrop-blur-[2px]'
+          }`}
+        />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
         <div className="text-center mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#D8E0E7] shadow-xs">
@@ -96,7 +118,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Card Box */}
-        <div className="bg-white rounded-3xl border border-[#D8E0E7] shadow-xl p-6 sm:p-8 space-y-6">
+        <div className="glass-panel rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6">
           <div className="border-b border-[#D8E0E7] pb-4">
             <h2 className="text-base font-bold text-[#1A202C] flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-[#548CA8]" />

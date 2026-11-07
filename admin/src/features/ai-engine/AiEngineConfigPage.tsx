@@ -72,7 +72,7 @@ export const AiEngineConfigPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* 1. KONDISI AI SAAT INI (GRAFIK PENGGUNAAN TOKEN & TEMPAT UJI KONEKSI)      */}
       {/* ========================================================================= */}
-      <section>
+      <section className="glass-panel rounded-3xl p-6 sm:p-8">
         <AiConditionSection
           aiConfig={aiConfig}
           hourlyTokens={stats?.aiTelemetry?.hourlyTokens24h}
@@ -85,7 +85,7 @@ export const AiEngineConfigPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. SETTING LANJUTAN (COLLAPSIBLE / ACCORDION DENGAN KLIK BUKA TUTUP)      */}
       {/* ========================================================================= */}
-      <section className="space-y-6 pt-4 border-t border-[#D8E0E7]">
+      <section className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
         {/* Clickable Header Accordion Trigger */}
         <button
           type="button"
@@ -175,7 +175,7 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setAiConfig({ ...aiConfig, activeProvider: e.target.value as any })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value="gemini">Google Gemini (Disarankan - Kuota Cepat &amp; Stabil)</option>
                     <option value="anthropic">Anthropic Claude (claude-3-5-haiku)</option>
@@ -194,7 +194,7 @@ export const AiEngineConfigPage: React.FC = () => {
                   <select
                     value={aiConfig.geminiModel}
                     onChange={(e) => setAiConfig({ ...aiConfig, geminiModel: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Rekomendasi Utama - Sangat Cepat)</option>
                     <option value="gemini-3.8-flash">gemini-3.8-flash (Penalaran Semantik Mendalam)</option>
@@ -206,7 +206,7 @@ export const AiEngineConfigPage: React.FC = () => {
                 </div>
 
                 {/* 3. Temperature Slider */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 max-w-xl">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-[#1A202C]">
                       Temperatur Penalaran:
@@ -241,7 +241,7 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setAiConfig({ ...aiConfig, maxTokens: parseInt(e.target.value, 10) })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value={512}>512 Tokens (Cepat &amp; Hemat)</option>
                     <option value={1024}>1.024 Tokens (Standar Scamora)</option>
@@ -281,7 +281,7 @@ export const AiEngineConfigPage: React.FC = () => {
                         timeoutMs: parseInt(e.target.value, 10),
                       })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
                   />
                   <p className="text-[11px] text-[#476072]">
                     Mencegah proses menggantung jika server situs phishing sengaja lambat atau tarpit.
@@ -305,7 +305,7 @@ export const AiEngineConfigPage: React.FC = () => {
                         maxBytesKb: parseInt(e.target.value, 10),
                       })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
                   />
                   <p className="text-[11px] text-[#476072]">
                     Maksimal ukuran halaman statis yang dibaca (mencegah zip/data bomb).
@@ -323,12 +323,12 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setCrawlerConfig({ ...crawlerConfig, userAgent: e.target.value })
                     }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xl px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
                   />
                 </div>
 
                 {/* 4. Crawler Feature Toggles (Vertically Stacked) */}
-                <div className="flex flex-col space-y-2.5 pt-2">
+                <div className="flex flex-col space-y-2.5 pt-2 max-w-xl">
                   <label className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between cursor-pointer hover:border-[#548CA8] transition">
                     <div className="space-y-0.5">
                       <span className="text-xs font-bold text-[#1A202C] block">Proteksi SSRF</span>
@@ -387,7 +387,7 @@ export const AiEngineConfigPage: React.FC = () => {
                 <span className="text-[11px] font-mono text-[#476072]">Skala Risiko 0 - 100</span>
               </div>
 
-              <div className="flex flex-col space-y-4">
+              <div className="flex flex-col space-y-4 max-w-xl">
                 {/* 1. Batas Risiko Tinggi */}
                 <div className="p-4 rounded-xl bg-rose-50/50 border border-rose-200 space-y-2">
                   <div className="flex items-center justify-between">

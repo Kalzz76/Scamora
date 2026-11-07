@@ -33,7 +33,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
     <div className="space-y-6">
       {/* Top Numeric Highlights */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7]">
+        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
           <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Total Scan (24 Jam)
           </span>
@@ -46,7 +46,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7]">
+        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
           <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Rata-rata Scan / Jam
           </span>
@@ -59,7 +59,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7]">
+        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
           <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Puncak Aktivitas (Peak)
           </span>
@@ -72,7 +72,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7]">
+        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
           <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Proporsi Masukan
           </span>

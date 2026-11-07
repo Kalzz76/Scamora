@@ -41,8 +41,8 @@ export const AuditLogsPage: React.FC = () => {
 
   return (
     <div className="p-6 sm:p-8 space-y-8 w-full">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* HEADER (FROSTED GLASS PANEL) */}
+      <div className="glass-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-black text-[#1A202C] tracking-tight">Log Audit &amp; Jejak Rekam Sistem</h2>
           <p className="text-xs text-[#476072] mt-0.5">
@@ -52,8 +52,8 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* FILTER & SEARCH */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-2xl bg-white border border-[#D8E0E7] shadow-xs">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7]">
+      <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/70 border border-[#D8E0E7]">
           <button
             onClick={() => setFilterSeverity('all')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${filterSeverity === 'all' ? 'bg-[#334257] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
@@ -84,13 +84,13 @@ export const AuditLogsPage: React.FC = () => {
             placeholder="Cari aksi, target, detail log..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#D8E0E7] bg-white/80 text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
           />
         </div>
       </div>
 
       {/* LOGS TABLE */}
-      <div className="admin-card overflow-hidden">
+      <div className="glass-panel rounded-3xl overflow-hidden p-6 sm:p-8">
         {loading ? (
           <div className="p-12 text-center text-xs font-mono text-[#476072]">Memuat audit log...</div>
         ) : filteredLogs.length === 0 ? (
