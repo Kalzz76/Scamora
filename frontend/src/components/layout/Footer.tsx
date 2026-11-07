@@ -189,6 +189,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
                   Standar Keamanan Siber
                 </a>
               </li>
+              <li>
+                <a href="#/admin" className="hover:text-[#0D9488] transition-colors flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-700">
+                  <span>Portal Administrator</span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 text-slate-500 font-mono">Petugas</span>
+                </a>
+              </li>
             </ul>
           </div>
 

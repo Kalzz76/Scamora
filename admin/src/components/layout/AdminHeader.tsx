@@ -6,13 +6,16 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { adminAuth } from '../../services/adminAuth';
 
 export const AdminHeader: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const currentUser = adminAuth.getUser();
 
   const handleLogout = () => {
-    toast.info('Sesi administrasi diamankan.');
+    toast.info('Sesi administrasi berhasil ditutup.');
     setDropdownOpen(false);
+    adminAuth.logout();
   };
 
   return (
@@ -66,14 +69,14 @@ export const AdminHeader: React.FC = () => {
             <div className="text-left hidden sm:block">
               <div className="flex items-center gap-1.5">
                 <span className="text-xs font-bold text-[#334257]">
-                  Super Administrator
+                  {currentUser?.name || 'Super Administrator'}
                 </span>
                 <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-sm bg-[#548CA8]/15 text-[#334257] font-bold border border-[#548CA8]/30">
                   Online
                 </span>
               </div>
               <span className="text-[10px] text-[#476072] block leading-tight font-mono">
-                admin@scamora.id
+                {currentUser?.username ? `${currentUser.username}@scamora.id` : 'admin@scamora.id'}
               </span>
             </div>
 

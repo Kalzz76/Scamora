@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { env } from '../config/env';
 import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
+import { createAdminToken, validateAdminCredentials } from '../services/adminAuthService';
 import type { RiskLevel, ScamType } from '../types/analysis';
 
 export interface DemoPresetItem {
@@ -53,6 +54,51 @@ let runtimeCrawlerConfig = {
   detectForms: true,
   allowRedirects: true,
 };
+
+export async function handleAdminLogin(req: Request, res: Response): Promise<void> {
+  const { username, password } = req.body;
+  const isValid = validateAdminCredentials(username, password);
+
+  if (!isValid) {
+    res.status(401).json({
+      success: false,
+      error: {
+        code: 'INVALID_CREDENTIALS',
+        message: 'Nama pengguna atau kata sandi tidak valid. Periksa kembali akun Anda.',
+      },
+    });
+    return;
+  }
+
+  const token = createAdminToken(username);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      token,
+      user: {
+        username,
+        role: 'admin',
+        name: 'Super Administrator',
+      },
+      expiresIn: 86400,
+    },
+  });
+}
+
+export async function handleVerifyAdminSession(_req: Request, res: Response): Promise<void> {
+  res.status(200).json({
+    success: true,
+    data: {
+      authenticated: true,
+      user: {
+        username: env.ADMIN_USERNAME,
+        role: 'admin',
+        name: 'Super Administrator',
+      },
+    },
+  });
+}
 
 export async function handleGetStats(_req: Request, res: Response): Promise<void> {
   res.status(200).json({

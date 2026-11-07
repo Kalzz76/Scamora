@@ -1,36 +1,42 @@
 import { Router } from 'express';
 import {
-  handleGetStats,
-  handleGetAiConfig,
-  handleUpdateAiConfig,
-  handleTestAi,
-  handleGetCrawlerConfig,
-  handleUpdateCrawlerConfig,
-  handleGetPresets,
+  handleAdminLogin,
   handleCreatePreset,
-  handleUpdatePreset,
   handleDeletePreset,
+  handleGetAiConfig,
+  handleGetCrawlerConfig,
+  handleGetPresets,
+  handleGetStats,
+  handleTestAi,
+  handleUpdateAiConfig,
+  handleUpdateCrawlerConfig,
+  handleUpdatePreset,
+  handleVerifyAdminSession,
 } from '../controllers/admin.controller';
+import { requireAdminAuth } from '../middlewares/adminAuth';
+import { validateBody } from '../middlewares/validate';
+import { adminLoginSchema } from '../schemas/adminAuth.schema';
 
 const router = Router();
 
-// Dashboard Telemetry & Stats
+router.post('/login', validateBody(adminLoginSchema), handleAdminLogin);
+
+router.get('/auth/verify', requireAdminAuth, handleVerifyAdminSession);
+
+router.use(requireAdminAuth);
+
 router.get('/stats', handleGetStats);
 
-// AI Engine Configuration & Latency Ping
 router.get('/ai-config', handleGetAiConfig);
 router.put('/ai-config', handleUpdateAiConfig);
 router.post('/test-ai', handleTestAi);
 
-// Crawler Configuration
 router.get('/crawler-config', handleGetCrawlerConfig);
 router.put('/crawler-config', handleUpdateCrawlerConfig);
 
-// Demo Presets CRUD
 router.get('/presets', handleGetPresets);
 router.post('/presets', handleCreatePreset);
 router.put('/presets/:id', handleUpdatePreset);
 router.delete('/presets/:id', handleDeletePreset);
 
 export default router;
-

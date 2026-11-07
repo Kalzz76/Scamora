@@ -15,6 +15,9 @@ const envSchema = z.object({
   SAFE_BROWSING_API_KEY: z.string().default(''),
   SUPABASE_URL: z.string().default(''),
   SUPABASE_KEY: z.string().default(''),
+  ADMIN_USERNAME: z.string().default('admin'),
+  ADMIN_PASSWORD: z.string().default('admin123'),
+  ADMIN_SECRET: z.string().default('scamora-super-secret-admin-key-2026'),
 });
 
 const parsed = envSchema.safeParse(process.env);

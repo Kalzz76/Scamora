@@ -1,8 +1,10 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AdminSidebar } from './components/layout/AdminSidebar';
 import { AdminHeader } from './components/layout/AdminHeader';
+import { LoginPage } from './features/auth/LoginPage';
+import { adminAuth } from './services/adminAuth';
 import { DashboardOverview } from './features/dashboard/DashboardOverview';
 import { AiEngineConfigPage } from './features/ai-engine/AiEngineConfigPage';
 import { DemoScenariosPage } from './features/demo-scenarios/DemoScenariosPage';
@@ -52,7 +54,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
                   localStorage.clear();
                   window.location.reload();
                 }}
-                className="px-4 py-2 bg-[#334257] hover:bg-[#476072] text-white text-xs font-semibold rounded-xl"
+                className="px-4 py-2 bg-[#334257] hover:bg-[#476072] text-white text-xs font-semibold rounded-xl cursor-pointer"
               >
                 Reset Cache &amp; Muat Ulang
               </button>
@@ -66,15 +68,26 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const isAuth = adminAuth.isAuthenticated();
+  const location = useLocation();
+
+  if (!isAuth) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex text-[#1A202C] font-sans">
-      {/* Mini Sidebar Navigation (Icons with hover tooltips) */}
+      {/* Mini Sidebar Navigation */}
       <AdminSidebar reportCount={1} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen bg-white">
-        {/* Top Header with Brand Name on Left & Account on Right */}
+        {/* Top Header */}
         <AdminHeader />
 
         <main className="flex-1 overflow-y-auto pb-12 bg-white">
@@ -86,8 +99,8 @@ const AdminLayout: React.FC = () => {
             <Route path="/quiz" element={<QuizManagerPage />} />
             <Route path="/moderation" element={<ModerationQueuePage />} />
             <Route path="/audit-logs" element={<AuditLogsPage />} />
-            {/* Fallback */}
-            <Route path="*" element={<DashboardOverview />} />
+            {/* Fallback inside admin */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       </div>
@@ -101,7 +114,17 @@ export default function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <AdminLayout />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </BrowserRouter>
     </ErrorBoundary>
   );

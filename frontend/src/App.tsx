@@ -11,6 +11,7 @@ import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
+import { AdminLoginPage } from './features/admin-auth/AdminLoginPage';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -54,6 +55,8 @@ function AnimatedRoutes() {
             <Route path="/kuis" element={<QuizPage />} />
             <Route path="/pengetahuan" element={<KnowledgePage />} />
             <Route path="/komunitas" element={<KomunitasPage />} />
+            <Route path="/admin" element={<AdminLoginPage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>

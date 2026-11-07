@@ -14,7 +14,7 @@ import { calculateRiskScore } from '../riskScoring';
 import { requestClaudePageAnalysis } from './claudePageAnalyzer';
 import { scanCrawlHeuristics } from './crawlerHeuristics';
 import { inspectDomainAndDns } from './domainInspector';
-import { crawlWebPage } from './pageCrawler';
+import { crawlWebPage, type CrawlResult } from './pageCrawler';
 import { checkSafeBrowsing } from './safeBrowsing';
 import { sanitizeUrl } from './sanitizeUrl';
 import { inspectSslCertificate } from './sslInspector';
@@ -78,15 +78,20 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
   rawIndicators.push(...sslData.indicators);
 
   // Lapisan 4: Safe Web Page Crawling & DOM Heuristics
-  const crawl =
+  const crawl: CrawlResult =
     crawlRes.status === 'fulfilled'
       ? crawlRes.value
       : {
-          status: 'failed' as const,
+          status: 'failed',
           note: 'Perayapan konten halaman gagal dijalankan.',
           extractedText: '',
-          forms: [],
-          detectedApks: [],
+          hasPasswordInput: false,
+          hasSensitiveFinancialInput: false,
+          hasApkDownloadLink: false,
+          isDirectApkDownload: false,
+          detectedForms: [],
+          externalFormTargets: [],
+          apkLinks: [],
         };
 
   if (crawl.status === 'completed') {
