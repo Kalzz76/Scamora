@@ -136,16 +136,6 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
           {/* LEFT COLUMN: HERO, 2D DETECTIVE ILLUSTRATION & LIVE TELEMETRY (lg:col-span-6) */}
           <div className="lg:col-span-6 space-y-6">
             
-            {/* Eyebrow Badge */}
-            <motion.div 
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] border border-[#143826]/15 font-mono text-xs font-bold uppercase tracking-wider"
-            >
-              <ShieldCheck className="w-4 h-4 text-[#E86A33]" />
-              <span>PEMINDAI TELEMETRI TAUTAN &amp; PHISHING</span>
-            </motion.div>
-
             {/* Bold H1 Headline */}
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
@@ -381,7 +371,7 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           }`}>
-                            {isHighRisk ? '🔴 Phishing' : isReview ? '🟡 Mencurigakan' : '🟢 Situs Resmi'}
+                            {isHighRisk ? 'Phishing' : isReview ? 'Mencurigakan' : 'Situs Resmi'}
                           </span>
                           <span className="font-bold text-xs text-gray-900 truncate">
                             {preset.title}

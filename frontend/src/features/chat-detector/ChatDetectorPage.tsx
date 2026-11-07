@@ -8,7 +8,6 @@ import {
   RotateCcw, 
   Play, 
   Lock,
-  MessageSquare,
   ShieldCheck,
   CheckCircle2,
   Smartphone,
@@ -137,13 +136,8 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
       {/* DUAL-PANE INTERACTIVE WORKSPACE (Left: Phone Simulator, Right: Forensics Lab) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 w-full relative z-10">
         
-        {/* Top Header Bar with Eyebrow and Headline */}
+        {/* Top Header Bar with Headline */}
         <div className="mb-10 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] border border-[#143826]/15 font-mono text-xs font-bold uppercase tracking-wider">
-            <MessageSquare className="w-4 h-4 text-[#E86A33]" />
-            <span>LABORATORIUM FORENSIK PERCAKAPAN &amp; REKAYASA SOSIAL</span>
-          </div>
-
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#143826] tracking-tight leading-tight">
@@ -425,7 +419,7 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           }`}>
-                            {isHighRisk ? '🔴 Penipuan' : isReview ? '🟡 Mencurigakan' : '🟢 Wajar'}
+                            {isHighRisk ? 'Penipuan' : isReview ? 'Mencurigakan' : 'Wajar'}
                           </span>
                           <span className="font-bold text-xs text-gray-900 truncate">
                             {preset.title}

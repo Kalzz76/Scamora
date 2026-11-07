@@ -67,7 +67,7 @@ function MainContent() {
   const isHome = location.pathname === '/';
 
   return (
-    <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-20 lg:pt-24'}`}>
+    <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
       <AnimatedRoutes />
     </main>
   );

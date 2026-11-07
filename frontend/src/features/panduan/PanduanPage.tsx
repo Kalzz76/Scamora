@@ -6,14 +6,16 @@ import {
   ExternalLink, 
   CheckSquare, 
   Square, 
-  ShieldCheck, 
   Clock, 
   PhoneCall, 
   FileText,
   ChevronRight,
   ArrowRight,
   ArrowLeft,
-  ChevronLeft
+  ChevronLeft,
+  Globe,
+  Smartphone,
+  ShieldCheck
 } from 'lucide-react';
 import { GuidebookIllustration } from '../../components/illustrations/Illustrations2D';
 import { toast } from 'sonner';
@@ -75,7 +77,7 @@ export const PanduanPage: React.FC = () => {
       category: 'apk',
       title: 'Protokol Isolasi Darurat Pasca Menginstal Berkas .APK',
       subtitle: 'Tindakan cepat memutus kendali spyware pencuri SMS & OTP perbankan.',
-      badge: 'DARURAT MALWARE',
+      badge: 'Darurat APK Malware',
       severity: 'DARURAT TINGGI',
       severityColor: 'bg-red-50 text-red-700 border-red-200',
       readTime: '3 Menit Respon Cepat',
@@ -144,7 +146,7 @@ export const PanduanPage: React.FC = () => {
       category: 'phishing',
       title: 'Penyelamatan Cepat Terlanjur Mengklik Tautan Phishing',
       subtitle: 'Langkah tangkal kebocoran data formulir dan pembajakan sesi peramban.',
-      badge: 'DARURAT PHISHING',
+      badge: 'Darurat Tautan Phishing',
       severity: 'RISIKO TINGGI',
       severityColor: 'bg-amber-50 text-amber-800 border-amber-200',
       readTime: '2 Menit Respon Cepat',
@@ -185,7 +187,7 @@ export const PanduanPage: React.FC = () => {
       category: 'domain',
       title: 'Panduan Membedah Anatomi Domain Bank & Institusi Resmi',
       subtitle: 'Teknik membaca subdomain vs domain induk untuk menghindari jebakan typosquatting.',
-      badge: 'PREVENTIF',
+      badge: 'Langkah Preventif',
       severity: 'PREVENTIF',
       severityColor: 'bg-emerald-50 text-emerald-800 border-emerald-200',
       readTime: '3 Menit Literasi',
@@ -213,7 +215,7 @@ export const PanduanPage: React.FC = () => {
       category: 'lapor',
       title: 'Prosedur Penerbitan Aduan Resmi Siber ke Kominfo & Kepolisian',
       subtitle: 'Langkah hukum resmi agar nomor rekening penipu dibekukan dan situs diblokir nasional.',
-      badge: 'TINDAK LANJUT',
+      badge: 'Tindak Lanjut & Lapor',
       severity: 'TINDAK LANJUT',
       severityColor: 'bg-blue-50 text-blue-800 border-blue-200',
       readTime: '4 Menit Panduan',
@@ -316,13 +318,13 @@ export const PanduanPage: React.FC = () => {
             </div>
             <div className="space-y-1.5">
               <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
-                <span className="text-red-600 font-bold">❌ PALSU:</span>
+                <span className="text-red-700 font-bold font-mono text-[11px]">PALSU:</span>
                 <span className="text-slate-800 break-all text-[11px]">
                   https://bca.<strong className="text-red-600 bg-red-100 px-1 rounded">klik-bca-promo.xyz</strong>/login
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2">
-                <span className="text-emerald-600 font-bold">✅ ASLI:</span>
+                <span className="text-emerald-700 font-bold font-mono text-[11px]">RESMI:</span>
                 <span className="text-slate-800 break-all text-[11px]">
                   https://<strong className="text-emerald-700 bg-emerald-100 px-1 rounded">ibank.klikbca.com</strong>/
                 </span>
@@ -379,12 +381,7 @@ export const PanduanPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border-b border-slate-200/80 pb-8">
           
           <div className="lg:col-span-8 space-y-4 text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200/80 font-mono text-xs font-bold uppercase tracking-wider shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-[#E86A33]" />
-              <span>ALUR JALUR MITIGASI &amp; PROTOKOL INSIDEN</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tight leading-tight">
               Panduan Tanggap Darurat <br />
               <span className="text-[#0D9488]">&amp; Alur Aliran Penyelamatan Siber.</span>
             </h1>
@@ -393,36 +390,49 @@ export const PanduanPage: React.FC = () => {
               Ikuti alur tahapan horizontal di bawah ini untuk mengambil tindakan penyelamatan terstruktur sebelum pelaku sempat mengeksploitasi data atau membobol rekening Anda.
             </p>
 
-            {/* Protocol Switcher Pills */}
-            <div className="flex items-center gap-2 flex-wrap pt-2">
-              {tutorials.map((tut) => (
+            {/* Protocol Switcher Segmented Control */}
+            <div className="pt-2 space-y-2">
+              <span className="text-[11px] font-mono font-bold tracking-wider text-slate-500 uppercase block">
+                Pilih Protokol Penanganan:
+              </span>
+              <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 max-w-full overflow-x-auto gap-1">
+                {tutorials.map((tut) => {
+                  const isActive = activeTutorialId === tut.id && !showChecklistView;
+                  return (
+                    <button
+                      key={tut.id}
+                      onClick={() => {
+                        setActiveTutorialId(tut.id);
+                        setActiveStepIndex(0);
+                        setShowChecklistView(false);
+                      }}
+                      className={`whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isActive
+                          ? 'bg-[#0F172A] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      {tut.id === 'tutorial-apk' && <Smartphone className="w-3.5 h-3.5 shrink-0" />}
+                      {tut.id === 'tutorial-phishing' && <Globe className="w-3.5 h-3.5 shrink-0" />}
+                      {tut.id === 'tutorial-domain' && <ShieldCheck className="w-3.5 h-3.5 shrink-0" />}
+                      {tut.id === 'tutorial-lapor' && <PhoneCall className="w-3.5 h-3.5 shrink-0" />}
+                      <span>{tut.badge}</span>
+                    </button>
+                  );
+                })}
+
                 <button
-                  key={tut.id}
-                  onClick={() => {
-                    setActiveTutorialId(tut.id);
-                    setActiveStepIndex(0);
-                    setShowChecklistView(false);
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                    activeTutorialId === tut.id && !showChecklistView
-                      ? 'bg-[#0F172A] text-white shadow-sm ring-1 ring-[#0F172A]'
-                      : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                  onClick={() => setShowChecklistView(true)}
+                  className={`whitespace-nowrap px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    showChecklistView
+                      ? 'bg-[#0D9488] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                   }`}
                 >
-                  {tut.badge}
+                  <CheckSquare className="w-3.5 h-3.5 shrink-0" />
+                  <span>Checklist Perimeter</span>
                 </button>
-              ))}
-
-              <button
-                onClick={() => setShowChecklistView(true)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  showChecklistView
-                    ? 'bg-[#E86A33] text-white shadow-sm'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-                }`}
-              >
-                📋 Checklist Perimeter Keamanan
-              </button>
+              </div>
             </div>
 
           </div>
@@ -430,7 +440,7 @@ export const PanduanPage: React.FC = () => {
           {/* 2D Cartoon Visual */}
           <div className="lg:col-span-4 flex justify-center lg:justify-end">
             <div className="p-4 rounded-3xl bg-gradient-to-b from-teal-50/60 to-white border border-slate-200/80 flex items-center justify-center shadow-xs">
-              <GuidebookIllustration className="w-56 h-40 sm:w-64 sm:h-48" />
+              <GuidebookIllustration className="w-44 h-32 sm:w-64 sm:h-48" />
             </div>
           </div>
 
@@ -670,12 +680,12 @@ export const PanduanPage: React.FC = () => {
               </div>
 
               {/* Bottom Step Flow Navigation */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
                 <button
                   type="button"
                   disabled={activeStepIndex === 0}
                   onClick={() => setActiveStepIndex((prev) => Math.max(0, prev - 1))}
-                  className={`px-5 py-2.5 rounded-full text-xs font-bold border transition flex items-center gap-2 ${
+                  className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-xs font-bold border transition flex items-center justify-center gap-2 ${
                     activeStepIndex === 0
                       ? 'opacity-30 cursor-not-allowed border-slate-200 text-slate-400'
                       : 'bg-white hover:bg-slate-100 border-slate-300 text-slate-700 cursor-pointer shadow-2xs'
@@ -689,7 +699,7 @@ export const PanduanPage: React.FC = () => {
                   type="button"
                   disabled={activeStepIndex === currentTutorial.steps.length - 1}
                   onClick={() => setActiveStepIndex((prev) => Math.min(currentTutorial.steps.length - 1, prev + 1))}
-                  className={`btn-animate px-6 py-2.5 rounded-full text-xs font-bold transition flex items-center gap-2 ${
+                  className={`btn-animate w-full sm:w-auto px-6 py-2.5 rounded-full text-xs font-bold transition flex items-center justify-center gap-2 ${
                     activeStepIndex === currentTutorial.steps.length - 1
                       ? 'opacity-30 cursor-not-allowed bg-slate-200 text-slate-400'
                       : 'bg-[#0D9488] hover:bg-[#0F766E] text-white shadow-xs cursor-pointer'

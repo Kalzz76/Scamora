@@ -61,7 +61,7 @@ export const DecisionPanel: React.FC<DecisionPanelProps> = ({
             <button
               onClick={onContinue}
               type="button"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition-all shadow-xs"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
             >
               <span>{isCompleted ? 'Lihat Laporan Lengkap' : 'Lanjutkan Percakapan'}</span>
               <ArrowRight className="w-4 h-4 text-[#E86A33]" />

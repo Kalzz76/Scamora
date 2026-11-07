@@ -55,7 +55,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
     difficulty: 'easy',
     characterName: 'Budi Santoso (Kurir J&T)',
     characterRole: 'Mengaku Kurir Ekspedisi',
-    characterAvatar: '🚚',
+    characterAvatar: '',
     initialDialogue: [
       {
         id: 'msg-01',
@@ -141,7 +141,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
               {
                 id: 'c3',
                 sender: 'system',
-                text: '🛡️ TEPAT DAN AMAN! Anda memutus rantai serangan siber dan melindungi perangkat dari infeksi malware.',
+                text: 'TEPAT DAN AMAN! Anda memutus rantai serangan siber dan melindungi perangkat dari infeksi malware.',
                 timestamp: '13:42',
               },
             ],
@@ -204,7 +204,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
     difficulty: 'medium',
     characterName: 'HaloBCA Priority Support',
     characterRole: 'Mengaku Petugas Customer Care',
-    characterAvatar: '🏦',
+    characterAvatar: '',
     initialDialogue: [
       {
         id: 'b-01',
@@ -273,7 +273,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
               {
                 id: 'bc2',
                 sender: 'system',
-                text: '🛡️ DETEKSI TAJAM! Anda berhasil mengidentifikasi teknik Domain Spoofing dan melindungi akun bank Anda.',
+                text: 'DETEKSI TAJAM! Anda berhasil mengidentifikasi teknik Domain Spoofing dan melindungi akun bank Anda.',
                 timestamp: '09:20',
               },
             ],
@@ -296,7 +296,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
     difficulty: 'medium',
     characterName: 'Jessica - HRD Global Media',
     characterRole: 'Mengaku Recruiter Freelance',
-    characterAvatar: '💼',
+    characterAvatar: '',
     initialDialogue: [
       {
         id: 'j-01',
@@ -335,7 +335,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
               {
                 id: 'jc1',
                 sender: 'system',
-                text: '💸 UANG ANDA LENYAP! Setelah transfer deposit, kontak Anda diblokir atau diminta transfer lagi dengan dalih biaya pembukaan sistem.',
+                text: 'UANG ANDA LENYAP! Setelah transfer deposit, kontak Anda diblokir atau diminta transfer lagi dengan dalih biaya pembukaan sistem.',
                 timestamp: '11:05',
               },
             ],
@@ -352,7 +352,7 @@ const CLIENT_FALLBACK_SCENARIOS: ChallengeScenario[] = [
               {
                 id: 'jc2',
                 sender: 'system',
-                text: '🛡️ ANDA TERLINDUNGI! Anda tidak membuang waktu dan modal pada tawaran kerja fiktif.',
+                text: 'ANDA TERLINDUNGI! Anda tidak membuang waktu dan modal pada tawaran kerja fiktif.',
                 timestamp: '11:06',
               },
             ],
