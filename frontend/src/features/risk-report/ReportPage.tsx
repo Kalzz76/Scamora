@@ -5,7 +5,8 @@ import {
   ArrowRight, 
   PlusCircle, 
   X, 
-  AlertTriangle 
+  AlertTriangle,
+  ArrowUpDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
@@ -15,6 +16,7 @@ export const ReportPage: React.FC = () => {
   const [domains, setDomains] = useState<ScannedDomain[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'high' | 'review' | 'low'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'most_checked' | 'highest_risk'>('newest');
   const [stats, setStats] = useState({ totalDomains: 1248, highRiskPercent: 31, checksToday: 86 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reportInput, setReportInput] = useState('');
@@ -42,11 +44,27 @@ export const ReportPage: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const filteredDomains = domains.filter((d) => {
-    const matchesSearch = d.domain.toLowerCase().includes(searchQuery.trim().toLowerCase());
-    const matchesCategory = filterCategory === 'all' || d.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredDomains = [...domains]
+    .filter((d) => {
+      const matchesSearch = d.domain.toLowerCase().includes(searchQuery.trim().toLowerCase());
+      const matchesCategory = filterCategory === 'all' || d.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'newest') {
+        return (b.timestamp || 0) - (a.timestamp || 0);
+      }
+      if (sortBy === 'oldest') {
+        return (a.timestamp || 0) - (b.timestamp || 0);
+      }
+      if (sortBy === 'most_checked') {
+        return b.count - a.count;
+      }
+      if (sortBy === 'highest_risk') {
+        return b.riskPercent - a.riskPercent;
+      }
+      return 0;
+    });
 
   const categoryStyles = {
     high: {
@@ -130,68 +148,132 @@ export const ReportPage: React.FC = () => {
         {/* MAIN TABLE CONTAINER */}
         <div className="bg-white border border-[#E3E0DA] rounded-[22px] overflow-hidden shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)]">
           
-          {/* TOOLBAR: SEARCH & FILTER CHIPS */}
-          <div className="p-4 sm:p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 border-b border-[#EEEAE0]">
+          {/* TOOLBAR: SEARCH, CATEGORY, & SORTING */}
+          <div className="p-4 sm:p-5 flex flex-col gap-4 border-b border-[#EEEAE0]">
             
-            {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-[#14161C] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama domain (contoh: bca, xyz, login)..."
-                className="w-full h-11 pl-11 pr-4 rounded-full border border-[#D5D0C3] bg-white text-sm text-[#14161C] placeholder:text-[#8C887B] focus:outline-none focus:ring-2 focus:ring-[#14161c]/10 focus:border-[#14161c] transition-all font-['DM_Sans',sans-serif]"
-              />
+            {/* Top Row: Search Input + Category Chips */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-[#14161C] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari nama domain (contoh: bca, xyz, login)..."
+                  className="w-full h-11 pl-11 pr-4 rounded-full border border-[#D5D0C3] bg-white text-sm text-[#14161C] placeholder:text-[#8C887B] focus:outline-none focus:ring-2 focus:ring-[#14161c]/10 focus:border-[#14161c] transition-all font-['DM_Sans',sans-serif]"
+                />
+              </div>
+
+              {/* Category Filter Chips */}
+              <div className="inline-flex bg-[#eeece8] p-1 rounded-full gap-1 flex-wrap items-center self-start lg:self-auto" role="tablist">
+                <button
+                  type="button"
+                  onClick={() => setFilterCategory('all')}
+                  className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
+                    filterCategory === 'all'
+                      ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                      : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
+                  }`}
+                >
+                  Semua
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterCategory('high')}
+                  className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
+                    filterCategory === 'high'
+                      ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                      : 'bg-transparent text-[#B42318] hover:text-[#B42318] font-medium'
+                  }`}
+                >
+                  Risiko Tinggi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterCategory('review')}
+                  className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
+                    filterCategory === 'review'
+                      ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                      : 'bg-transparent text-[#93370D] hover:text-[#93370D] font-medium'
+                  }`}
+                >
+                  Perlu Ditinjau
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterCategory('low')}
+                  className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
+                    filterCategory === 'low'
+                      ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                      : 'bg-transparent text-[#067647] hover:text-[#067647] font-medium'
+                  }`}
+                >
+                  Rendah
+                </button>
+              </div>
             </div>
 
-            {/* Filter Chips */}
-            <div className="inline-flex bg-[#eeece8] p-1 rounded-full gap-1 flex-wrap" role="tablist">
-              <button
-                type="button"
-                onClick={() => setFilterCategory('all')}
-                className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
-                  filterCategory === 'all'
-                    ? 'bg-[#14161C] text-white font-bold shadow-xs'
-                    : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
-                }`}
-              >
-                Semua
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterCategory('high')}
-                className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
-                  filterCategory === 'high'
-                    ? 'bg-[#14161C] text-white font-bold shadow-xs'
-                    : 'bg-transparent text-[#B42318] hover:text-[#B42318] font-medium'
-                }`}
-              >
-                Risiko Tinggi
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterCategory('review')}
-                className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
-                  filterCategory === 'review'
-                    ? 'bg-[#14161C] text-white font-bold shadow-xs'
-                    : 'bg-transparent text-[#93370D] hover:text-[#93370D] font-medium'
-                }`}
-              >
-                Perlu Ditinjau
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterCategory('low')}
-                className={`h-8 px-4 rounded-full text-xs transition-all cursor-pointer ${
-                  filterCategory === 'low'
-                    ? 'bg-[#14161C] text-white font-bold shadow-xs'
-                    : 'bg-transparent text-[#067647] hover:text-[#067647] font-medium'
-                }`}
-              >
-                Rendah
-              </button>
+            {/* Bottom Row: Sort by "Terbaru", "Terlama", etc. */}
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-3 border-t border-[#F0ECE3] text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-[#5B5850] text-xs flex items-center gap-1.5">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#14161C]" />
+                  <span>Urutkan:</span>
+                </span>
+                <div className="inline-flex bg-[#eeece8] p-1 rounded-full gap-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setSortBy('newest')}
+                    className={`h-7 px-3.5 rounded-full text-xs transition-all cursor-pointer ${
+                      sortBy === 'newest'
+                        ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                        : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
+                    }`}
+                  >
+                    Terbaru
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy('oldest')}
+                    className={`h-7 px-3.5 rounded-full text-xs transition-all cursor-pointer ${
+                      sortBy === 'oldest'
+                        ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                        : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
+                    }`}
+                  >
+                    Terlama
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy('most_checked')}
+                    className={`h-7 px-3.5 rounded-full text-xs transition-all cursor-pointer ${
+                      sortBy === 'most_checked'
+                        ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                        : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
+                    }`}
+                  >
+                    Paling Sering
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSortBy('highest_risk')}
+                    className={`h-7 px-3.5 rounded-full text-xs transition-all cursor-pointer ${
+                      sortBy === 'highest_risk'
+                        ? 'bg-[#14161C] text-white font-bold shadow-xs'
+                        : 'bg-transparent text-[#5B5850] hover:text-[#14161C] font-medium'
+                    }`}
+                  >
+                    Risiko Tertinggi
+                  </button>
+                </div>
+              </div>
+
+              <span className="text-[#8C887B] font-mono text-[11px]">
+                Menampilkan {filteredDomains.length} domain
+              </span>
             </div>
+
           </div>
 
           {/* MOBILE VIEW: DEDICATED RESPONSIVE CARD LIST (md:hidden) */}
