@@ -73,7 +73,7 @@ export function App() {
         <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />
 
         {/* Dynamic Route Content with Smooth Page Transitions */}
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col pt-16 sm:pt-20">
           <AnimatedRoutes />
         </main>
 

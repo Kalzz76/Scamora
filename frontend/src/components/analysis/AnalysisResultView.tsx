@@ -8,6 +8,7 @@ import {
   ChevronDown, 
   ChevronUp,
   ShieldAlert,
+  AlertTriangle,
   Share2,
   MessageSquare
 } from 'lucide-react';
@@ -125,8 +126,8 @@ function UrlDeconstructor({ rawUrl }: { rawUrl: string }) {
 
       {(hasSubdomainWarning || isRiskyTld) && (
         <div className="flex flex-wrap gap-2 pt-1 text-[11px] font-mono text-[#B42318]">
-          {hasSubdomainWarning && <span>⚠️ Peringatan: Nama merek/bank disisipkan pada subdomain!</span>}
-          {isRiskyTld && <span>⚠️ Ekstensi domain ({tld}) memiliki riwayat tinggi situs phishing.</span>}
+          {hasSubdomainWarning && <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-[#B42318] shrink-0" /> Peringatan: Nama merek/bank disisipkan pada subdomain!</span>}
+          {isRiskyTld && <span className="inline-flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-[#B42318] shrink-0" /> Ekstensi domain ({tld}) memiliki riwayat tinggi situs phishing.</span>}
         </div>
       )}
     </div>
@@ -303,8 +304,9 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
               ? 'Ditemukan beberapa indikasi ancaman kuat pada masukan yang diperiksa. Jangan pernah memberikan data atau melanjutkan transaksi.'
               : 'Terdapat beberapa indikasi yang perlu diverifikasi lebih lanjut sebelum mengambil tindakan.')}
           {hasCritical && riskScore < 70 && (
-            <span className="block mt-1 font-semibold text-[#B42318] text-xs">
-              ⚠️ Terdapat tanda bahaya kritis, sehingga hasil otomatis dikategorikan ke Risiko Tinggi.
+            <span className="inline-flex items-center gap-1.5 mt-1 font-semibold text-[#B42318] text-xs">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#B42318] shrink-0" />
+              Terdapat tanda bahaya kritis, sehingga hasil otomatis dikategorikan ke Risiko Tinggi.
             </span>
           )}
         </p>

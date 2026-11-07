@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  BookOpen, 
   AlertTriangle, 
   ShieldCheck, 
   Search, 
@@ -24,7 +23,10 @@ import {
   Lock,
   Layers,
   KeyRound,
-  Activity
+  Activity,
+  Briefcase,
+  Building2,
+  User
 } from 'lucide-react';
 import { AcademyIllustration } from '../../components/illustrations/Illustrations2D';
 
@@ -92,9 +94,9 @@ export const KnowledgePage: React.FC = () => {
       category: 'Malware Android / Trojan SMS',
       senderName: 'Undangan Pernikahan R&D',
       senderPhone: '+62 821-9981-2241',
-      senderAvatar: '👰',
+      senderAvatar: '',
       timeString: '14:23',
-      chatMessage: 'Halo kak, mohon maaf mengganggu waktunya 🙏 Ini kami kirimkan Surat Undangan Pernikahan digital kami. Mohon doa restu dan kehadirannya ya kak. Silakan buka file undangannya di bawah ini ya kak terima kasih.',
+      chatMessage: 'Halo kak, mohon maaf mengganggu waktunya. Ini kami kirimkan Surat Undangan Pernikahan digital kami. Mohon doa restu dan kehadirannya ya kak. Silakan buka file undangannya di bawah ini ya kak terima kasih.',
       attachmentName: 'Surat_Undangan_Pernikahan_Digital.apk',
       attachmentType: 'apk',
       attachmentSize: '6.4 MB',
@@ -140,7 +142,7 @@ export const KnowledgePage: React.FC = () => {
       category: 'Task Scam / Rekayasa Sosial',
       senderName: 'HR Recruiter Global Agency',
       senderPhone: '+62 858-3312-9901',
-      senderAvatar: '💼',
+      senderAvatar: '',
       timeString: '10:15',
       chatMessage: 'Halo Kak! Kami dari HR Global Marketing Agency membuka peluang kerja paruh waktu (freelance WFH). Tugasnya hanya Like dan Subscribe channel YouTube/TikTok. Komisi harian Rp 200.000 s/d Rp 1.500.000 langsung cair ke rekening/e-wallet Anda. Untuk tugas pertama komisi Rp 30.000, apakah Kakak tertarik bergabung?',
       presetTarget: { type: 'chat', presetId: 'chat-job-scam' },
@@ -185,7 +187,7 @@ export const KnowledgePage: React.FC = () => {
       category: 'Phishing & Domain Typosquatting',
       senderName: 'NOTIFIKASI BANK RESMI',
       senderPhone: 'INFO-BCA / BANK RESMI',
-      senderAvatar: '🏦',
+      senderAvatar: '',
       timeString: '08:45',
       chatMessage: '[PERINGATAN RESMI] Rekening Anda terindikasi transaksi mencurigakan sebesar Rp 5.000.000. Jika ini bukan Anda, segera batalkan transaksi dan amankan akun Anda dalam 2 jam melalui tautan resmi: http://bca-klik.com.secure-login-update.xyz/login?verifikasi=true',
       attachmentType: 'link',
@@ -700,6 +702,13 @@ export const KnowledgePage: React.FC = () => {
     }
   };
 
+  const renderSenderAvatar = (caseId: string) => {
+    if (caseId === 'case-apk') return <User className="w-5 h-5 text-emerald-200" />;
+    if (caseId === 'case-task') return <Briefcase className="w-5 h-5 text-emerald-200" />;
+    if (caseId === 'case-phishing') return <Building2 className="w-5 h-5 text-emerald-200" />;
+    return <User className="w-5 h-5 text-emerald-200" />;
+  };
+
   return (
     <div className="flex flex-col w-full bg-transparent text-[#0F172A] min-h-screen">
       
@@ -716,11 +725,6 @@ export const KnowledgePage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-7 space-y-4 text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF2ED] text-[#143826] border border-[#143826]/15 font-mono text-xs font-bold uppercase tracking-wider shadow-2xs">
-                <BookOpen className="w-4 h-4 text-[#E86A33]" />
-                <span>PUSAT EDUKASI &amp; ANATOMI KEJAHATAN SIBER</span>
-              </div>
-
               <h1 className="text-3xl sm:text-5xl font-black text-[#143826] tracking-tight leading-tight">
                 Laboratorium Bedah Modus <br />
                 <span className="text-[#E86A33]">&amp; Ensiklopedia Penipuan Digital.</span>
@@ -730,43 +734,48 @@ export const KnowledgePage: React.FC = () => {
                 Pelajari anatomi trik psikologis, manipulasi teknis, dan ciri fisik pesan penipuan melalui simulasi interaktif sebelum Anda menjadi korban berikutnya.
               </p>
 
-              {/* Navigation Mode Switcher Pills */}
-              <div className="flex items-center gap-2.5 sm:gap-3 pt-2 flex-wrap">
-                <button
-                  onClick={() => setActiveTab('anatomi')}
-                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                    activeTab === 'anatomi'
-                      ? 'bg-[#143826] text-white shadow-sm'
-                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
-                  }`}
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Bedah Kasus Interaktif (Hotspot)</span>
-                </button>
+              {/* Navigation Mode Switcher Segmented Control */}
+              <div className="pt-3 space-y-2">
+                <span className="text-[11px] font-mono font-bold tracking-wider text-[#143826]/70 uppercase block">
+                  Pilih Modul Pembelajaran:
+                </span>
+                <div className="inline-flex p-1 bg-white/95 rounded-2xl border border-[#143826]/15 shadow-xs max-w-full overflow-x-auto gap-1">
+                  <button
+                    onClick={() => setActiveTab('anatomi')}
+                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                      activeTab === 'anatomi'
+                        ? 'bg-[#143826] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                    }`}
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Bedah Kasus Interaktif</span>
+                  </button>
 
-                <button
-                  onClick={() => setActiveTab('katalog')}
-                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                    activeTab === 'katalog'
-                      ? 'bg-[#143826] text-white shadow-sm'
-                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
-                  }`}
-                >
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Katalog Modus Populer</span>
-                </button>
+                  <button
+                    onClick={() => setActiveTab('katalog')}
+                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                      activeTab === 'katalog'
+                        ? 'bg-[#143826] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                    }`}
+                  >
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Katalog Modus Populer</span>
+                  </button>
 
-                <button
-                  onClick={() => setActiveTab('kamus')}
-                  className={`btn-animate px-5 py-2.5 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                    activeTab === 'kamus'
-                      ? 'bg-[#143826] text-white shadow-sm'
-                      : 'bg-white hover:bg-gray-100 text-gray-700 border border-gray-200'
-                  }`}
-                >
-                  <Info className="w-4 h-4" />
-                  <span>Kamus Istilah Siber</span>
-                </button>
+                  <button
+                    onClick={() => setActiveTab('kamus')}
+                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+                      activeTab === 'kamus'
+                        ? 'bg-[#143826] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/70'
+                    }`}
+                  >
+                    <Info className="w-4 h-4" />
+                    <span>Kamus Istilah Siber</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -799,7 +808,7 @@ export const KnowledgePage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <div className="p-1 bg-gray-100/90 rounded-2xl border border-gray-200 flex items-center gap-1 overflow-x-auto max-w-full">
                 {anatomyCases.map((c) => (
                   <button
                     key={c.id}
@@ -807,10 +816,10 @@ export const KnowledgePage: React.FC = () => {
                       setActiveCaseId(c.id);
                       setSelectedHotspotId(c.hotspots[0]?.id || 'h1');
                     }}
-                    className={`btn-animate px-4 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
+                    className={`btn-animate px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                       activeCaseId === c.id
-                        ? 'bg-[#143826] text-white shadow-sm'
-                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                        ? 'bg-[#143826] text-white shadow-xs'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200/60'
                     }`}
                   >
                     {c.title}
@@ -823,70 +832,78 @@ export const KnowledgePage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* Left Column: Simulated Chat / Message UI with Hotspots */}
-              <div className="lg:col-span-7 bg-[#EFEAE2] rounded-3xl p-6 sm:p-8 border border-gray-300 shadow-card space-y-6 relative overflow-hidden">
+              <div className="lg:col-span-7 bg-[#EFEAE2] rounded-3xl p-3.5 sm:p-6 lg:p-8 border border-gray-300 shadow-card space-y-4 sm:space-y-6 relative overflow-hidden">
                 
                 {/* Header Chat Bar */}
-                <div className="bg-[#143826] text-white p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg">
-                      {currentCase.senderAvatar}
+                <div className="bg-[#143826] text-white p-3 sm:p-3.5 rounded-2xl flex items-center justify-between shadow-sm">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                      {renderSenderAvatar(currentCase.id)}
                     </div>
-                    <div>
-                      <div className="font-bold text-xs sm:text-sm leading-tight flex items-center gap-1.5">
-                        <span>{currentCase.senderName}</span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-xs sm:text-sm leading-tight flex items-center gap-1.5 truncate">
+                        <span className="truncate">{currentCase.senderName}</span>
                       </div>
-                      <div className="text-[10px] text-emerald-300 font-mono mt-0.5">
+                      <div className="text-[10px] text-emerald-300 font-mono mt-0.5 truncate">
                         {currentCase.senderPhone}
                       </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono text-gray-300 px-2 py-0.5 rounded bg-white/10">
+                  <span className="text-[9px] sm:text-[10px] font-mono text-gray-300 px-2 py-0.5 rounded bg-white/10 shrink-0 ml-2">
                     SIMULASI CHAT
                   </span>
                 </div>
 
                 {/* Simulated WhatsApp Chat Bubble */}
-                <div className="max-w-xl mx-auto space-y-4 pt-2">
+                <div className="max-w-xl mx-auto space-y-3 sm:space-y-4 pt-1 sm:pt-2">
                   
-                  <div className="relative bg-white rounded-2xl rounded-tl-none p-5 shadow-md border border-gray-200 space-y-3.5 text-left text-xs sm:text-sm text-gray-800 leading-relaxed">
+                  <div className="relative bg-white rounded-2xl rounded-tl-none p-3.5 sm:p-5 shadow-md border border-gray-200 space-y-3 text-left text-xs sm:text-sm text-gray-800 leading-relaxed">
                     
                     {/* Hotspot 1 Pin: Pengirim Asing */}
                     <button
                       onClick={() => setSelectedHotspotId(currentCase.hotspots[0].id)}
-                      className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-[#E86A33] text-white font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-orange-200 hover:scale-110 transition-transform cursor-pointer animate-bounce"
+                      className={`absolute -top-3 left-2 sm:-left-3 sm:-top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 sm:ring-4 cursor-pointer transition-transform hover:scale-110 z-10 ${
+                        selectedHotspotId === currentCase.hotspots[0].id
+                          ? 'bg-[#E86A33] text-white ring-orange-300 scale-105'
+                          : 'bg-white text-gray-800 border-2 border-[#E86A33] ring-orange-100'
+                      }`}
                       title="Klik untuk menganalisis nomor pengirim"
                     >
                       {currentCase.hotspots[0].pinNumber}
                     </button>
 
                     {/* Chat Text Message */}
-                    <div className="relative">
-                      <p className="font-normal text-gray-800">
+                    <div className="relative pr-7 pt-1">
+                      <p className="font-normal text-gray-800 leading-relaxed text-xs sm:text-sm">
                         {currentCase.chatMessage}
                       </p>
 
                       {/* Hotspot 2 Pin: Manipulasi Urgensi / Teks */}
                       <button
                         onClick={() => setSelectedHotspotId(currentCase.hotspots[1].id)}
-                        className="absolute -top-2 right-2 w-7 h-7 rounded-full bg-[#143826] text-white font-black text-xs flex items-center justify-center shadow-md ring-2 ring-emerald-200 hover:scale-110 transition-transform cursor-pointer"
+                        className={`absolute -top-2 right-0 sm:right-1 w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 cursor-pointer transition-transform hover:scale-110 z-10 ${
+                          selectedHotspotId === currentCase.hotspots[1].id
+                            ? 'bg-[#143826] text-white ring-emerald-300 scale-105'
+                            : 'bg-white text-[#143826] border-2 border-[#143826] ring-emerald-100'
+                        }`}
                         title="Klik untuk membedah rekayasa sosial"
                       >
                         {currentCase.hotspots[1].pinNumber}
                       </button>
                     </div>
 
-                    {/* Attachment Box (if any) */}
-                    {currentCase.attachmentName && (
-                      <div className="relative p-3.5 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-3 mt-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs">
+                    {/* Attachment / Preview / Hotspot 3 Box */}
+                    {currentCase.attachmentName ? (
+                      <div className="relative p-2.5 sm:p-3.5 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-between gap-2 mt-2 w-full max-w-full overflow-hidden">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">
                             APK
                           </div>
-                          <div>
-                            <div className="font-bold text-xs text-gray-900 truncate max-w-[200px] sm:max-w-xs">
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-xs text-gray-900 truncate">
                               {currentCase.attachmentName}
                             </div>
-                            <div className="text-[10px] text-gray-400 font-mono">
+                            <div className="text-[10px] text-gray-500 font-mono truncate">
                               {currentCase.attachmentSize} &bull; Berkas Aplikasi Android
                             </div>
                           </div>
@@ -895,26 +912,84 @@ export const KnowledgePage: React.FC = () => {
                         {/* Hotspot 3 Pin: Ekstensi Berbahaya */}
                         <button
                           onClick={() => setSelectedHotspotId(currentCase.hotspots[2].id)}
-                          className="w-7 h-7 rounded-full bg-[#E86A33] text-white font-black text-xs flex items-center justify-center shadow-md ring-2 ring-orange-200 hover:scale-110 transition-transform shrink-0 cursor-pointer"
+                          className={`w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 transition-transform shrink-0 cursor-pointer ml-1 ${
+                            selectedHotspotId === currentCase.hotspots[2].id
+                              ? 'bg-[#E86A33] text-white ring-orange-300 scale-105'
+                              : 'bg-white text-gray-800 border-2 border-[#E86A33] ring-orange-100'
+                          }`}
                           title="Klik untuk mengungkap bahaya file .APK"
+                        >
+                          {currentCase.hotspots[2].pinNumber}
+                        </button>
+                      </div>
+                    ) : currentCase.attachmentType === 'link' ? (
+                      <div className="relative p-2.5 sm:p-3 rounded-xl bg-red-50/80 border border-red-200 flex items-center justify-between gap-2 mt-2 w-full max-w-full overflow-hidden">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-mono text-red-700 font-bold truncate">
+                            http://bca-klik.com.secure-login-update.xyz/...
+                          </div>
+                          <div className="text-[10px] text-red-500 font-sans">
+                            Tautan Typosquatting / Tidak Aman
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setSelectedHotspotId(currentCase.hotspots[2].id)}
+                          className={`w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 transition-transform shrink-0 cursor-pointer ml-1 ${
+                            selectedHotspotId === currentCase.hotspots[2].id
+                              ? 'bg-[#E86A33] text-white ring-orange-300 scale-105'
+                              : 'bg-white text-gray-800 border-2 border-[#E86A33] ring-orange-100'
+                          }`}
+                          title="Klik untuk bedah link phishing"
+                        >
+                          {currentCase.hotspots[2].pinNumber}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="relative p-2.5 sm:p-3 rounded-xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-2 mt-2 w-full max-w-full overflow-hidden">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[11px] font-sans text-amber-900 font-bold truncate">
+                            Komisi Awal Rp 30.000 Cair Instan
+                          </div>
+                          <div className="text-[10px] text-amber-700 font-sans">
+                            Trik Umpan Kepercayaan (Baiting)
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setSelectedHotspotId(currentCase.hotspots[2].id)}
+                          className={`w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 transition-transform shrink-0 cursor-pointer ml-1 ${
+                            selectedHotspotId === currentCase.hotspots[2].id
+                              ? 'bg-[#E86A33] text-white ring-orange-300 scale-105'
+                              : 'bg-white text-gray-800 border-2 border-[#E86A33] ring-orange-100'
+                          }`}
+                          title="Klik untuk bedah trik komisi"
                         >
                           {currentCase.hotspots[2].pinNumber}
                         </button>
                       </div>
                     )}
 
-                    {/* Hotspot 4 Pin (if available) */}
+                    {/* Hotspot 4 Pin (footer badge) */}
                     {currentCase.hotspots[3] && (
-                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between flex-wrap gap-2 text-[11px] text-gray-400">
                         <span>{currentCase.timeString} WIB &bull; Terkirim</span>
                         <button
                           onClick={() => setSelectedHotspotId(currentCase.hotspots[3].id)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 font-bold hover:bg-red-200 transition cursor-pointer"
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
+                            selectedHotspotId === currentCase.hotspots[3].id
+                              ? 'bg-red-600 text-white shadow-xs'
+                              : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                          }`}
                         >
-                          <span className="w-4 h-4 rounded-full bg-red-600 text-white flex items-center justify-center text-[10px]">
+                          <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black ${
+                            selectedHotspotId === currentCase.hotspots[3].id
+                              ? 'bg-white text-red-600'
+                              : 'bg-red-600 text-white'
+                          }`}>
                             {currentCase.hotspots[3].pinNumber}
                           </span>
-                          <span>Bahaya Izin Akses</span>
+                          <span className="truncate max-w-[170px] sm:max-w-none">
+                            {currentCase.hotspots[3].label}
+                          </span>
                         </button>
                       </div>
                     )}
@@ -923,8 +998,41 @@ export const KnowledgePage: React.FC = () => {
 
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white/80 backdrop-blur border border-gray-300 text-xs text-gray-600 text-center">
-                  💡 <em>Klik salah satu lingkaran pin bernomor di atas untuk melihat pembongkaran triknya di samping.</em>
+                {/* Hotspot Quick Dock: 1 | 2 | 3 | 4 buttons */}
+                <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1">
+                  <span className="text-[11px] font-bold text-gray-600 mr-1 hidden sm:inline">Pilih Titik:</span>
+                  {currentCase.hotspots.map((h) => {
+                    const isSelected = selectedHotspotId === h.id;
+                    return (
+                      <button
+                        key={h.id}
+                        onClick={() => setSelectedHotspotId(h.id)}
+                        className={`h-8 px-2.5 sm:px-3 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#143826] text-white ring-2 ring-emerald-300'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black ${
+                          isSelected ? 'bg-[#E86A33] text-white' : 'bg-gray-200 text-gray-800'
+                        }`}>
+                          {h.pinNumber}
+                        </span>
+                        <span className="text-[11px] hidden min-[480px]:inline truncate max-w-[120px]">
+                          {h.label.split(' ')[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Responsive Instruction Note */}
+                <div className="p-3 sm:p-3.5 rounded-2xl bg-white/90 backdrop-blur border border-gray-300 text-xs text-gray-600 text-center leading-relaxed">
+                  <em>
+                    Klik salah satu lingkaran pin bernomor di atas untuk melihat pembongkaran triknya{' '}
+                    <span className="hidden lg:inline">di samping</span>
+                    <span className="lg:hidden">di bawah</span>.
+                  </em>
                 </div>
 
               </div>
@@ -939,7 +1047,7 @@ export const KnowledgePage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.25 }}
-                    className="p-6 sm:p-8 rounded-3xl bg-white border border-[#E8ECE9] shadow-card space-y-6 text-left"
+                    className="p-4 sm:p-6 lg:p-8 rounded-3xl bg-white border border-[#E8ECE9] shadow-card space-y-4 sm:space-y-6 text-left"
                   >
                     
                     <div className="space-y-2 border-b border-gray-100 pb-4">
@@ -997,7 +1105,7 @@ export const KnowledgePage: React.FC = () => {
                   <span className="text-xs font-bold text-[#143826] block">
                     Semua Titik Bahaya pada Kasus Ini:
                   </span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {currentCase.hotspots.map((h) => (
                       <button
                         key={h.id}
@@ -1276,9 +1384,9 @@ export const KnowledgePage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Background Decorative Shield Watermark (Bukan Bintang/Sparkle) */}
-          <div className="absolute right-0 bottom-0 text-9xl opacity-10 pointer-events-none select-none">
-            🛡️
+          {/* Background Decorative Shield Watermark */}
+          <div className="absolute right-0 bottom-0 p-4 opacity-15 pointer-events-none select-none text-white">
+            <ShieldCheck className="w-36 h-36 sm:w-56 sm:h-56" />
           </div>
 
         </div>

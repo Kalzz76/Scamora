@@ -12,6 +12,7 @@ import {
   Play,
   Cpu,
   Bot,
+  User,
 } from 'lucide-react';
 import type {
   ChallengeCategory,
@@ -173,7 +174,7 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
             </h4>
           </div>
           <span className="text-[11px] text-on-surface-variant hidden sm:inline font-medium">
-            ⚡ Klik salah satu level untuk generate & mulai simulasi instan
+            Pilih level untuk memulai simulasi interaktif
           </span>
         </div>
 
@@ -243,8 +244,8 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
 
           <div className="p-4 rounded-2xl bg-surface-container-low border border-surface-container space-y-2">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-sm shadow-xs shrink-0">
-                {currentScenario.characterAvatar || '👤'}
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-sm shadow-xs shrink-0 text-emerald-900">
+                {currentScenario.characterAvatar ? currentScenario.characterAvatar : <User className="w-4 h-4 text-emerald-800" />}
               </div>
               <div>
                 <span className="text-xs font-bold text-on-surface block">

@@ -73,6 +73,72 @@ const CARA_STEPS = [
   },
 ];
 
+const PHISHING_SIGNS = [
+  {
+    num: 'TANDA 01',
+    title: 'Nama domain mirip merek',
+    desc: 'Penipu menambah kata atau memodifikasi huruf agar terlihat resmi saat sekilas dibaca.',
+    badge: (
+      <div className="font-mono text-[10.5px] sm:text-[11px] xl:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg py-2.5 px-2 text-[#2D2A24] mt-auto whitespace-nowrap overflow-hidden">
+        <span className="text-[#067647] font-semibold">bank-nusa.co.id</span> <span className="text-[#8C887B] mx-1">vs</span> <span className="text-[#B42318] font-semibold">bank-nusa-login.xyz</span>
+      </div>
+    ),
+  },
+  {
+    num: 'TANDA 02',
+    title: 'Ekstensi domain janggal',
+    desc: 'Beberapa ekstensi domain murah atau anonim sering dimanfaatkan untuk situs penipuan massal.',
+    badge: (
+      <div className="flex gap-1.5 flex-wrap font-mono text-xs bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 mt-auto">
+        <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.xyz</span>
+        <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.top</span>
+        <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.click</span>
+        <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.site</span>
+      </div>
+    ),
+  },
+  {
+    num: 'TANDA 03',
+    title: 'Tautan dipendekkan',
+    desc: 'Tautan pendek menyembunyikan domain tujuan asli agar korban tidak curiga sebelum mengekliknya.',
+    badge: (
+      <div className="font-mono text-[11.5px] sm:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 text-[#5B5850] mt-auto whitespace-nowrap">
+        <span>bit.ly/xxxx</span> <span className="text-[#8C887B] mx-1">&bull;</span> <span>s.id/xxxx</span>
+      </div>
+    ),
+  },
+  {
+    num: 'TANDA 04',
+    title: 'Meminta OTP, PIN, kata sandi',
+    desc: 'Layanan resmi tidak pernah meminta kredensial rahasia perbankan lewat tautan web atau chat.',
+    badge: (
+      <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
+        "Kirim kode OTP yang masuk ke HP kamu"
+      </div>
+    ),
+  },
+  {
+    num: 'TANDA 05',
+    title: 'Menekan lewat batas waktu',
+    desc: 'Korban dipaksa bertindak terburu-buru dengan ancaman pemblokiran akun agar tidak sempat berpikir.',
+    badge: (
+      <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
+        "Akun diblokir jika tidak verifikasi dalam 1 jam"
+      </div>
+    ),
+  },
+  {
+    num: 'TANDA 06',
+    title: 'Gembok bukan jaminan aman',
+    desc: 'Situs penipuan modern pun bisa memakai HTTPS. Ikon gembok hanya menandakan koneksi terenkripsi.',
+    badge: (
+      <div className="font-mono text-xs leading-normal bg-[#F5F3EE] border border-[#EAE6DC] rounded-lg p-2.5 mt-auto text-[#2D2A24]">
+        <span className="font-semibold">https://...</span> tetap bisa situs palsu!
+      </div>
+    ),
+  },
+];
+
 export const HomePage: React.FC = () => {
   const location = useLocation();
 
@@ -93,6 +159,9 @@ export const HomePage: React.FC = () => {
   // Cara Kerja Interactive State
   const [currentCaraStep, setCurrentCaraStep] = useState(0);
   const [caraInteracted, setCaraInteracted] = useState(false);
+
+  // Mobile Tab State for Section Kenapa Scamora (Cakupan vs Batasan)
+  const [capabilityTab, setCapabilityTab] = useState<'cakupan' | 'batasan'>('cakupan');
 
   const hasilRef = useRef<HTMLDivElement>(null);
   const inputSectionRef = useRef<HTMLDivElement>(null);
@@ -587,11 +656,11 @@ export const HomePage: React.FC = () => {
 
                 <div className="space-y-1.5 text-xs mt-auto">
                   <div className="bg-white border border-[#EAE6DC] rounded-lg p-2.5 flex items-center justify-between">
-                    <span>⚠️ Nama domain meniru merek (bank-nusa)</span>
+                    <span className="text-slate-800">Nama domain meniru merek (bank-nusa)</span>
                     <b className="text-[#B42318]">+35</b>
                   </div>
                   <div className="bg-white border border-[#EAE6DC] rounded-lg p-2.5 flex items-center justify-between">
-                    <span>⚠️ Kata kunci sensitif verifikasi akun</span>
+                    <span className="text-slate-800">Kata kunci sensitif verifikasi akun</span>
                     <b className="text-[#B42318]">+30</b>
                   </div>
                 </div>
@@ -643,119 +712,78 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 5. SECTION: CIRI-CIRI TAUTAN PHISHING (PERBAIKAN FOTO 4) */}
-      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
-          Ciri-ciri tautan phishing
-        </h2>
-        <p className="text-sm text-[#5B5850] mt-1.5">
-          Enam tanda yang paling sering muncul saat penipuan mencoba mengelabui korban.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-          
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 01</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Nama domain mirip merek</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Penipu menambah kata atau memodifikasi huruf agar terlihat resmi saat sekilas dibaca.
-              </p>
-            </div>
-            <div className="font-mono text-[10.5px] sm:text-[11px] xl:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg py-2.5 px-2 text-[#2D2A24] mt-auto whitespace-nowrap overflow-hidden">
-              <span className="text-[#067647] font-semibold">bank-nusa.co.id</span> <span className="text-[#8C887B] mx-1">vs</span> <span className="text-[#B42318] font-semibold">bank-nusa-login.xyz</span>
-            </div>
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-10 sm:py-12 border-t border-[#DDD8CC] w-full">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+              Ciri-ciri tautan phishing
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-1.5">
+              Enam tanda yang paling sering muncul saat penipuan mencoba mengelabui korban.
+            </p>
           </div>
+          <span className="sm:hidden shrink-0 text-[11px] font-mono font-bold text-[#8C887B] bg-[#F5F3EE] border border-[#E9E5DA] px-2.5 py-1 rounded-full mt-1">
+            6 Tanda
+          </span>
+        </div>
 
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 02</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Ekstensi domain janggal</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Beberapa ekstensi domain murah atau anonim sering dimanfaatkan untuk situs penipuan massal.
-              </p>
-            </div>
-            <div className="flex gap-1.5 flex-wrap font-mono text-xs bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 mt-auto">
-              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.xyz</span>
-              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.top</span>
-              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.click</span>
-              <span className="bg-[#E9E5DA] px-2 py-0.5 rounded text-[11px] font-bold">.site</span>
-            </div>
+        {/* Mobile Horizontal Snap Carousel (sm:hidden) */}
+        <div className="sm:hidden mt-4">
+          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 pt-1 px-4 -mx-4 no-scrollbar">
+            {PHISHING_SIGNS.map((item, idx) => (
+              <div 
+                key={idx} 
+                className="w-[82vw] max-w-[300px] snap-center bg-white border border-[#E4E0D6] rounded-2xl p-4.5 flex flex-col justify-between shadow-2xs shrink-0"
+              >
+                <div>
+                  <div className="text-[10.5px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">{item.num}</div>
+                  <h3 className="font-display font-bold text-sm text-[#14130F] mb-1.5 leading-snug">{item.title}</h3>
+                  <p className="text-xs text-[#5B5850] leading-relaxed mb-3">{item.desc}</p>
+                </div>
+                {item.badge}
+              </div>
+            ))}
           </div>
-
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 03</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Tautan dipendekkan</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Tautan pendek menyembunyikan domain tujuan asli agar korban tidak curiga sebelum mengekliknya.
-              </p>
-            </div>
-            <div className="font-mono text-[11.5px] sm:text-xs leading-normal bg-[#F5F3EE] border border-[#E9E5DA] rounded-lg p-2.5 text-[#5B5850] mt-auto whitespace-nowrap">
-              <span>bit.ly/xxxx</span> <span className="text-[#8C887B] mx-1">&bull;</span> <span>s.id/xxxx</span>
-            </div>
+          <div className="flex items-center justify-between px-1 text-[11px] text-[#8C887B]">
+            <span>&larr; Geser jempol untuk tanda lain &rarr;</span>
+            <span className="font-mono font-bold">1 &ndash; 6 Tanda</span>
           </div>
+        </div>
 
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 04</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Meminta OTP, PIN, kata sandi</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Layanan resmi tidak pernah meminta kredensial rahasia perbankan lewat tautan web atau chat.
-              </p>
+        {/* Desktop Grid (hidden sm:grid) */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          {PHISHING_SIGNS.map((item, idx) => (
+            <div key={idx} className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
+              <div>
+                <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">{item.num}</div>
+                <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">{item.title}</h3>
+                <p className="text-xs text-[#5B5850] leading-relaxed mb-3">{item.desc}</p>
+              </div>
+              {item.badge}
             </div>
-            <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
-              "Kirim kode OTP yang masuk ke HP kamu"
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 05</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Menekan lewat batas waktu</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Korban dipaksa bertindak terburu-buru dengan ancaman pemblokiran akun agar tidak sempat berpikir.
-              </p>
-            </div>
-            <div className="font-mono text-xs leading-normal bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B] rounded-lg p-2.5 mt-auto font-semibold">
-              "Akun diblokir jika tidak verifikasi dalam 1 jam"
-            </div>
-          </div>
-
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 flex flex-col justify-between shadow-2xs hover:border-[#14130F] transition-all">
-            <div>
-              <div className="text-[11px] font-bold font-mono text-[#8C887B] tracking-wider mb-2">TANDA 06</div>
-              <h3 className="font-display font-bold text-base text-[#14130F] mb-1.5 leading-snug">Gembok bukan jaminan aman</h3>
-              <p className="text-xs text-[#5B5850] leading-relaxed mb-3">
-                Situs penipuan modern pun bisa memakai HTTPS. Ikon gembok hanya menandakan koneksi terenkripsi.
-              </p>
-            </div>
-            <div className="font-mono text-xs leading-normal bg-[#F5F3EE] border border-[#EAE6DC] rounded-lg p-2.5 mt-auto text-[#2D2A24]">
-              <span className="font-semibold">https://...</span> tetap bisa situs palsu!
-            </div>
-          </div>
-
+          ))}
         </div>
 
         {/* Bar Bawah: Cek Manual */}
-        <div className="mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-5 grid grid-cols-1 md:grid-cols-4 gap-4 items-center shadow-2xs">
+        <div className="mt-5 sm:mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-4 sm:p-5 grid grid-cols-1 md:grid-cols-4 gap-3.5 sm:gap-4 items-center shadow-2xs">
           <div className="font-display font-bold text-sm text-[#14130F] leading-snug">
             Cek manual <br className="hidden md:inline" /> tanpa alat:
           </div>
-          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-2.5 md:pt-0 md:pl-4">
             <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">1</span>
             <div>
               <b className="text-[#14130F] block">Tahan tautan</b>
               <span className="text-[#5B5850]">Lihat alamat asli di pratinjau sebelum klik.</span>
             </div>
           </div>
-          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-2.5 md:pt-0 md:pl-4">
             <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">2</span>
             <div>
               <b className="text-[#14130F] block">Baca nama domain</b>
               <span className="text-[#5B5850]">Cek domain tepat sebelum garis miring pertama (/).</span>
             </div>
           </div>
-          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-3 md:pt-0 md:pl-4">
+          <div className="flex items-start gap-2.5 text-xs border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-2.5 md:pt-0 md:pl-4">
             <span className="w-5 h-5 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">3</span>
             <div>
               <b className="text-[#14130F] block">Tanya pengirim</b>
@@ -766,15 +794,56 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 6. SECTION: MODUS YANG SERING DITEMUI (PERBAIKAN FOTO 5) */}
-      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
-        <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
-          Modus yang sering ditemui
-        </h2>
-        <p className="text-sm text-[#5B5850] mt-1.5">
-          Klik salah satu kartu di bawah ini untuk mencoba pemeriksaannya secara langsung.
-        </p>
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-10 sm:py-12 border-t border-[#DDD8CC] w-full">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
+              Modus yang sering ditemui
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5B5850] mt-1.5">
+              Klik salah satu kartu di bawah ini untuk mencoba pemeriksaannya secara langsung.
+            </p>
+          </div>
+          <span className="sm:hidden shrink-0 text-[11px] font-mono font-bold text-[#8C887B] bg-[#F5F3EE] border border-[#E9E5DA] px-2.5 py-1 rounded-full mt-1">
+            6 Kasus
+          </span>
+        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-5">
+        {/* Mobile Horizontal Snap Carousel (sm:hidden) */}
+        <div className="sm:hidden mt-4">
+          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 pt-1 px-4 -mx-4 no-scrollbar">
+            {MODUS_EXAMPLES.map((modus, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleSelectModus(modus)}
+                className="w-[82vw] max-w-[290px] snap-center bg-white border border-[#E4E0D6] active:border-[#14130F] rounded-2xl p-4 text-left flex flex-col justify-between shadow-2xs shrink-0 cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#EAE6DC] text-[#8C887B]">
+                      {modus.type === 'url' ? 'Tautan' : 'Chat WA'}
+                    </span>
+                    <span className="text-[11px] font-bold text-[#E86A33]">Uji Kasus &rarr;</span>
+                  </div>
+                  <h3 className="font-display font-bold text-sm text-[#14130F] mb-2 leading-snug">
+                    {modus.title}
+                  </h3>
+                </div>
+                <div className="font-mono text-[11px] leading-relaxed text-[#5B5850] bg-[#FAF8F5] p-2.5 rounded-lg border border-[#EAE6DC] mt-auto line-clamp-3">
+                  {modus.snippet}
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center justify-between px-1 text-[11px] text-[#8C887B]">
+            <span>&larr; Geser untuk kasus lainnya &rarr;</span>
+            <span className="font-mono font-bold">1 &ndash; 6 Kasus</span>
+          </div>
+        </div>
+
+        {/* Desktop Grid (hidden sm:grid) */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mt-5">
           {MODUS_EXAMPLES.map((modus, idx) => (
             <button
               key={idx}
@@ -794,44 +863,126 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 7. SECTION: KENAPA SCAMORA */}
-      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-10 sm:py-12 border-t border-[#DDD8CC] w-full">
         <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight">
           Kenapa Scamora
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
-            <span className="font-mono font-bold text-xs text-[#8C887B]">01</span>
-            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Ada bukti, bukan sekadar label</h3>
-            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
-              Bukan cuma "bahaya" atau "aman". Tiap tanda bahaya dijabarkan dengan alasan dan bobot risikonya.
-            </p>
+        {/* 4 Cards: Compact 2x2 grid on mobile (grid-cols-2), 4-col on desktop (lg:grid-cols-4) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mt-5 sm:mt-6">
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-3.5 sm:p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="font-mono font-bold text-[11px] sm:text-xs text-[#8C887B]">01</span>
+              <h3 className="font-display font-bold text-xs sm:text-base text-[#14130F] mt-1 sm:mt-1.5 leading-snug">Ada bukti nyata</h3>
+              <p className="text-[11px] sm:text-xs text-[#5B5850] mt-1 sm:mt-1.5 leading-relaxed">
+                Bukan cuma "bahaya" atau "aman". Tiap tanda bahaya dijabarkan dengan alasan dan bobot risikonya.
+              </p>
+            </div>
           </div>
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
-            <span className="font-mono font-bold text-xs text-[#8C887B]">02</span>
-            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Tautan dan chat satu tempat</h3>
-            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
-              Periksa tautan web mencurigakan dan percakapan WhatsApp tanpa perlu berpindah aplikasi.
-            </p>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-3.5 sm:p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="font-mono font-bold text-[11px] sm:text-xs text-[#8C887B]">02</span>
+              <h3 className="font-display font-bold text-xs sm:text-base text-[#14130F] mt-1 sm:mt-1.5 leading-snug">Tautan &amp; chat</h3>
+              <p className="text-[11px] sm:text-xs text-[#5B5850] mt-1 sm:mt-1.5 leading-relaxed">
+                Periksa tautan web mencurigakan dan percakapan WhatsApp tanpa perlu berpindah aplikasi.
+              </p>
+            </div>
           </div>
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
-            <span className="font-mono font-bold text-xs text-[#8C887B]">03</span>
-            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Privasi lebih dulu</h3>
-            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
-              Nomor HP, rekening, dan data pribadi di chat disamarkan otomatis, serta input tidak disimpan.
-            </p>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-3.5 sm:p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="font-mono font-bold text-[11px] sm:text-xs text-[#8C887B]">03</span>
+              <h3 className="font-display font-bold text-xs sm:text-base text-[#14130F] mt-1 sm:mt-1.5 leading-snug">Privasi lebih dulu</h3>
+              <p className="text-[11px] sm:text-xs text-[#5B5850] mt-1 sm:mt-1.5 leading-relaxed">
+                Nomor HP, rekening, dan data pribadi di chat disamarkan otomatis, serta input tidak disimpan.
+              </p>
+            </div>
           </div>
-          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs">
-            <span className="font-mono font-bold text-xs text-[#8C887B]">04</span>
-            <h3 className="font-display font-bold text-sm sm:text-base text-[#14130F] mt-1.5">Ada langkah setelahnya</h3>
-            <p className="text-xs text-[#5B5850] mt-1.5 leading-relaxed">
-              Saran tindakan nyata dan kanal pelaporan resmi ke bank atau otoritas, bukan berhenti di skor.
-            </p>
+          <div className="bg-white border border-[#E4E0D6] rounded-2xl p-3.5 sm:p-4.5 shadow-2xs flex flex-col justify-between">
+            <div>
+              <span className="font-mono font-bold text-[11px] sm:text-xs text-[#8C887B]">04</span>
+              <h3 className="font-display font-bold text-xs sm:text-base text-[#14130F] mt-1 sm:mt-1.5 leading-snug">Langkah lanjutan</h3>
+              <p className="text-[11px] sm:text-xs text-[#5B5850] mt-1 sm:mt-1.5 leading-relaxed">
+                Saran tindakan nyata dan kanal pelaporan resmi ke bank atau otoritas, bukan berhenti di skor.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Transparansi Kemampuan (Bisa vs Belum Bisa) */}
-        <div className="mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 shadow-2xs">
+        
+        {/* Mobile Tab Toggle Version (md:hidden) */}
+        <div className="md:hidden mt-4 bg-white border border-[#E4E0D6] rounded-2xl p-4 shadow-2xs">
+          {/* Segmented Switcher */}
+          <div className="grid grid-cols-2 gap-1 p-1 bg-[#F5F3EE] rounded-xl border border-[#EAE6DC] mb-3.5">
+            <button
+              type="button"
+              onClick={() => setCapabilityTab('cakupan')}
+              className={`py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                capabilityTab === 'cakupan'
+                  ? 'bg-white text-[#067647] shadow-2xs'
+                  : 'text-[#8C887B] hover:text-[#14130F]'
+              }`}
+            >
+              ✓ Cakupan Deteksi
+            </button>
+            <button
+              type="button"
+              onClick={() => setCapabilityTab('batasan')}
+              className={`py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                capabilityTab === 'batasan'
+                  ? 'bg-white text-[#5B5850] shadow-2xs'
+                  : 'text-[#8C887B] hover:text-[#14130F]'
+              }`}
+            >
+              — Batasan Sistem
+            </button>
+          </div>
+
+          {capabilityTab === 'cakupan' ? (
+            <div>
+              <h3 className="font-display font-bold text-sm text-[#14130F] mb-2.5">
+                Yang bisa ditunjukkan hasil ini:
+              </h3>
+              <ul className="text-xs text-[#3F3C35] space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#067647] font-bold">✓</span>
+                  <span>Kemiripan nama domain dengan merek resmi (typosquatting &amp; subdomain masking)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#067647] font-bold">✓</span>
+                  <span>Pencocokan reputasi dengan basis data ancaman Google Safe Browsing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#067647] font-bold">✓</span>
+                  <span>Pola manipulasi urgensi, ancaman blokir, dan permintaan kode rahasia/OTP di chat</span>
+                </li>
+              </ul>
+            </div>
+          ) : (
+            <div>
+              <h3 className="font-display font-bold text-sm text-[#14130F] mb-2.5">
+                Yang belum bisa dilakukan:
+              </h3>
+              <ul className="text-xs text-[#3F3C35] space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#8C887B] font-bold">—</span>
+                  <span>Menjamin 100% keamanan situs jika penipuan memakai domain resmi yang baru dibajak</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#8C887B] font-bold">—</span>
+                  <span>Melihat isi formulir internal atau tujuan akhir tautan pendek tanpa diakses</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#8C887B] font-bold">—</span>
+                  <span>Menggantikan peran penegak hukum atau konfirmasi manual langsung ke pihak bank</span>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Desktop 2-Column Version (hidden md:grid) */}
+        <div className="hidden md:grid md:grid-cols-2 gap-6 mt-6 bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 shadow-2xs">
           <div>
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#DCFAE6] text-[#067647]">Cakupan</span>
@@ -853,7 +1004,7 @@ export const HomePage: React.FC = () => {
             </ul>
           </div>
 
-          <div className="border-t md:border-t-0 md:border-l border-[#EEEAE0] pt-4 md:pt-0 md:pl-6">
+          <div className="border-l border-[#EEEAE0] pl-6">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EEEAE0] text-[#5B5850]">Batasan</span>
               <h3 className="font-display font-bold text-base text-[#14130F]">Yang belum bisa dilakukan</h3>
@@ -877,7 +1028,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 8. SECTION: TINDAKAN DARURAT (PERBAIKAN: HAPUS LATAR BELAKANG PUTIH LUAR) */}
-      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-12 border-t border-[#DDD8CC] w-full">
+      <section className="max-w-[1120px] mx-auto px-4 sm:px-8 py-10 sm:py-12 border-t border-[#DDD8CC] w-full">
         <div>
           <span className="text-[11px] font-bold font-mono uppercase tracking-wider px-2.5 py-0.5 rounded bg-[#EAE6DC] text-[#14130F]">
             PANDUAN DARURAT
@@ -885,12 +1036,75 @@ export const HomePage: React.FC = () => {
           <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#14130F] tracking-tight mt-2.5">
             Sudah terlanjur klik atau transfer?
           </h2>
-          <p className="text-sm text-[#5B5850] mt-1.5">
+          <p className="text-xs sm:text-sm text-[#5B5850] mt-1.5">
             Tenang, lakukan berurutan. Pemblokiran lewat bank paling efektif dalam 24 jam pertama.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+        {/* Mobile Connected Timeline Checklist (sm:hidden) */}
+        <div className="sm:hidden mt-5 bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs relative">
+          <div className="space-y-4 relative before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#DDD8CC]">
+            {/* Step 1 */}
+            <div className="relative flex items-start gap-3">
+              <span className="w-7 h-7 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs shrink-0 ring-4 ring-white z-10">
+                1
+              </span>
+              <div className="pt-0.5">
+                <h3 className="font-bold text-sm text-[#14130F]">Berhenti</h3>
+                <p className="text-xs text-[#5B5850] mt-0.5 leading-relaxed">
+                  Tutup segera halaman tersebut, jangan masukkan OTP, password, atau transfer dana lagi.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative flex items-start gap-3">
+              <span className="w-7 h-7 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs shrink-0 ring-4 ring-white z-10">
+                2
+              </span>
+              <div className="pt-0.5">
+                <h3 className="font-bold text-sm text-[#14130F]">Amankan akun</h3>
+                <p className="text-xs text-[#5B5850] mt-0.5 leading-relaxed">
+                  Segera ganti kata sandi email, m-banking, dan aktifkan verifikasi dua langkah (2FA).
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative flex items-start gap-3">
+              <span className="w-7 h-7 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs shrink-0 ring-4 ring-white z-10">
+                3
+              </span>
+              <div className="pt-0.5">
+                <h3 className="font-bold text-sm text-[#14130F]">Hubungi bank</h3>
+                <p className="text-xs text-[#5B5850] mt-0.5 leading-relaxed">
+                  Minta pemblokiran rekening atau penahanan transaksi, lalu simpan nomor laporan buktinya.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div className="relative flex items-start gap-3">
+              <span className="w-7 h-7 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs shrink-0 ring-4 ring-white z-10">
+                4
+              </span>
+              <div className="pt-0.5">
+                <h3 className="font-bold text-sm text-[#14130F]">Laporkan</h3>
+                <p className="text-xs text-[#5B5850] mt-0.5 leading-relaxed">
+                  Laporkan insiden ke kanal resmi:
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-2 font-mono text-[10.5px]">
+                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-gray-700">cekrekening.id</span>
+                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-gray-700">aduannomor.id</span>
+                  <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-gray-700">lapor.go.id</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Grid (hidden sm:grid) */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
           <div className="bg-white border border-[#E4E0D6] rounded-2xl p-4.5 shadow-2xs flex flex-col justify-between">
             <div>
               <span className="w-6 h-6 rounded-full bg-[#14130F] text-white flex items-center justify-center font-bold text-xs mb-2.5">1</span>

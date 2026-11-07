@@ -474,7 +474,7 @@ export const DIFFICULTY_METADATA = {
   pemula: {
     level: 1,
     title: 'Tingkat Pemula (Level 1)',
-    badge: '🥉 Cyber Aware Starter',
+    badge: 'Cyber Aware Starter',
     description: 'Kenali indikator mencolok: penipuan undian, berkas APK dasar, phishing OTP, dan pembajakan akun sosial.',
     passScorePercentage: 65,
     accentColor: '#143826',
@@ -483,7 +483,7 @@ export const DIFFICULTY_METADATA = {
   menengah: {
     level: 2,
     title: 'Tingkat Menengah (Level 2)',
-    badge: '🥈 Cyber Defender Specialist',
+    badge: 'Cyber Defender Specialist',
     description: 'Analisis rekayasa sosial rapi: domain spoofing, trik baiting task scam, QRIS palsu (Quishing), dan batas waktu buatan.',
     passScorePercentage: 70,
     accentColor: '#E86A33',
@@ -492,7 +492,7 @@ export const DIFFICULTY_METADATA = {
   sulit: {
     level: 3,
     title: 'Tingkat Sulit / Mahir (Level 3)',
-    badge: '🥇 Elite Security Master',
+    badge: 'Elite Security Master',
     description: 'Investigasi tingkat lanjut: izin Accessibility Service, SIM Swap fraud, AI voice deepfake cloning, dan insiden response mitigasi.',
     passScorePercentage: 75,
     accentColor: '#7C2D12',

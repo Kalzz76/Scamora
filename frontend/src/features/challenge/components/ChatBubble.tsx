@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { FileCode, ExternalLink, AlertTriangle, CheckCheck } from 'lucide-react';
+import { FileCode, ExternalLink, AlertTriangle, CheckCheck, User } from 'lucide-react';
 import type { DialogueMessage } from '../../../types/challenge';
 
 interface ChatBubbleProps {
@@ -10,7 +10,7 @@ interface ChatBubbleProps {
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({
   message,
-  characterAvatar = '👤',
+  characterAvatar,
 }) => {
   if (message.sender === 'system') {
     return (
@@ -38,8 +38,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       className={`flex items-end gap-2.5 my-2 ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       {!isUser && (
-        <div className="w-8 h-8 rounded-full bg-surface-container border border-surface-container-high flex items-center justify-center text-sm shrink-0 mb-0.5 shadow-xs">
-          {characterAvatar}
+        <div className="w-8 h-8 rounded-full bg-surface-container border border-surface-container-high flex items-center justify-center text-sm shrink-0 mb-0.5 shadow-xs text-emerald-900">
+          {characterAvatar ? characterAvatar : <User className="w-4 h-4 text-emerald-800" />}
         </div>
       )}
 

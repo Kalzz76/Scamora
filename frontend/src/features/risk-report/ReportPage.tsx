@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   ArrowRight, 
-  Layers,
   PlusCircle,
   X,
   AlertTriangle
@@ -71,20 +70,16 @@ export const ReportPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full bg-[#F5F3EE] text-[#14130F] min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-[1120px] mx-auto w-full space-y-8">
+    <div className="flex flex-col w-full bg-[#F5F3EE] text-[#14130F] min-h-screen py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1120px] mx-auto w-full space-y-6 sm:space-y-8">
         
         {/* HEADER SECTION */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEEAE0] text-xs font-bold text-[#14130F]">
-              <Layers className="w-3.5 h-3.5 text-[#14130F]" />
-              <span>DIREKTORI PEMINDAIAN PUBLIK</span>
-            </div>
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-[#14130F] tracking-tight">
+            <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-[#14130F] tracking-tight">
               Pemindaian Publik
             </h1>
-            <p className="text-base sm:text-lg text-[#5B5850] max-w-2xl leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-[#5B5850] max-w-2xl leading-relaxed">
               Daftar domain yang telah diperiksa oleh pengguna lain, lengkap dengan frekuensi pengecekan dan persentase indikasi risikonya.
             </p>
           </div>
@@ -92,7 +87,7 @@ export const ReportPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#14130F] hover:bg-[#2A2721] text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer self-start sm:self-auto shrink-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#14130F] hover:bg-[#2A2721] text-white text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Laporkan Domain Baru</span>
@@ -147,8 +142,8 @@ export const ReportPage: React.FC = () => {
               />
             </div>
 
-            {/* Filter Chips */}
-            <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Filter Chips - Horizontal Scrollable on Mobile */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
               <button
                 type="button"
                 onClick={() => setFilterCategory('all')}
@@ -353,7 +348,7 @@ export const ReportPage: React.FC = () => {
           {/* FOOTER NOTICE */}
           <div className="p-4 bg-[#FAF8F4] border-t border-[#E4E0D6] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#706C62]">
             <span>
-              💡 Data di atas bersifat anonim dan dihimpun dari partisipasi pemindaian komunitas Scamora.
+              Data di atas bersifat anonim dan dihimpun dari partisipasi pemindaian komunitas Scamora.
             </span>
             <Link
               to="/"
@@ -370,7 +365,7 @@ export const ReportPage: React.FC = () => {
       {/* MODAL LAPORAN KOMUNITAS */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#14130F]/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-[#E4E0D6] shadow-xl max-w-md w-full p-6 sm:p-7 relative animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl border border-[#E4E0D6] shadow-xl max-w-md w-full p-6 sm:p-7 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
