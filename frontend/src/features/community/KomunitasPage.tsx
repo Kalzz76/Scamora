@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   MessageSquare, 
   Search, 
@@ -12,7 +13,10 @@ import {
   CornerDownRight, 
   CheckCircle2,
   AlertTriangle,
-  ShieldCheck
+  ShieldCheck,
+  TrendingUp,
+  Tag,
+  ArrowLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -50,6 +54,46 @@ export interface Channel {
   icon: string;
   activeCount: number;
 }
+
+export interface TrendingScam {
+  id: string;
+  title: string;
+  tag: string;
+  consultationCount: number;
+  severity: 'Kritis' | 'Tinggi';
+}
+
+const POPULAR_TAGS = [
+  { id: 'apk', label: 'APK Kurir', query: 'APK' },
+  { id: 'undangan', label: 'Undangan Nikah', query: 'Undangan' },
+  { id: 'task', label: 'Task Scam Telegram', query: 'Telegram' },
+  { id: 'bca', label: 'Phishing BCA', query: 'BCA' },
+  { id: 'rekening', label: 'Blokir Rekening', query: 'rekening' },
+];
+
+const TRENDING_SCAMS: TrendingScam[] = [
+  {
+    id: 'tr-1',
+    title: 'Berkas .APK Berkedok Resi Kurir',
+    tag: 'APK',
+    consultationCount: 38,
+    severity: 'Kritis',
+  },
+  {
+    id: 'tr-2',
+    title: 'Lowongan Freelance Like Video (Deposit)',
+    tag: 'Telegram',
+    consultationCount: 29,
+    severity: 'Tinggi',
+  },
+  {
+    id: 'tr-3',
+    title: 'Pemberitahuan Tarif Bank Rp 150rb',
+    tag: 'BCA',
+    consultationCount: 19,
+    severity: 'Kritis',
+  },
+];
 
 const CHANNELS: Channel[] = [
   {
@@ -216,6 +260,64 @@ export const KomunitasPage: React.FC = () => {
   
   // Filter inside room
   const [activeFilter, setActiveFilter] = useState<'all' | 'question' | 'answer'>('all');
+
+  // Thread Detail Modal State (Inspired by community_post_detail.html)
+  const [focusedThread, setFocusedThread] = useState<ChatMessage | null>(null);
+  const [threadReplyInput, setThreadReplyInput] = useState<string>('');
+
+  // Lock background scroll when thread modal is open
+  useEffect(() => {
+    if (focusedThread) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setFocusedThread(null);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [focusedThread]);
+
+  const getRepliesCount = (msgId: string) => {
+    return messages.filter(m => m.replyTo?.id === msgId).length;
+  };
+
+  const getThreadReplies = (rootMsg: ChatMessage) => {
+    return messages.filter(m => m.replyTo?.id === rootMsg.id || (m.replyTo && m.replyTo.author === rootMsg.author));
+  };
+
+  const handleSendThreadReply = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!threadReplyInput.trim() || !focusedThread) return;
+
+    const now = new Date();
+    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    const newReply: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      channelId: focusedThread.channelId,
+      author: 'Anda (Warga Waspada)',
+      authorBadge: 'Warga Waspada',
+      avatarColor: 'bg-[#143826]',
+      timestamp: timeString,
+      type: 'answer',
+      content: threadReplyInput.trim(),
+      replyTo: {
+        id: focusedThread.id,
+        author: focusedThread.author,
+        content: focusedThread.content.slice(0, 65) + (focusedThread.content.length > 65 ? '...' : '')
+      },
+      helpfulCount: 1,
+      userLiked: true,
+    };
+
+    setMessages(prev => [...prev, newReply]);
+    setThreadReplyInput('');
+    toast.success('Balasan Anda berhasil dikirim ke utas ini!');
+  };
 
   // Copy helper
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -436,6 +538,47 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Tren Modus Minggu Ini (Trending Security Alerts) */}
+            <div className="apple-card p-4 sm:p-5 border border-gray-200 bg-white shadow-2xs space-y-3 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
+                  <TrendingUp className="w-3.5 h-3.5 text-[#E86A33]" />
+                  <span>Tren Modus Minggu Ini</span>
+                </div>
+                <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold">
+                  Update
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {TRENDING_SCAMS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(item.tag);
+                      toast.info(`Menyaring obrolan terkait "${item.title}"`);
+                    }}
+                    className="w-full text-left p-2.5 rounded-xl bg-gray-50/80 hover:bg-[#FAF9F6] border border-gray-200/80 hover:border-gray-300 transition-all flex items-start justify-between gap-2 group cursor-pointer"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-bold text-xs text-gray-900 group-hover:text-[#143826] transition-colors block truncate">
+                        {item.title}
+                      </span>
+                      <span className="text-[10px] text-gray-500 font-mono mt-0.5 block">
+                        {item.consultationCount} warga berkonsultasi
+                      </span>
+                    </div>
+                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                      item.severity === 'Kritis' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    }`}>
+                      {item.severity}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Desktop Only: Helpline Fast Access Card */}
             <div className="hidden lg:block apple-card p-4 sm:p-5 border border-gray-200 bg-white shadow-2xs space-y-3">
               <div className="flex items-center gap-2 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
@@ -508,39 +651,95 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Search Strip */}
-            <div className="px-6 py-2 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between gap-2 shrink-0">
-              <div className="flex items-center gap-2 flex-1">
-                <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+            {/* Quick Search & Popular Scam Topic Tags Strip (Inspired by community_search.html) */}
+            <div className="p-3 sm:p-4 bg-gray-50/90 border-b border-gray-100 space-y-2.5 shrink-0">
+              {/* Search input */}
+              <div className="relative bg-white rounded-2xl p-2.5 px-3.5 flex items-center gap-2 border border-gray-200 focus-within:ring-2 focus-within:ring-[#143826]/20 focus-within:border-[#143826] transition-all shadow-2xs">
+                <Search className="w-4 h-4 text-gray-400 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari obrolan (misal: APK, Shopee, Telegram, transfer)..."
-                  className="w-full bg-transparent text-xs text-gray-800 placeholder-gray-400 focus:outline-none"
+                  placeholder="Cari kata kunci kasus (misal: APK, J&T, Telegram, BCA, rekening)..."
+                  className="w-full bg-transparent text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none font-medium"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition cursor-pointer"
+                    title="Hapus pencarian"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="text-gray-400 hover:text-gray-700 text-xs cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+
+              {/* Popular Scam Topic Tags (Pencarian Populer) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+                <span className="text-[10px] font-mono font-bold text-gray-400 uppercase shrink-0 mr-1 flex items-center gap-1">
+                  <Tag className="w-3 h-3 text-[#E86A33]" />
+                  <span>Topik Populer:</span>
+                </span>
+                {POPULAR_TAGS.map((tag) => {
+                  const isSelected = searchQuery.toLowerCase() === tag.query.toLowerCase();
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSearchQuery('');
+                        } else {
+                          setSearchQuery(tag.query);
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer border ${
+                        isSelected
+                          ? 'bg-[#143826] text-white border-[#143826] shadow-2xs'
+                          : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-200'
+                      }`}
+                    >
+                      #{tag.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* CHAT MESSAGES BODY */}
             <div ref={chatScrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#FAF9F6]">
               {filteredMessages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-gray-400 space-y-2">
-                  <MessageSquare className="w-8 h-8 text-gray-300" />
-                  <p className="text-xs font-semibold text-gray-600">Belum ada obrolan yang sesuai pencarian</p>
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-gray-400 space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-2xs">
+                    <Search className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <div className="space-y-1 max-w-sm">
+                    <p className="text-xs sm:text-sm font-bold text-gray-700">
+                      Tidak ada obrolan untuk "{searchQuery}"
+                    </p>
+                    <p className="text-[11px] text-gray-500 leading-relaxed">
+                      Belum ada warga yang menanyakan kata kunci ini. Anda dapat menjadi yang pertama berkonsultasi tentang kasus ini.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInputText(`Apakah ada yang tahu tentang modus "${searchQuery}"? Mohon bantuan informasinya...`);
+                      setMessageType('question');
+                      setSearchQuery('');
+                    }}
+                    className="btn-animate inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#143826] text-white text-xs font-bold hover:bg-[#1D4E36] transition shadow-xs cursor-pointer"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Tanyakan Kasus Ini Sekarang</span>
+                  </button>
                 </div>
               ) : (
                 filteredMessages.map(msg => {
                   const isQuestion = msg.type === 'question';
                   const isAnswer = msg.type === 'answer';
+                  const repliesCount = getRepliesCount(msg.id);
 
                   return (
                     <motion.div
@@ -625,8 +824,8 @@ export const KomunitasPage: React.FC = () => {
                       )}
 
                       {/* Action buttons */}
-                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-4">
+                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                           <button
                             onClick={() => {
                               setReplyTarget(msg);
@@ -636,6 +835,19 @@ export const KomunitasPage: React.FC = () => {
                           >
                             <CornerDownRight className="w-3.5 h-3.5" />
                             <span>Balas / Jawab</span>
+                          </button>
+
+                          <button
+                            onClick={() => setFocusedThread(msg)}
+                            className="inline-flex items-center gap-1.5 font-bold text-xs text-gray-600 hover:text-[#143826] transition cursor-pointer bg-gray-100/90 hover:bg-gray-200/80 px-2.5 py-1 rounded-lg"
+                            title="Buka seluruh utas obrolan untuk topik ini"
+                          >
+                            <MessageSquare className="w-3 h-3 text-gray-500" />
+                            <span>
+                              {repliesCount > 0 
+                                ? `Utas (${repliesCount} balasan)` 
+                                : 'Buka Utas'}
+                            </span>
                           </button>
 
                           <button
@@ -651,7 +863,7 @@ export const KomunitasPage: React.FC = () => {
 
                         <button
                           onClick={() => handleShareMessage(msg)}
-                          className="text-gray-400 hover:text-gray-600 transition cursor-pointer"
+                          className="text-gray-400 hover:text-gray-600 transition cursor-pointer p-1 rounded hover:bg-gray-100"
                           title="Bagikan obrolan"
                         >
                           <Share2 className="w-3.5 h-3.5" />
@@ -791,6 +1003,163 @@ export const KomunitasPage: React.FC = () => {
         </div>
 
       </div>
+
+      {/* THREAD DETAIL MODAL (Inspired by community_post_detail.html) */}
+      {focusedThread && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFocusedThread(null);
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-2xl w-full p-5 sm:p-6 relative my-auto max-h-[90vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setFocusedThread(null)}
+                  className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition cursor-pointer"
+                  aria-label="Tutup utas"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E86A33]">
+                    Utas Pembahasan Kasus
+                  </span>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-tight">
+                    Diskusi @{focusedThread.author}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFocusedThread(null)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Content Scroll Area */}
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {/* Root Question Card */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-8 h-8 rounded-full ${focusedThread.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs`}>
+                      {focusedThread.author.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs sm:text-sm text-gray-900">{focusedThread.author}</span>
+                      <span className="text-[10px] text-gray-400 font-mono ml-2">{focusedThread.timestamp}</span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-800">
+                    KASUS UTAMA
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-medium whitespace-pre-line">
+                  {focusedThread.content}
+                </p>
+                {focusedThread.evidenceSnippet && (
+                  <div className="p-2.5 rounded-xl bg-white border border-amber-200/80 text-xs font-mono text-[#143826]">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Bukti Terkait:</span>
+                    "{focusedThread.evidenceSnippet}"
+                  </div>
+                )}
+              </div>
+
+              {/* Replies Chain Header */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between px-1 mb-2">
+                  <span className="text-[11px] font-mono font-bold text-gray-500 uppercase tracking-wider">
+                    Semua Balasan &amp; Rekomendasi Warga ({getThreadReplies(focusedThread).length})
+                  </span>
+                </div>
+
+                {getThreadReplies(focusedThread).length === 0 ? (
+                  <div className="p-6 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-xs text-gray-500 space-y-1">
+                    <p className="font-semibold text-gray-700">Belum ada tanggapan untuk pertanyaan ini.</p>
+                    <p className="text-[11px] text-gray-400">Jadilah yang pertama memberikan saran mitigasi di bawah.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {getThreadReplies(focusedThread).map((reply) => (
+                      <div 
+                        key={reply.id}
+                        className={`p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm space-y-2 ${
+                          reply.isVerifiedSolution
+                            ? 'bg-emerald-50/70 border-emerald-200 shadow-2xs'
+                            : 'bg-gray-50/70 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-6 h-6 rounded-full ${reply.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}>
+                              {reply.author.slice(0, 2).toUpperCase()}
+                            </div>
+                            <span className="font-bold text-xs text-gray-900">{reply.author}</span>
+                            <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded font-bold ${
+                              reply.authorBadge === 'Relawan Komunitas'
+                                ? 'bg-[#EAF2ED] text-[#143826]'
+                                : 'bg-gray-200 text-gray-700'
+                            }`}>
+                              {reply.authorBadge}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-mono">{reply.timestamp}</span>
+                        </div>
+
+                        {reply.isVerifiedSolution && (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>Solusi Mitigasi Terverifikasi</span>
+                          </div>
+                        )}
+
+                        <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal whitespace-pre-line">
+                          {reply.content}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Fast Reply Box Inside Modal */}
+            <form onSubmit={handleSendThreadReply} className="pt-2 border-t border-gray-100 space-y-2 shrink-0">
+              <span className="text-[11px] font-bold text-gray-600 block">
+                Tulis Balasan / Solusi Mitigasi:
+              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={threadReplyInput}
+                  onChange={(e) => setThreadReplyInput(e.target.value)}
+                  placeholder={`Bantu @${focusedThread.author} dengan tanggapan Anda...`}
+                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition"
+                />
+                <button
+                  type="submit"
+                  className="btn-animate inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                >
+                  <span>Kirim</span>
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );
