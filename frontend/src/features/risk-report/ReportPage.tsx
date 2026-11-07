@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
@@ -32,6 +33,22 @@ export const ReportPage: React.FC = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, activeFilter]);
+
+  // Lock background body scroll and listen for Escape key when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setIsModalOpen(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isModalOpen]);
 
   const handleManualReportSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -437,23 +454,35 @@ export const ReportPage: React.FC = () => {
 
       </div>
 
-      {/* MODAL LAPORAN KOMUNITAS */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#14161C]/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-[24px] border border-[#E3E0DA] shadow-[0_24px_48px_-12px_rgba(29,63,110,0.25)] max-w-md w-full p-6 sm:p-7 relative animate-in fade-in zoom-in-95 duration-200">
+      {/* MODAL LAPORAN KOMUNITAS (Mounted via portal to escape stacking context) */}
+      {isModalOpen && typeof document !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 z-[999] bg-[#14161C]/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalOpen(false);
+          }}
+        >
+          <div 
+            className="bg-white rounded-[24px] border border-[#E3E0DA] shadow-[0_24px_48px_-12px_rgba(20,22,28,0.35)] max-w-md w-full p-6 sm:p-7 relative my-auto max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-report-title"
+          >
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
               className="absolute top-5 right-5 text-[#8C887B] hover:text-[#14161C] p-1.5 rounded-full hover:bg-[#F5F3EE] transition-colors cursor-pointer"
+              aria-label="Tutup modal"
             >
               <X className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-2 text-xs font-bold font-mono text-[#B42318] mb-1">
-              <AlertTriangle className="w-4 h-4" />
+              <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>LAPORKAN PENIPUAN BARU</span>
             </div>
-            <h2 className="text-xl font-bold font-display text-[#14161C] mb-1.5">
+            <h2 id="modal-report-title" className="text-xl font-bold font-display text-[#14161C] mb-1.5">
               Laporkan ke Komunitas
             </h2>
             <p className="text-xs text-[#5B5850] leading-relaxed mb-5">
@@ -523,7 +552,8 @@ export const ReportPage: React.FC = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
