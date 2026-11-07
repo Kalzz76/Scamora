@@ -35,7 +35,7 @@ export const AdminHeader: React.FC = () => {
               Admin
             </span>
           </div>
-          <p className="text-[10px] text-[#CBDCE5] font-medium leading-none mt-0.5 font-mono">
+          <p className="text-[10px] text-slate-200 font-medium leading-none mt-0.5 font-mono">
             Command &amp; Control Center
           </p>
         </div>
@@ -95,33 +95,33 @@ export const AdminHeader: React.FC = () => {
                   Online
                 </span>
               </div>
-              <span className="text-[10px] text-[#CBDCE5] block leading-tight font-mono">
+              <span className="text-[10px] text-slate-200 block leading-tight font-mono">
                 {currentUser?.username ? `${currentUser.username}@scamora.id` : 'admin@scamora.id'}
               </span>
             </div>
 
-            <ChevronDown className={`w-3.5 h-3.5 text-[#CBDCE5] transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 text-slate-200 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {/* User Profile Dropdown Menu */}
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-panel-dark shadow-2xl p-2 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-100 border border-white/15">
+            <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-panel-dark shadow-2xl p-2 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-100 border border-white/20">
               <div className="p-3 border-b border-white/10 space-y-1">
                 <div className="text-xs font-bold text-white">Super Administrator</div>
-                <div className="text-[11px] text-[#CBDCE5] font-mono">admin@scamora.id</div>
-                <div className="inline-flex items-center gap-1.5 mt-1 text-[10px] font-bold text-[#EEEEEE] bg-[#548CA8]/30 px-2.5 py-1 rounded-md border border-[#548CA8]/50">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#548CA8] shrink-0" />
+                <div className="text-[11px] text-slate-200 font-mono">admin@scamora.id</div>
+                <div className="inline-flex items-center gap-1.5 mt-1.5 text-[10px] font-bold text-white bg-[#548CA8]/35 px-2.5 py-1 rounded-lg border border-[#548CA8]/60 shadow-xs">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
                   <span>Akses Penuh (Role: Lead Security Officer)</span>
                 </div>
               </div>
 
               <div className="p-1 space-y-0.5">
-                <div className="px-3 py-2 text-xs text-[#CBDCE5] flex items-center justify-between">
+                <div className="px-3 py-2 text-xs text-slate-200 flex items-center justify-between">
                   <span>Protokol Keamanan:</span>
                   <span className="font-mono font-bold text-white text-[11px]">MIT-2026</span>
                 </div>
 
-                <div className="px-3 py-2 text-xs text-[#CBDCE5] flex items-center justify-between">
+                <div className="px-3 py-2 text-xs text-slate-200 flex items-center justify-between">
                   <span>Sesi Login:</span>
                   <span className="font-mono text-emerald-400 text-[11px] font-bold">Terotentikasi</span>
                 </div>
@@ -131,9 +131,9 @@ export const AdminHeader: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition cursor-pointer"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-300 hover:text-white hover:bg-rose-500/25 transition cursor-pointer"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>Kunci Sesi Admin</span>
                 </button>
               </div>

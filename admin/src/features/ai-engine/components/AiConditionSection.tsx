@@ -133,73 +133,73 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
       {/* 3 STATUS SUMMARY STATS (Unboxed) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Model & Provider */}
-        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 border border-[#D8E0E7] space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#476072]">
-            <span className="font-bold flex items-center gap-1.5">
-              <Cpu className="w-4 h-4 text-[#334257]" />
+        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 space-y-2 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-xs text-[#476072] dark:text-slate-300">
+            <span className="font-bold flex items-center gap-1.5 text-[#334257] dark:text-slate-200">
+              <Cpu className="w-4 h-4 text-[#334257] dark:text-cyan-400" />
               Model AI Aktif
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-[#548CA8]/15 text-[#334257] font-bold uppercase">
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-sm bg-[#548CA8]/15 dark:bg-[#548CA8]/30 text-[#334257] dark:text-cyan-300 font-bold uppercase">
               {aiConfig.activeProvider}
             </span>
           </div>
-          <div className="text-base font-black text-[#1A202C] font-mono truncate">
+          <div className="text-base font-black text-[#1A202C] dark:text-white font-mono truncate">
             {aiConfig.geminiModel}
           </div>
-          <div className="text-[11px] text-[#476072] flex items-center justify-between pt-1 font-mono">
+          <div className="text-[11px] text-[#476072] dark:text-slate-300 flex items-center justify-between pt-1 font-mono">
             <span>Suhu: {aiConfig.temperature}</span>
-            <span className="text-emerald-700 font-bold flex items-center gap-1">
-              <Key className="w-3 h-3 text-emerald-600" />
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <Key className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               <span>{aiConfig.idToken ? 'ID Token & Key Aktif' : 'API Key: Terkonfigurasi'}</span>
             </span>
           </div>
           {aiConfig.credentialCode && (
-            <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1 pt-1 border-t border-slate-200/60 dark:border-white/10">
-              <Fingerprint className="w-3 h-3 text-[#548CA8]" />
+            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 flex items-center gap-1 pt-1 border-t border-slate-200/60 dark:border-white/10">
+              <Fingerprint className="w-3 h-3 text-[#548CA8] dark:text-cyan-400" />
               <span className="truncate">Kode: {aiConfig.credentialCode}</span>
             </div>
           )}
         </div>
 
         {/* 24h Tokens */}
-        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 border border-[#D8E0E7] space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#476072]">
-            <span className="font-bold flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-[#548CA8]" />
+        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 space-y-2 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-xs text-[#476072] dark:text-slate-300">
+            <span className="font-bold flex items-center gap-1.5 text-[#334257] dark:text-slate-200">
+              <Zap className="w-4 h-4 text-[#548CA8] dark:text-cyan-400" />
               Total Token (24 Jam)
             </span>
-            <span className="text-[10px] font-mono text-emerald-700 font-bold">
+            <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
               Normal
             </span>
           </div>
-          <div className="text-xl font-black text-[#334257] font-mono">
+          <div className="text-xl font-black text-[#334257] dark:text-white font-mono">
             {totalTokens24h.toLocaleString()}{' '}
-            <span className="text-xs font-semibold text-[#476072]">token</span>
+            <span className="text-xs font-semibold text-[#476072] dark:text-slate-400">token</span>
           </div>
-          <div className="text-[11px] text-[#476072] flex items-center justify-between pt-1 font-mono">
+          <div className="text-[11px] text-[#476072] dark:text-slate-300 flex items-center justify-between pt-1 font-mono">
             <span>Prompt: {(promptTokens24h / 1000).toFixed(1)}k</span>
             <span>Output: {(completionTokens24h / 1000).toFixed(1)}k</span>
           </div>
         </div>
 
         {/* Latency & Status */}
-        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 border border-[#D8E0E7] space-y-2">
-          <div className="flex items-center justify-between text-xs text-[#476072]">
-            <span className="font-bold flex items-center gap-1.5">
-              <Activity className="w-4 h-4 text-emerald-600" />
+        <div className="p-4 rounded-xl bg-[#EEEEEE]/60 dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 space-y-2 shadow-xs transition-colors">
+          <div className="flex items-center justify-between text-xs text-[#476072] dark:text-slate-300">
+            <span className="font-bold flex items-center gap-1.5 text-[#334257] dark:text-slate-200">
+              <Activity className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Kecepatan Latensi
             </span>
-            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+            <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-sm border border-emerald-200 dark:border-emerald-500/30">
               Optimal
             </span>
           </div>
-          <div className="text-xl font-black text-[#334257] font-mono">
+          <div className="text-xl font-black text-[#334257] dark:text-white font-mono">
             {testResult?.latencyMs || 620}{' '}
-            <span className="text-xs font-semibold text-[#476072]">ms</span>
+            <span className="text-xs font-semibold text-[#476072] dark:text-slate-400">ms</span>
           </div>
-          <div className="text-[11px] text-[#476072] flex items-center justify-between pt-1">
+          <div className="text-[11px] text-[#476072] dark:text-slate-300 flex items-center justify-between pt-1">
             <span>Target SLA: &lt; 1.500 ms</span>
-            <span className="text-emerald-700 font-bold">0 Kendala (100%)</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-bold">0 Kendala (100%)</span>
           </div>
         </div>
       </div>
@@ -210,29 +210,29 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
         {/* LEFT COLUMN: GRAFIK PENGGUNAAN TOKEN (7 COLS - Unboxed) */}
         <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8E0E7] pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8E0E7] dark:border-white/10 pb-3">
               <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C] flex items-center gap-1.5">
-                  <Zap className="w-4 h-4 text-[#548CA8]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C] dark:text-white flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-[#548CA8] dark:text-cyan-400" />
                   Grafik Penggunaan Token (24 Jam)
                 </h3>
-                <p className="text-[11px] text-[#476072]">
+                <p className="text-[11px] text-[#476072] dark:text-slate-400">
                   Konsumsi token Google Gemini API per jam dalam 24 jam terakhir
                 </p>
               </div>
 
               {activeHoverItem ? (
-                <div className="text-xs font-mono font-bold text-[#334257] bg-[#548CA8]/15 px-2.5 py-1 rounded-md">
+                <div className="text-xs font-mono font-bold text-[#334257] dark:text-cyan-200 bg-[#548CA8]/15 dark:bg-[#548CA8]/30 px-2.5 py-1 rounded-md">
                   {activeHoverItem.hour}: {activeHoverItem.totalTokens.toLocaleString()} token
                 </div>
               ) : (
-                <span className="text-[11px] text-[#476072]">Hover batang untuk detail</span>
+                <span className="text-[11px] text-[#476072] dark:text-slate-400">Hover batang untuk detail</span>
               )}
             </div>
 
             {/* Token Bar Chart */}
             <div className="pt-6">
-              <div className="h-44 flex items-end gap-1 sm:gap-2 border-b border-[#D8E0E7] pb-1">
+              <div className="h-44 flex items-end gap-1 sm:gap-2 border-b border-[#D8E0E7] dark:border-white/10 pb-1">
                 {hourlyTokens.map((item, idx) => {
                   const heightPercent = Math.max((item.totalTokens / maxTokenInHour) * 100, 8);
                   const isHovered = hoveredIndex === idx;
@@ -260,7 +260,7 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
                         />
                         {/* Prompt segment (Slate Navy) */}
                         <div
-                          className="w-full bg-[#334257] flex-1"
+                          className="w-full bg-[#334257] dark:bg-slate-700 flex-1"
                         />
                       </div>
                     </div>
@@ -269,7 +269,7 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
               </div>
 
               {/* X-axis labels */}
-              <div className="flex justify-between items-center text-[10px] font-mono text-[#476072] pt-2">
+              <div className="flex justify-between items-center text-[10px] font-mono text-[#476072] dark:text-slate-400 pt-2">
                 <span>00:00</span>
                 <span>04:00</span>
                 <span>08:00</span>
@@ -282,10 +282,10 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
           </div>
 
           {/* Chart Legend & Summary */}
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] text-xs">
-            <div className="flex items-center gap-4 text-[11px] text-[#476072]">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-[#EEEEEE] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 text-xs">
+            <div className="flex items-center gap-4 text-[11px] text-[#476072] dark:text-slate-300">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-xs bg-[#334257]"></span>
+                <span className="w-2.5 h-2.5 rounded-xs bg-[#334257] dark:bg-slate-600"></span>
                 <span>Prompt ({((promptTokens24h / totalTokens24h) * 100).toFixed(0)}%)</span>
               </span>
               <span className="flex items-center gap-1.5">
@@ -294,36 +294,36 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
               </span>
             </div>
 
-            <div className="text-[11px] font-mono text-[#334257] font-bold">
+            <div className="text-[11px] font-mono text-[#334257] dark:text-slate-200 font-bold">
               Rata-rata: ~{(totalTokens24h / 24).toFixed(0)} token/jam
             </div>
           </div>
         </div>
 
         {/* RIGHT COLUMN: TEMPAT KECIL UNTUK UJI KONEKSI (5 COLS - Unboxed with Left Border) */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 lg:pl-8 lg:border-l lg:border-[#D8E0E7]">
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 lg:pl-8 lg:border-l lg:border-[#D8E0E7] dark:lg:border-white/10">
           <div>
-            <div className="flex items-center justify-between border-b border-[#D8E0E7] pb-3">
+            <div className="flex items-center justify-between border-b border-[#D8E0E7] dark:border-white/10 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-[#548CA8]/15 text-[#334257] flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-[#548CA8]/15 dark:bg-[#548CA8]/30 text-[#334257] dark:text-cyan-300 flex items-center justify-center">
                   <Terminal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C]">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C] dark:text-white">
                     Tempat Uji Koneksi AI
                   </h3>
-                  <p className="text-[11px] text-[#476072]">Tes latensi &amp; respon inferensi langsung</p>
+                  <p className="text-[11px] text-[#476072] dark:text-slate-400">Tes latensi &amp; respon inferensi langsung</p>
                 </div>
               </div>
 
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#EEEEEE] border border-[#D8E0E7]">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#EEEEEE] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 text-slate-700 dark:text-slate-300">
                 Live Ping
               </span>
             </div>
 
             {/* Quick Preset Buttons */}
             <div className="pt-3 space-y-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#476072] block">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#476072] dark:text-slate-400 block">
                 Pilihan Cepat Prompt:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -332,7 +332,7 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
                     key={preset}
                     type="button"
                     onClick={() => setTestPrompt(preset)}
-                    className="px-2.5 py-1 rounded-lg bg-[#EEEEEE] hover:bg-[#548CA8]/15 hover:text-[#334257] border border-[#D8E0E7] text-[10px] font-semibold text-[#476072] transition cursor-pointer"
+                    className="px-2.5 py-1 rounded-lg bg-[#EEEEEE] dark:bg-slate-800 hover:bg-[#548CA8]/15 dark:hover:bg-[#548CA8]/30 hover:text-[#334257] dark:hover:text-white border border-[#D8E0E7] dark:border-white/10 text-[10px] font-semibold text-[#476072] dark:text-slate-300 transition cursor-pointer"
                   >
                     {preset}
                   </button>
@@ -348,17 +348,17 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
                   value={testPrompt}
                   onChange={(e) => setTestPrompt(e.target.value)}
                   placeholder="Ketik teks uji inferensi..."
-                  className="w-full pl-3 pr-20 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                  className="w-full pl-3 pr-20 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs text-[#1A202C] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:border-[#548CA8]"
                 />
                 <button
                   type="submit"
                   disabled={testing}
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3 rounded-lg bg-[#334257] hover:bg-[#476072] text-white text-[11px] font-bold flex items-center gap-1 transition disabled:opacity-50 cursor-pointer"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3 rounded-lg bg-[#334257] hover:bg-[#476072] dark:bg-[#548CA8] dark:hover:bg-[#437691] text-white text-[11px] font-bold flex items-center gap-1 transition disabled:opacity-50 cursor-pointer"
                 >
                   {testing ? (
                     <RefreshCw className="w-3 h-3 animate-spin" />
                   ) : (
-                    <Send className="w-3 h-3 text-[#548CA8]" />
+                    <Send className="w-3 h-3 text-[#548CA8] dark:text-white" />
                   )}
                   <span>{testing ? 'Menguji' : 'Kirim'}</span>
                 </button>
@@ -391,8 +391,8 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
             </div>
           </div>
 
-          <div className="text-[10px] text-[#476072] flex items-center gap-1 pt-1">
-            <Clock className="w-3 h-3 text-[#548CA8] shrink-0" />
+          <div className="text-[10px] text-[#476072] dark:text-slate-400 flex items-center gap-1 pt-1">
+            <Clock className="w-3 h-3 text-[#548CA8] dark:text-cyan-400 shrink-0" />
             Uji koneksi mengeksekusi inferensi mikro untuk memvalidasi token API &amp; ketersediaan model.
           </div>
         </div>

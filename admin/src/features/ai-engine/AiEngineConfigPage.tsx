@@ -458,32 +458,32 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setAiConfig({ ...aiConfig, activeProvider: e.target.value as any })
                     }
-                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
+                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-semibold text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value="gemini">Google Gemini (Disarankan - Kuota Cepat &amp; Stabil)</option>
                     <option value="anthropic">Anthropic Claude (claude-3-5-haiku)</option>
                     <option value="auto">Auto Selection (Pilih otomatis berdasarkan ketersediaan key)</option>
                   </select>
-                  <p className="text-[11px] text-[#476072]">
+                  <p className="text-[11px] text-[#476072] dark:text-slate-400">
                     Saat ini backend terkonfigurasi memprioritaskan Google Gemini API.
                   </p>
                 </div>
 
                 {/* 2. Gemini Model Selector */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#1A202C] block">
+                  <label className="text-xs font-bold text-[#1A202C] dark:text-white block">
                     Model Google Gemini Aktif:
                   </label>
                   <select
                     value={aiConfig.geminiModel}
                     onChange={(e) => setAiConfig({ ...aiConfig, geminiModel: e.target.value })}
-                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
+                    className="w-full max-w-md px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-semibold font-mono text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Rekomendasi Utama - Sangat Cepat)</option>
                     <option value="gemini-3.8-flash">gemini-3.8-flash (Penalaran Semantik Mendalam)</option>
                     <option value="gemini-flash-latest">gemini-flash-latest (Versi Rilis Terkini)</option>
                   </select>
-                  <p className="text-[11px] text-[#476072]">
+                  <p className="text-[11px] text-[#476072] dark:text-slate-400">
                     Rantai toleransi otomatis (auto-fallback) aktif jika terjadi lonjakan traffic.
                   </p>
                 </div>
@@ -524,7 +524,7 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setAiConfig({ ...aiConfig, maxTokens: parseInt(e.target.value, 10) })
                     }
-                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-semibold font-mono text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8] cursor-pointer"
                   >
                     <option value={512}>512 Tokens (Cepat &amp; Hemat)</option>
                     <option value={1024}>1.024 Tokens (Standar Scamora)</option>
@@ -535,13 +535,13 @@ export const AiEngineConfigPage: React.FC = () => {
             </div>
 
             {/* SUB-SECTION B: WEB CRAWLER & DOM INSPECTION CONFIG (Vertically Stacked) */}
-            <div className="space-y-6 pb-8 border-b border-[#D8E0E7]">
-              <div className="flex items-center justify-between border-b border-[#D8E0E7] pb-4">
+            <div className="space-y-6 pb-8 border-b border-[#D8E0E7] dark:border-white/10">
+              <div className="flex items-center justify-between border-b border-[#D8E0E7] dark:border-white/10 pb-4">
                 <div className="flex items-center gap-2.5">
-                  <Globe className="w-5 h-5 text-[#334257]" />
-                  <h3 className="text-base font-bold text-[#1A202C]">Web Page Crawler &amp; Sandbox Sanitasi</h3>
+                  <Globe className="w-5 h-5 text-[#334257] dark:text-cyan-400" />
+                  <h3 className="text-base font-bold text-[#1A202C] dark:text-white">Web Page Crawler &amp; Sandbox Sanitasi</h3>
                 </div>
-                <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-[#548CA8]/15 text-[#334257] font-bold">
+                <span className="text-[11px] font-mono px-2.5 py-1 rounded-full bg-[#548CA8]/15 dark:bg-[#548CA8]/30 text-[#334257] dark:text-cyan-300 font-bold">
                   SSRF Protected
                 </span>
               </div>
@@ -549,7 +549,7 @@ export const AiEngineConfigPage: React.FC = () => {
               <div className="flex flex-col space-y-5">
                 {/* 1. Timeout */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#1A202C] block">
+                  <label className="text-xs font-bold text-[#1A202C] dark:text-white block">
                     Batas Waktu Perayapan (Timeout ms):
                   </label>
                   <input
@@ -564,16 +564,16 @@ export const AiEngineConfigPage: React.FC = () => {
                         timeoutMs: parseInt(e.target.value, 10),
                       })
                     }
-                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-semibold font-mono text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8]"
                   />
-                  <p className="text-[11px] text-[#476072]">
+                  <p className="text-[11px] text-[#476072] dark:text-slate-400">
                     Mencegah proses menggantung jika server situs phishing sengaja lambat atau tarpit.
                   </p>
                 </div>
 
                 {/* 2. Max Bytes */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#1A202C] block">
+                  <label className="text-xs font-bold text-[#1A202C] dark:text-white block">
                     Batas Muatan Memori (Max Payload KB):
                   </label>
                   <input
@@ -588,16 +588,16 @@ export const AiEngineConfigPage: React.FC = () => {
                         maxBytesKb: parseInt(e.target.value, 10),
                       })
                     }
-                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-semibold font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xs px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-semibold font-mono text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8]"
                   />
-                  <p className="text-[11px] text-[#476072]">
+                  <p className="text-[11px] text-[#476072] dark:text-slate-400">
                     Maksimal ukuran halaman statis yang dibaca (mencegah zip/data bomb).
                   </p>
                 </div>
 
                 {/* 3. User-Agent String */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-[#1A202C] block">
+                  <label className="text-xs font-bold text-[#1A202C] dark:text-white block">
                     User-Agent Identitas Perayap:
                   </label>
                   <input
@@ -606,16 +606,16 @@ export const AiEngineConfigPage: React.FC = () => {
                     onChange={(e) =>
                       setCrawlerConfig({ ...crawlerConfig, userAgent: e.target.value })
                     }
-                    className="w-full max-w-xl px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] bg-[#EEEEEE] text-xs font-mono text-[#1A202C] focus:outline-hidden focus:border-[#548CA8]"
+                    className="w-full max-w-xl px-3.5 py-2.5 rounded-xl border border-[#D8E0E7] dark:border-white/15 bg-[#EEEEEE] dark:bg-slate-900/80 text-xs font-mono text-[#1A202C] dark:text-white focus:outline-hidden focus:border-[#548CA8]"
                   />
                 </div>
 
                 {/* 4. Crawler Feature Toggles (Vertically Stacked) */}
                 <div className="flex flex-col space-y-2.5 pt-2 max-w-xl">
-                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between cursor-pointer hover:border-[#548CA8] transition">
+                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 flex items-center justify-between cursor-pointer hover:border-[#548CA8] dark:hover:border-[#548CA8] transition">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-[#1A202C] block">Proteksi SSRF</span>
-                      <span className="text-[10px] text-[#476072] block">Blokir IP lokal &amp; privat</span>
+                      <span className="text-xs font-bold text-[#1A202C] dark:text-white block">Proteksi SSRF</span>
+                      <span className="text-[10px] text-[#476072] dark:text-slate-300 block">Blokir IP lokal &amp; privat</span>
                     </div>
                     <input
                       type="checkbox"
@@ -627,10 +627,10 @@ export const AiEngineConfigPage: React.FC = () => {
                     />
                   </label>
 
-                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between cursor-pointer hover:border-[#548CA8] transition">
+                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 flex items-center justify-between cursor-pointer hover:border-[#548CA8] dark:hover:border-[#548CA8] transition">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-[#1A202C] block">Deteksi Form Sandi</span>
-                      <span className="text-[10px] text-[#476072] block">&lt;input type="password"&gt;</span>
+                      <span className="text-xs font-bold text-[#1A202C] dark:text-white block">Deteksi Form Sandi</span>
+                      <span className="text-[10px] text-[#476072] dark:text-slate-300 block">&lt;input type="password"&gt;</span>
                     </div>
                     <input
                       type="checkbox"
@@ -642,10 +642,10 @@ export const AiEngineConfigPage: React.FC = () => {
                     />
                   </label>
 
-                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between cursor-pointer hover:border-[#548CA8] transition">
+                  <label className="p-3.5 rounded-xl bg-[#EEEEEE] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-white/10 flex items-center justify-between cursor-pointer hover:border-[#548CA8] dark:hover:border-[#548CA8] transition">
                     <div className="space-y-0.5">
-                      <span className="text-xs font-bold text-[#1A202C] block">Deteksi Berkas APK</span>
-                      <span className="text-[10px] text-[#476072] block">Pemicu unduhan .apk</span>
+                      <span className="text-xs font-bold text-[#1A202C] dark:text-white block">Deteksi Berkas APK</span>
+                      <span className="text-[10px] text-[#476072] dark:text-slate-300 block">Pemicu unduhan .apk</span>
                     </div>
                     <input
                       type="checkbox"

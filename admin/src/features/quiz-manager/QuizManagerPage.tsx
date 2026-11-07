@@ -601,11 +601,11 @@ export const QuizManagerPage: React.FC = () => {
             </div>
 
             {/* Skenario Kasus */}
-            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/10 space-y-1.5">
-              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10 space-y-1.5">
+              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-cyan-400 uppercase tracking-wider block">
                 Skenario Kasus yang Dialami Peserta:
               </span>
-              <p className="text-xs text-[#1A202C] dark:text-slate-200 leading-relaxed italic font-medium">
+              <p className="text-xs text-[#1A202C] dark:text-slate-100 leading-relaxed italic font-medium">
                 "{activeDetailQuestion.scenario}"
               </p>
             </div>

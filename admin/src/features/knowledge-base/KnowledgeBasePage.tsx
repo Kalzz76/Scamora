@@ -599,11 +599,11 @@ export const KnowledgeBasePage: React.FC = () => {
             </div>
 
             {/* Summary Description */}
-            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/10 space-y-1">
-              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-slate-400 uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-white/10 space-y-1">
+              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-cyan-400 uppercase tracking-wider block">
                 Ringkasan &amp; Cara Kerja Modus:
               </span>
-              <p className="text-xs text-[#334257] dark:text-slate-200 leading-relaxed">
+              <p className="text-xs text-[#334257] dark:text-slate-100 leading-relaxed font-medium">
                 {activeDetailArticle.summary}
               </p>
             </div>
@@ -623,9 +623,9 @@ export const KnowledgeBasePage: React.FC = () => {
                   {activeDetailArticle.redFlags.map((flag, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-500/30 text-xs text-rose-950 dark:text-rose-200 flex items-start gap-2.5"
+                      className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-500/40 text-xs text-rose-950 dark:text-rose-100 flex items-start gap-2.5"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-1.5" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400 shrink-0 mt-1.5" />
                       <span className="leading-relaxed font-medium">{flag}</span>
                     </div>
                   ))}
@@ -644,9 +644,9 @@ export const KnowledgeBasePage: React.FC = () => {
                   {activeDetailArticle.responseSteps.map((step, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-500/30 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-3"
+                      className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-500/40 text-xs text-emerald-950 dark:text-emerald-100 flex items-start gap-3"
                     >
-                      <span className="w-5 h-5 rounded-full bg-[#334257] dark:bg-emerald-700 text-white font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#334257] dark:bg-emerald-600 text-white font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <span className="leading-relaxed font-medium">{step}</span>
