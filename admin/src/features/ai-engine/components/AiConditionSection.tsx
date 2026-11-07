@@ -7,6 +7,9 @@ import {
   RefreshCw,
   Clock,
   Terminal,
+  Key,
+  Fingerprint,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '../../../services/adminService';
@@ -143,10 +146,19 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
           <div className="text-base font-black text-[#1A202C] font-mono truncate">
             {aiConfig.geminiModel}
           </div>
-          <div className="text-[11px] text-[#476072] flex items-center justify-between pt-1">
+          <div className="text-[11px] text-[#476072] flex items-center justify-between pt-1 font-mono">
             <span>Suhu: {aiConfig.temperature}</span>
-            <span className="text-emerald-700 font-bold">API Key: Terkonfigurasi</span>
+            <span className="text-emerald-700 font-bold flex items-center gap-1">
+              <Key className="w-3 h-3 text-emerald-600" />
+              <span>{aiConfig.idToken ? 'ID Token & Key Aktif' : 'API Key: Terkonfigurasi'}</span>
+            </span>
           </div>
+          {aiConfig.credentialCode && (
+            <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1 pt-1 border-t border-slate-200/60 dark:border-white/10">
+              <Fingerprint className="w-3 h-3 text-[#548CA8]" />
+              <span className="truncate">Kode: {aiConfig.credentialCode}</span>
+            </div>
+          )}
         </div>
 
         {/* 24h Tokens */}

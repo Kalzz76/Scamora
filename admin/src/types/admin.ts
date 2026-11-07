@@ -78,6 +78,13 @@ export interface AiConfig {
   maxTokens: number;
   status: 'operational' | 'degraded' | 'offline';
   latencyMs?: number;
+  // Credential & ID Token Configuration
+  credentialCode?: string;
+  idToken?: string;
+  geminiApiKey?: string;
+  claudeApiKey?: string;
+  safeBrowsingApiKey?: string;
+  projectId?: string;
 }
 
 export interface CrawlerConfig {

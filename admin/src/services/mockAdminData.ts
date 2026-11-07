@@ -145,6 +145,12 @@ export const INITIAL_AI_CONFIG: AiConfig = {
   maxTokens: 1024,
   status: 'operational',
   latencyMs: 720,
+  credentialCode: 'SCAMORA-SEC-CRED-9942',
+  idToken: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImF1dGgta2V5LTIwMjYifQ.eyJzdWIiOiJzY2Ftb3JhLWFkbWluIiwicm9sZSI6ImFkbWluIiwiYXVkIjoic2NhbW9yYS1haS1lbmdpbmUiLCJpYXQiOjE3OTQwNjg4MDB9.dGVzdF9zaWduYXR1cmVfaWQtdG9rZW4',
+  geminiApiKey: '',
+  claudeApiKey: '',
+  safeBrowsingApiKey: '',
+  projectId: 'scamora-cyber-defense-prod',
 };
 
 export const INITIAL_CRAWLER_CONFIG: CrawlerConfig = {
