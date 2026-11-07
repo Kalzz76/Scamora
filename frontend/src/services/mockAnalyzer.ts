@@ -111,8 +111,6 @@ export class MockAnalyzer {
     const pathname = (parsed.pathname + parsed.search).toLowerCase();
 
     // 1. Local Heuristics
-    checks.push({ name: 'url_syntax', status: 'completed', note: 'Validasi struktur sintaksis lolos' });
-
     if (parsed.protocol === 'http:') {
       indicators.push({
         type: 'no_https',
@@ -217,30 +215,64 @@ export class MockAnalyzer {
       });
     }
 
-    // 2. Safe Browsing Check (Simulation)
+    // 2. 5-Layer Pipeline Checks (Matching Backend UrlAnalyzer Architecture)
+    const isKnownThreat = KNOWN_THREAT_DOMAINS.includes(hostname) || cleanUrl.includes('bca-klik');
+    if (isKnownThreat) {
+      indicators.push({
+        type: 'safe_browsing_match',
+        title: 'Terdaftar pada Basis Data Google Safe Browsing',
+        severity: 'high',
+        weight: 60,
+        source: 'threat_db',
+        evidence: cleanUrl,
+        description: 'Domain tercatat aktif sebagai ancaman malware/social engineering terkonfirmasi.',
+      });
+    }
+
+    // Layer 1: Structure & Syntax
+    checks.push({
+      name: 'structure',
+      status: 'completed',
+      note: 'Pemeriksaan sintaksis dan heuristik struktur URL selesai.',
+    });
+
+    // Layer 2: Safe Browsing Reputation
     if (mode === 'reputation_failed' || mode === 'all_failed') {
       checks.push({
-        name: 'safe_browsing',
+        name: 'reputation',
         status: 'failed',
         note: 'Pemeriksaan Google Safe Browsing gagal merespons. Status dialihkan ke partial.',
       });
     } else {
-      const isKnownThreat = KNOWN_THREAT_DOMAINS.includes(hostname) || cleanUrl.includes('bca-klik');
-      if (isKnownThreat) {
-        indicators.push({
-          type: 'safe_browsing_match',
-          title: 'Terdaftar pada Basis Data Google Safe Browsing',
-          severity: 'high',
-          weight: 60,
-          source: 'threat_db',
-          evidence: cleanUrl,
-          description: 'Domain tercatat aktif sebagai ancaman malware/social engineering terkonfirmasi.',
-        });
-        checks.push({ name: 'safe_browsing', status: 'completed', note: 'Teridentifikasi pada daftar ancaman' });
-      } else {
-        checks.push({ name: 'safe_browsing', status: 'completed', note: 'Tidak ditemukan pada daftar ancaman yang diperiksa' });
-      }
+      checks.push({
+        name: 'reputation',
+        status: 'completed',
+        note: isKnownThreat ? 'Teridentifikasi pada daftar ancaman' : 'Tidak ditemukan pada daftar ancaman yang diperiksa',
+      });
     }
+
+    // Layer 3: Domain Age & DNS
+    checks.push({
+      name: 'domain_age',
+      status: mode === 'all_failed' ? 'failed' : 'completed',
+      note: 'Inspeksi DNS & usia domain selesai.',
+    });
+
+    // Layer 4: SSL/TLS Certificate
+    checks.push({
+      name: 'ssl_certificate',
+      status: mode === 'all_failed' ? 'failed' : 'completed',
+      note: cleanUrl.startsWith('https://')
+        ? 'Inspeksi koneksi SSL/TLS terverifikasi aman.'
+        : 'Koneksi tidak menggunakan enkripsi standar SSL/HTTPS.',
+    });
+
+    // Layer 5: Live Content & DOM Inspection
+    checks.push({
+      name: 'live_content',
+      status: mode === 'all_failed' ? 'failed' : 'completed',
+      note: 'Inspeksi konten web & struktur formulir selesai.',
+    });
 
     return this.calculateFinalRisk('url', cleanUrl, indicators, checks);
   }

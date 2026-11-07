@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
 
 export const ReportPage: React.FC = () => {
+  const navigate = useNavigate();
   const [domains, setDomains] = useState<ScannedDomain[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'high' | 'review' | 'low'>('all');
@@ -20,7 +21,6 @@ export const ReportPage: React.FC = () => {
   const [reportInput, setReportInput] = useState('');
   const [reportCategory, setReportCategory] = useState('Phishing Perbankan');
   const [reportNotes, setReportNotes] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     setDomains(directoryService.getDomains());
@@ -269,14 +269,13 @@ export const ReportPage: React.FC = () => {
                   <th className="py-3.5 px-4">Diperiksa</th>
                   <th className="py-3.5 px-5">Tingkat Risiko (% Bahaya)</th>
                   <th className="py-3.5 px-4">Kategori</th>
-                  <th className="py-3.5 px-4">Terakhir</th>
-                  <th className="py-3.5 px-5 text-right">Aksi</th>
+                  <th className="py-3.5 px-5 text-right">Terakhir</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F0ECE3]">
                 {filteredDomains.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-sm text-[#706C62]">
+                    <td colSpan={5} className="py-12 text-center text-sm text-[#706C62]">
                       Tidak ada domain yang cocok dengan pencarian kata kunci "{searchQuery}".
                     </td>
                   </tr>
@@ -307,7 +306,7 @@ export const ReportPage: React.FC = () => {
                                 style={{
                                   width: `${item.riskPercent}%`,
                                   backgroundColor: style.bar,
-                                }}
+                                  }}
                               />
                             </div>
                             <span className="font-mono font-bold text-xs text-[#14130F] tabular-nums">
@@ -325,22 +324,8 @@ export const ReportPage: React.FC = () => {
                         </td>
 
                         {/* Last Checked Column */}
-                        <td className="py-4 px-4 text-[#706C62] font-mono text-[11px]">
+                        <td className="py-4 px-5 text-right text-[#706C62] font-mono text-[11px]">
                           {item.lastChecked}
-                        </td>
-
-                        {/* Action Column */}
-                        <td className="py-4 px-5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                            }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#FAF8F5] group-hover:bg-[#14130F] group-hover:text-white text-[#14130F] border border-[#D5D0C3] group-hover:border-[#14130F] font-semibold text-xs transition-all cursor-pointer"
-                          >
-                            <span>Periksa</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
                         </td>
                       </tr>
                     );

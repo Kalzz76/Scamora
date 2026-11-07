@@ -11,6 +11,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const isHome = location.pathname === '/';
 
   // Track window scroll to create smooth responsive sticky header
   useEffect(() => {
@@ -49,65 +50,102 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
     return false;
   };
 
+  const isTransparent = isHome && !scrolled;
+
   return (
     <header 
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-xs border-b border-slate-200' 
-          : 'bg-white/80 backdrop-blur-md border-b border-slate-200/70'
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isTransparent 
+          ? 'bg-transparent border-transparent' 
+          : 'bg-[#faf8f5]/95 backdrop-blur-md shadow-xs border-b border-[#d9d6d0]'
       }`}
     >
-      <div className="max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12">
-        <div className={`relative flex items-center justify-between transition-all duration-300 ${scrolled ? 'h-16' : 'h-20'}`}>
+      <div className={`w-full mx-auto transition-all duration-300 ${
+        isTransparent 
+          ? 'px-6 sm:px-10 lg:px-[calc(var(--u16)*6.5)]' 
+          : 'max-w-[1440px] px-6 sm:px-10 lg:px-16'
+      }`}>
+        <div 
+          style={{ height: isTransparent ? 'calc(var(--u16) * 6)' : undefined }}
+          className={`relative flex items-center justify-between transition-all duration-300 ${
+            scrolled ? 'h-16' : 'h-20 lg:h-24'
+          }`}
+        >
           
           {/* Left: Brand Logo */}
-          <Link to="/" className="flex items-center gap-3 shrink-0 z-10 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0F172A] to-[#1E293B] flex items-center justify-center text-white shadow-md group-hover:scale-105 transition-all">
-              <ShieldCheck className="w-5 h-5 text-[#0D9488]" />
-            </div>
+          <Link to="/" className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
+            <span 
+              style={{
+                width: isTransparent ? 'calc(var(--u16) * 2.9)' : '2.5rem',
+                height: isTransparent ? 'calc(var(--u16) * 2.9)' : '2.5rem',
+                borderRadius: isTransparent ? 'calc(var(--u16) * 0.7)' : '0.65rem',
+              }}
+              className={`flex items-center justify-center transition-all duration-300 shadow-xs group-hover:scale-105 p-1 bg-white ${
+                isTransparent 
+                  ? '' 
+                  : 'border border-slate-200'
+              }`}
+            >
+              <img 
+                src="/Logo.png" 
+                alt="Scamora" 
+                className="w-full h-full object-contain" 
+              />
+            </span>
             <div className="flex flex-col">
-              <span className="font-extrabold text-xl tracking-tight text-[#0F172A] leading-none">
+              <span 
+                style={{
+                  fontSize: isTransparent ? 'calc(var(--u16) * 1.65)' : '1.35rem',
+                }}
+                className={`font-bold tracking-tight leading-none transition-colors duration-300 font-['DM_Sans',sans-serif] ${
+                  isTransparent 
+                    ? 'text-white' 
+                    : 'text-[#14161c]'
+                }`}
+              >
                 Scamora
-              </span>
-              <span className="text-[10px] text-slate-500 tracking-tight font-medium hidden sm:inline mt-1">
-                Protect. Reason. Prevent.
               </span>
             </div>
           </Link>
 
-          {/* Center: Desktop Navigation Bar (Clean & Pure Text, Dead-Center via absolute) */}
-          <nav className="hidden lg:flex items-center gap-3.5 xl:gap-6 text-xs xl:text-sm font-semibold whitespace-nowrap absolute left-1/2 -translate-x-1/2">
+          {/* Right: Desktop Navigation Bar */}
+          <nav 
+            aria-label="Navigasi utama" 
+            style={{ 
+              gap: 'calc(var(--u16) * 2.4)', 
+              fontSize: 'calc(var(--u16) * 1.05)' 
+            }}
+            className="hidden lg:flex items-center font-semibold whitespace-nowrap"
+          >
             {navLinks.map((link) => {
               const active = isActive(link.path);
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`relative py-1.5 whitespace-nowrap transition-colors ${
+                  aria-current={active ? 'page' : undefined}
+                  className={`relative py-1.5 whitespace-nowrap transition-colors duration-150 border-b-[calc(var(--u16)*0.2)] ${
                     active
-                      ? 'text-[#0D9488] font-bold'
-                      : 'text-slate-600 hover:text-[#0F172A]'
+                      ? 'text-[#0f9b8a] border-[#0f9b8a] font-bold'
+                      : 'text-[#475569] border-transparent hover:text-[#0f9b8a]'
                   }`}
                 >
                   <span>{link.label}</span>
-                  {active && (
-                    <motion.span
-                      layoutId="navbar-indicator"
-                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#0D9488] rounded-full"
-                      transition={{ type: 'spring', stiffness: 450, damping: 35 }}
-                    />
-                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right: Only Mobile Menu Toggle (lg:hidden) */}
+          {/* Right: Mobile Menu Toggle (lg:hidden) */}
           <div className="flex items-center lg:hidden z-10">
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               type="button"
-              className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition text-slate-700 cursor-pointer"
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition cursor-pointer ${
+                isTransparent 
+                  ? 'bg-white/90 text-[#14161c] hover:bg-white' 
+                  : 'bg-stone-200/80 text-[#14161c] hover:bg-stone-300/80'
+              }`}
               aria-label="Toggle menu"
             >
               {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
