@@ -115,6 +115,7 @@ export const HomePage: React.FC = () => {
   // Cara Kerja Interactive State
   const [currentCaraStep, setCurrentCaraStep] = useState(0);
   const [caraInteracted, setCaraInteracted] = useState(false);
+  const [caraPreviewTab, setCaraPreviewTab] = useState<'url' | 'chat'>('url');
 
   const hasilRef = useRef<HTMLDivElement>(null);
   const inputSectionRef = useRef<HTMLDivElement>(null);
@@ -656,43 +657,107 @@ export const HomePage: React.FC = () => {
             {/* Slide 0: Tempel */}
             {currentCaraStep === 0 && (
               <div className="flex flex-col gap-4 flex-1 animate-in fade-in duration-200">
-                <div className="flex gap-1.5">
-                  <span className="h-9 px-4 bg-[#14130F] text-white rounded-full text-xs font-semibold inline-flex items-center">
+                <div className="flex gap-1.5" role="tablist">
+                  <button
+                    type="button"
+                    onClick={() => setCaraPreviewTab('url')}
+                    className={`h-9 px-4 rounded-full text-xs transition-all cursor-pointer inline-flex items-center ${
+                      caraPreviewTab === 'url'
+                        ? 'bg-[#14130F] text-white font-semibold shadow-xs'
+                        : 'bg-[#EEEAE0] text-[#5B5850] hover:text-[#14130F] font-medium'
+                    }`}
+                  >
                     Cek Tautan
-                  </span>
-                  <span className="h-9 px-4 bg-[#EEEAE0] text-[#5B5850] rounded-full text-xs font-medium inline-flex items-center">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCaraPreviewTab('chat')}
+                    className={`h-9 px-4 rounded-full text-xs transition-all cursor-pointer inline-flex items-center ${
+                      caraPreviewTab === 'chat'
+                        ? 'bg-[#14130F] text-white font-semibold shadow-xs'
+                        : 'bg-[#EEEAE0] text-[#5B5850] hover:text-[#14130F] font-medium'
+                    }`}
+                  >
                     Cek WhatsApp
-                  </span>
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-3 bg-white border-[1.5px] border-[#14130F] rounded-xl p-3 sm:p-3.5 shadow-2xs">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14130F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  <div className="flex-1 font-mono text-xs sm:text-sm text-[#14130F] truncate">
-                    https://bank-nusa-login.xyz/verifikasi-akun
-                  </div>
-                  <span className="h-8 px-3.5 bg-[#14130F] text-white rounded-full text-xs font-semibold inline-flex items-center shrink-0">
-                    Periksa
-                  </span>
-                </div>
+                {caraPreviewTab === 'url' ? (
+                  <>
+                    <div className="flex items-center gap-3 bg-white border-[1.5px] border-[#14130F] rounded-xl p-3 sm:p-3.5 shadow-2xs">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#14130F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      <div className="flex-1 font-mono text-xs sm:text-sm text-[#14130F] truncate">
+                        https://bank-nusa-login.xyz/verifikasi-akun
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setCaraInteracted(true); setCurrentCaraStep(1); }}
+                        className="h-8 px-3.5 bg-[#14130F] hover:bg-[#2b2f3a] text-white rounded-full text-xs font-semibold inline-flex items-center shrink-0 cursor-pointer transition-colors"
+                      >
+                        Periksa
+                      </button>
+                    </div>
 
-                <div className="flex flex-col gap-2.5 text-xs sm:text-sm text-[#3F3C35]">
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
-                    <span>Mendukung tautan web mencurigakan, domain singkat, &amp; chat WhatsApp</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
-                    <span>Nomor HP, rekening bank, dan email disamarkan otomatis</span>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
-                    <span>Input kamu tidak pernah disimpan di server (privasi terjaga)</span>
-                  </div>
-                </div>
+                    <div className="flex flex-col gap-2.5 text-xs sm:text-sm text-[#3F3C35]">
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Mendukung tautan web mencurigakan, domain singkat, &amp; chat WhatsApp</span>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Nomor HP, rekening bank, dan email disamarkan otomatis</span>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Input kamu tidak pernah disimpan di server (privasi terjaga)</span>
+                      </div>
+                    </div>
 
-                <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3.5 text-xs sm:text-sm text-[#5B5850] mt-auto">
-                  <b>Tips:</b> Tempel seluruh pesan chat apa adanya. Sistem otomatis memilah bagian berbahaya tanpa kamu harus mengeditnya dulu.
-                </div>
+                    <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3.5 text-xs sm:text-sm text-[#5B5850] mt-auto">
+                      <b>Tips:</b> Tempel seluruh pesan chat apa adanya. Sistem otomatis memilah bagian berbahaya tanpa kamu harus mengeditnya dulu.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-2.5 bg-white border-[1.5px] border-[#14130F] rounded-xl p-3 sm:p-3.5 shadow-2xs">
+                      <div className="flex items-start gap-2.5">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0f9b8a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <div className="flex-1 text-xs sm:text-sm text-[#14130F] leading-snug font-medium line-clamp-2">
+                          &ldquo;Selamat! Kamu memenangkan undian Rp50.000.000. Segera kirim kode OTP SMS sekarang sebelum hangus!&rdquo;
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-[#EEEAE0]">
+                        <span className="text-[11px] text-[#8C887B] font-mono">Sensitif: HP &amp; rekening disamarkan</span>
+                        <button 
+                          type="button"
+                          onClick={() => { setCaraInteracted(true); setCurrentCaraStep(1); }}
+                          className="h-7 px-3 bg-[#14130F] hover:bg-[#2b2f3a] text-white rounded-full text-xs font-semibold inline-flex items-center shrink-0 cursor-pointer transition-colors"
+                        >
+                          Periksa Chat
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5 text-xs sm:text-sm text-[#3F3C35]">
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Analisis rekayasa sosial, manipulasi psikologis, &amp; desakan waktu</span>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Nomor HP, rekening bank, &amp; PIN disamarkan otomatis sebelum dibaca AI</span>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <span className="w-4.5 h-4.5 min-w-4.5 rounded-full bg-[#DCFAE6] text-[#067647] flex items-center justify-center text-xs font-bold mt-0.5">✓</span>
+                        <span>Isi chat tidak pernah disimpan di server (zero-retention guarantee)</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-3.5 text-xs sm:text-sm text-[#5B5850] mt-auto">
+                      <b>Tips WhatsApp:</b> Penipu sering memakai desakan waktu atau hadiah palsu. Tempel pesan utuh agar konteks ancaman terbaca akurat.
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
