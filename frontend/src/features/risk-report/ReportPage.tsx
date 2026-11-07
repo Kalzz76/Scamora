@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
-  ArrowRight, 
+  ChevronLeft,
+  ChevronRight,
   PlusCircle, 
   X, 
   AlertTriangle 
@@ -15,6 +16,8 @@ export const ReportPage: React.FC = () => {
   const [domains, setDomains] = useState<ScannedDomain[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'newest' | 'oldest' | 'high' | 'review' | 'low'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [stats, setStats] = useState({ totalDomains: 1248, highRiskPercent: 31, checksToday: 86 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [reportInput, setReportInput] = useState('');
@@ -25,6 +28,10 @@ export const ReportPage: React.FC = () => {
     setDomains(directoryService.getDomains());
     setStats(directoryService.getStats());
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeFilter]);
 
   const handleManualReportSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +65,10 @@ export const ReportPage: React.FC = () => {
       return (b.timestamp || 0) - (a.timestamp || 0);
     });
 
+  const totalPages = Math.max(1, Math.ceil(filteredDomains.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDomains = filteredDomains.slice(startIndex, startIndex + itemsPerPage);
+
   const categoryStyles = {
     high: {
       bar: '#D92D20',
@@ -86,9 +97,6 @@ export const ReportPage: React.FC = () => {
         {/* HEADER SECTION */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 pb-2">
           <div>
-            <div className="inline-block px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#EEEAE0] text-[#3F3C35] mb-3">
-              Direktori Komunitas
-            </div>
             <h1 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
               Pemindaian Publik
             </h1>
@@ -234,16 +242,22 @@ export const ReportPage: React.FC = () => {
                 Tidak ada domain yang cocok dengan pencarian kata kunci "{searchQuery}".
               </div>
             ) : (
-              filteredDomains.map((item, idx) => {
+              paginatedDomains.map((item, idx) => {
                 const style = categoryStyles[item.category] || categoryStyles.review;
                 return (
                   <div key={idx} className="p-5 space-y-3 hover:bg-[#FAF8F5] transition-colors">
                     {/* Top Row: Domain & Category Badge */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <span className="font-mono font-bold text-sm text-[#14161C] block truncate">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
+                          }}
+                          className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline block truncate text-left cursor-pointer"
+                        >
                           {item.domain}
-                        </span>
+                        </button>
                         <div className="flex items-center gap-2 text-[11px] font-mono text-[#706C62] mt-0.5">
                           <span>Diperiksa {item.count}&times;</span>
                           <span>&bull;</span>
@@ -270,20 +284,6 @@ export const ReportPage: React.FC = () => {
                         {item.riskPercent}% Bahaya
                       </span>
                     </div>
-
-                    {/* Bottom Action Button */}
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                        }}
-                        className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-full bg-white hover:bg-[#14161C] hover:text-white text-[#14161C] border border-[#CFCABD] font-semibold text-xs transition-all cursor-pointer shadow-2xs"
-                      >
-                        <span>Periksa Domain Ini</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   </div>
                 );
               })
@@ -299,7 +299,7 @@ export const ReportPage: React.FC = () => {
                   <th className="py-4 px-4">Diperiksa</th>
                   <th className="py-4 px-5">Tingkat Risiko (% Bahaya)</th>
                   <th className="py-4 px-4">Kategori</th>
-                  <th className="py-4 px-6 text-right">Aksi &amp; Waktu</th>
+                  <th className="py-4 px-6 text-right">Terakhir</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F0ECE3]">
@@ -310,7 +310,7 @@ export const ReportPage: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredDomains.map((item, idx) => {
+                  paginatedDomains.map((item, idx) => {
                     const style = categoryStyles[item.category] || categoryStyles.review;
                     return (
                       <tr key={idx} className="hover:bg-[#FAF8F5] transition-colors group">
@@ -358,23 +358,9 @@ export const ReportPage: React.FC = () => {
                           </span>
                         </td>
 
-                        {/* Action & Last Checked Column */}
-                        <td className="py-4 px-6 text-right">
-                          <div className="inline-flex items-center gap-3">
-                            <span className="text-[#8C887B] font-mono text-xs">
-                              {item.lastChecked}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                              }}
-                              className="h-8 px-3.5 rounded-full border border-[#CFCABD] bg-white hover:bg-[#14161C] hover:text-white text-[#14130F] font-semibold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                            >
-                              <span>Cek Ulang</span>
-                              <ArrowRight className="w-3 h-3" />
-                            </button>
-                          </div>
+                        {/* Last Checked Column */}
+                        <td className="py-4 px-6 text-right font-mono text-xs text-[#706C62]">
+                          {item.lastChecked}
                         </td>
                       </tr>
                     );
@@ -384,19 +370,69 @@ export const ReportPage: React.FC = () => {
             </table>
           </div>
 
-          {/* FOOTER NOTICE */}
-          <div className="p-5 bg-[#FAF8F5] border-t border-[#E3E0DA] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#5B5850]">
-            <span>
-              💡 Data di atas bersifat anonim dan dihimpun dari partisipasi pemindaian komunitas Scamora.
-            </span>
-            <Link
-              to="/"
-              className="text-[#14161C] font-bold hover:underline inline-flex items-center gap-1 shrink-0"
-            >
-              <span>Periksa Tautan Lain di Beranda</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          {/* PAGINATION BAR */}
+          {filteredDomains.length > 0 && (
+            <div className="p-4 sm:p-5 bg-white border-t border-[#EEEAE0] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#5B5850]">
+              <div className="font-medium">
+                Menampilkan <span className="font-bold text-[#14161C]">{startIndex + 1}</span>–<span className="font-bold text-[#14161C]">{Math.min(startIndex + itemsPerPage, filteredDomains.length)}</span> dari <span className="font-bold text-[#14161C]">{filteredDomains.length}</span> domain
+              </div>
+
+              {totalPages > 1 && (
+                <div className="inline-flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 px-3 rounded-full border border-[#D5D0C3] bg-white text-[#14161C] hover:bg-[#FAF8F5] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs inline-flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Sebelumnya</span>
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      if (
+                        totalPages > 7 &&
+                        page !== 1 &&
+                        page !== totalPages &&
+                        Math.abs(page - currentPage) > 1
+                      ) {
+                        if (page === 2 || page === totalPages - 1) {
+                          return <span key={page} className="px-1 text-[#8C887B]">...</span>;
+                        }
+                        return null;
+                      }
+
+                      return (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-8 h-8 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                            currentPage === page
+                              ? 'bg-[#14161C] text-white shadow-xs'
+                              : 'text-[#5B5850] hover:bg-[#EEEAE0] hover:text-[#14161C]'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 px-3 rounded-full border border-[#D5D0C3] bg-white text-[#14161C] hover:bg-[#FAF8F5] disabled:opacity-40 disabled:cursor-not-allowed font-medium text-xs inline-flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <span>Selanjutnya</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>
