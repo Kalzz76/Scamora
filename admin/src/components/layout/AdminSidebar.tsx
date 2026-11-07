@@ -30,7 +30,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
   return (
     <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
       {/* 1. DOCK MENU AKSES KONTEN: Diketengahkan secara vertikal (my-auto) */}
-      <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center my-auto">
+      <div className="w-[56px] glass-panel rounded-3xl py-3 px-1.5 flex flex-col items-center my-auto shadow-xl">
         <nav className="flex flex-col items-center gap-3 w-full">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -42,8 +42,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
                 className={({ isActive }) =>
                   `w-11 h-11 rounded-2xl flex items-center justify-center relative group transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? 'bg-[#476072] text-white shadow-xs border border-white/20'
-                      : 'text-[#EEEEEE]/70 hover:bg-white/10 hover:text-white'
+                      ? 'bg-[#334257] dark:bg-[#476072] text-white shadow-xs border border-white/20'
+                      : 'text-[#476072] dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#1A202C] dark:hover:text-white'
                   }`
                 }
               >
@@ -55,11 +55,11 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
 
                 {/* Badge Dot / Notification Count */}
                 {item.badgeCount && item.badgeCount > 0 ? (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#548CA8] text-white font-mono text-[9px] font-black flex items-center justify-center ring-2 ring-[#334257]">
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#548CA8] text-white font-mono text-[9px] font-black flex items-center justify-center ring-2 ring-white dark:ring-[#334257]">
                     {item.badgeCount}
                   </span>
                 ) : item.badge ? (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#334257]" />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#334257]" />
                 ) : null}
 
                 {/* Hover Flyout Tooltip with Menu Text */}
@@ -83,13 +83,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
       </div>
 
       {/* 2. DOCK BAWAH TERPISAH: Buka Web Publik & Akun (dengan gap) */}
-      <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center gap-2.5">
+      <div className="w-[56px] glass-panel rounded-3xl py-3 px-1.5 flex flex-col items-center gap-2.5 shadow-xl">
         {/* Tombol Buka Web Publik */}
         <a
           href="http://localhost:5173"
           target="_blank"
           rel="noreferrer"
-          className="w-11 h-11 rounded-2xl text-[#EEEEEE]/70 hover:bg-white/10 hover:text-white flex items-center justify-center transition-all duration-200 relative group cursor-pointer"
+          className="w-11 h-11 rounded-2xl text-[#476072] dark:text-slate-300 hover:bg-black/5 dark:hover:bg-white/10 hover:text-[#1A202C] dark:hover:text-white flex items-center justify-center transition-all duration-200 relative group cursor-pointer"
           title="Buka Web Publik Scamora"
         >
           <ExternalLink className="w-5 h-5 text-[#548CA8]" />
@@ -100,18 +100,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
         </a>
 
         {/* Divider pemisah */}
-        <div className="w-6 h-px bg-white/20 my-0.5" />
+        <div className="w-6 h-px bg-slate-300 dark:bg-white/20 my-0.5" />
 
         {/* Avatar Akun Pengguna */}
         <div className="relative group cursor-pointer">
           <button
             type="button"
             onClick={() => setAccountOpen(!accountOpen)}
-            className="w-10 h-10 rounded-2xl bg-[#476072] hover:bg-[#548CA8] border border-white/20 flex items-center justify-center font-bold text-xs text-white shadow-xs transition-transform duration-200 group-hover:scale-105 cursor-pointer relative"
+            className="w-10 h-10 rounded-2xl bg-[#334257] dark:bg-[#476072] hover:bg-[#548CA8] border border-white/20 flex items-center justify-center font-bold text-xs text-white shadow-xs transition-transform duration-200 group-hover:scale-105 cursor-pointer relative"
             title="Akun Administrator"
           >
             SA
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-[#334257]" />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#334257]" />
           </button>
 
           {/* Hover Flyout for Account Info */}
