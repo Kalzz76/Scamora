@@ -65,20 +65,29 @@ function AnimatedRoutes() {
   );
 }
 
+function MainContent() {
+  const location = useLocation();
+  const isHome = location.pathname === '/';
+
+  return (
+    <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-20 lg:pt-24'}`}>
+      <AnimatedRoutes />
+    </main>
+  );
+}
+
 export function App() {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   return (
     <HashRouter>
-      <div className="min-h-screen flex flex-col bg-surface text-on-surface">
+      <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c]">
         
         {/* Navigation Bar */}
         <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />
 
         {/* Dynamic Route Content with Smooth Page Transitions */}
-        <main className="flex-1 flex flex-col">
-          <AnimatedRoutes />
-        </main>
+        <MainContent />
 
         {/* Universal Footer */}
         <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />

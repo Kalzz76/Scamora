@@ -1,5 +1,4 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
   onOpenPrivacy: () => void;
@@ -16,8 +15,8 @@ export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
           {/* Brand Info & Social Media (lg:col-span-5) */}
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-[#0F172A] flex items-center justify-center text-white shadow-xs">
-                <ShieldCheck className="w-4 h-4 text-[#0D9488]" />
+              <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shadow-xs">
+                <img src="/Logo.png" alt="Scamora" className="w-full h-full object-contain" />
               </div>
               <div>
                 <span className="font-extrabold text-lg tracking-tight text-[#0F172A] block leading-none">

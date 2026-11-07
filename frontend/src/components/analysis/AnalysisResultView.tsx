@@ -21,13 +21,21 @@ interface AnalysisResultViewProps {
 
 const CHECK_LABELS: Record<string, string> = {
   structure: 'Struktur Domain & Ekstensi',
+  url_syntax: 'Struktur Domain & Ekstensi',
   reputation: 'Daftar Bahaya Google Safe Browsing',
+  safe_browsing: 'Daftar Bahaya Google Safe Browsing',
   google_safe_browsing: 'Daftar Bahaya Google Safe Browsing',
-  ssl: 'Sertifikat SSL / HTTPS',
-  ssl_cert: 'Sertifikat SSL / HTTPS',
   domain_age: 'Usia Domain & Catatan DNS',
   dns: 'Resolusi DNS & Hosting',
+  ssl: 'Sertifikat SSL / HTTPS',
+  ssl_cert: 'Sertifikat SSL / HTTPS',
+  ssl_certificate: 'Sertifikat SSL / HTTPS',
+  live_content: 'Inspeksi Konten Web & Formulir',
+  pattern_scan: 'Pemindaian Pola & Bahasa Chat',
   chat_heuristic: 'Pola Manipulasi Bahasa Chat',
+  pii_scrubbing: 'Penyaringan Data Pribadi (PII)',
+  ai_analysis: 'Penalaran Semantik AI',
+  claude_ai_reasoning: 'Penalaran Semantik AI',
   ai_classification: 'Klasifikasi Semantik AI',
 };
 
