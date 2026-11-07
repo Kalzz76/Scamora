@@ -521,21 +521,21 @@ export const KnowledgeBasePage: React.FC = () => {
 
       {/* 5. DETAIL POPUP MODAL (Menggantikan display sebelah kanan) */}
       {activeDetailArticle && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257] font-mono text-xs font-bold">
+                <span className="px-2.5 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257] dark:text-cyan-300 font-mono text-xs font-bold">
                   {activeDetailArticle.categoryName}
                 </span>
                 <button
                   onClick={() => handleToggleStatus(activeDetailArticle)}
                   className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold transition cursor-pointer ${
                     activeDetailArticle.status === 'published'
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
-                      : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30'
+                      : 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/30'
                   }`}
                   title="Klik untuk mengubah status terbit"
                 >
@@ -546,25 +546,25 @@ export const KnowledgeBasePage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleOpenEdit(activeDetailArticle)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/20 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-[#334257] dark:text-white transition cursor-pointer flex items-center gap-1.5"
                   title="Edit data materi ini"
                 >
-                  <Pencil className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <Pencil className="w-3.5 h-3.5 text-[#548CA8] dark:text-cyan-400" />
                   <span>Edit Materi</span>
                 </button>
 
                 <button
                   onClick={() => handleCopyGuide(activeDetailArticle)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/20 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-[#334257] dark:text-white transition cursor-pointer flex items-center gap-1.5"
                   title="Salin panduan lengkap untuk dibagikan"
                 >
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{isCopied ? 'Tersalin' : 'Salin Teks'}</span>
                 </button>
 
                 <button
                   onClick={() => handleDeleteArticle(activeDetailArticle.id, activeDetailArticle.title)}
-                  className="p-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                  className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 transition cursor-pointer"
                   title="Hapus materi ini"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -572,7 +572,7 @@ export const KnowledgeBasePage: React.FC = () => {
 
                 <button
                   onClick={() => setActiveDetailArticle(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                   title="Tutup pop-up"
                 >
                   <X className="w-5 h-5" />
@@ -582,28 +582,28 @@ export const KnowledgeBasePage: React.FC = () => {
 
             {/* Title & Audience */}
             <div className="space-y-2">
-              <h2 className="text-xl sm:text-2xl font-black text-[#1A202C] leading-snug tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-[#1A202C] dark:text-white leading-snug tracking-tight">
                 {activeDetailArticle.title}
               </h2>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-[#476072]">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[#476072] dark:text-slate-400">
                 <span className="flex items-center gap-1 font-medium">
-                  <Users className="w-3.5 h-3.5 text-[#548CA8]" />
-                  <span>Sasaran Korban: <strong className="text-[#1A202C]">{activeDetailArticle.targetVictims}</strong></span>
+                  <Users className="w-3.5 h-3.5 text-[#548CA8] dark:text-cyan-400" />
+                  <span>Sasaran Korban: <strong className="text-[#1A202C] dark:text-slate-200">{activeDetailArticle.targetVictims}</strong></span>
                 </span>
                 <span>&bull;</span>
                 <span className="flex items-center gap-1 font-mono">
-                  <Eye className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <Eye className="w-3.5 h-3.5 text-[#548CA8] dark:text-cyan-400" />
                   <span>{activeDetailArticle.views.toLocaleString()} tayangan</span>
                 </span>
               </div>
             </div>
 
             {/* Summary Description */}
-            <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1">
-              <span className="text-[10px] font-bold font-mono text-[#476072] uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/10 space-y-1">
+              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-slate-400 uppercase tracking-wider block">
                 Ringkasan &amp; Cara Kerja Modus:
               </span>
-              <p className="text-xs text-[#334257] leading-relaxed">
+              <p className="text-xs text-[#334257] dark:text-slate-200 leading-relaxed">
                 {activeDetailArticle.summary}
               </p>
             </div>
@@ -613,8 +613,8 @@ export const KnowledgeBasePage: React.FC = () => {
               
               {/* 1. Tanda Bahaya (Red Flags) */}
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-rose-800">
-                  <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300">
+                  <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                   <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
                     Ciri Khas &amp; Tanda Bahaya ({activeDetailArticle.redFlags.length} Indikator):
                   </h3>
@@ -623,7 +623,7 @@ export const KnowledgeBasePage: React.FC = () => {
                   {activeDetailArticle.redFlags.map((flag, idx) => (
                     <div
                       key={idx}
-                      className="p-2.5 rounded-xl bg-rose-50/60 border border-rose-200/80 text-xs text-rose-950 flex items-start gap-2.5"
+                      className="p-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-500/30 text-xs text-rose-950 dark:text-rose-200 flex items-start gap-2.5"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0 mt-1.5" />
                       <span className="leading-relaxed font-medium">{flag}</span>
@@ -634,8 +634,8 @@ export const KnowledgeBasePage: React.FC = () => {
 
               {/* 2. Protokol Tanggap Darurat */}
               <div className="space-y-2 pt-2">
-                <div className="flex items-center gap-2 text-emerald-900">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
                     Protokol Respon Darurat Korban ({activeDetailArticle.responseSteps.length} Langkah):
                   </h3>
@@ -644,9 +644,9 @@ export const KnowledgeBasePage: React.FC = () => {
                   {activeDetailArticle.responseSteps.map((step, idx) => (
                     <div
                       key={idx}
-                      className="p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 text-xs text-emerald-950 flex items-start gap-3"
+                      className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-500/30 text-xs text-emerald-950 dark:text-emerald-200 flex items-start gap-3"
                     >
-                      <span className="w-5 h-5 rounded-full bg-[#334257] text-white font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#334257] dark:bg-emerald-700 text-white font-mono text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <span className="leading-relaxed font-medium">{step}</span>
@@ -658,8 +658,8 @@ export const KnowledgeBasePage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-[11px] font-mono text-[#476072]">
+            <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs">
+              <span className="text-[11px] font-mono text-[#476072] dark:text-slate-400">
                 ID: {activeDetailArticle.id} &bull; Diperbarui: {new Date(activeDetailArticle.updatedAt).toLocaleDateString('id-ID')}
               </span>
               <button
@@ -677,22 +677,22 @@ export const KnowledgeBasePage: React.FC = () => {
 
       {/* 6. MODAL FORM: TULIS MATERI BARU */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] dark:text-cyan-400 uppercase">
                   Editor Pengetahuan Modus
                 </span>
-                <h3 className="text-base font-bold text-[#1A202C]">
+                <h3 className="text-base font-bold text-[#1A202C] dark:text-white">
                   Tulis Materi Edukasi Penipuan Baru
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -700,28 +700,28 @@ export const KnowledgeBasePage: React.FC = () => {
 
             {/* Quick Templates Bar */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <span className="text-[11px] font-bold text-[#476072] font-mono shrink-0 flex items-center gap-1">
+              <span className="text-[11px] font-bold text-[#476072] dark:text-slate-400 font-mono shrink-0 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 Template Cepat:
               </span>
               <button
                 type="button"
                 onClick={() => applyPreset('bank')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 🏦 Phishing Bank
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('apk')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 📦 Berkas APK
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('job')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 💼 Lowongan Palsu
               </button>
@@ -918,22 +918,22 @@ export const KnowledgeBasePage: React.FC = () => {
 
       {/* 7. MODAL FORM: EDIT MATERI EDUKASI */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] dark:text-cyan-400 uppercase">
                   Editor Pengetahuan Modus
                 </span>
-                <h3 className="text-base font-bold text-[#1A202C]">
+                <h3 className="text-base font-bold text-[#1A202C] dark:text-white">
                   Edit Materi Edukasi Penipuan
                 </h3>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

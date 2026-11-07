@@ -533,27 +533,27 @@ export const QuizManagerPage: React.FC = () => {
 
       {/* 5. DETAIL POPUP MODAL (Persis seperti pusat pengetahuan) */}
       {activeDetailQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header Actions */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257] font-mono text-xs font-bold">
+                <span className="px-2.5 py-0.5 rounded-md bg-[#548CA8]/15 text-[#334257] dark:text-cyan-300 font-mono text-xs font-bold">
                   {activeDetailQuestion.categoryCode.toUpperCase()}
                 </span>
                 <span
                   className={`px-2.5 py-0.5 rounded-md text-xs font-mono font-bold ${
                     activeDetailQuestion.difficulty === 'Easy'
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
                       : activeDetailQuestion.difficulty === 'Medium'
-                      ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
+                      : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30'
                   }`}
                 >
                   {activeDetailQuestion.difficulty}
                 </span>
-                <span className="font-mono text-xs font-bold text-[#548CA8] flex items-center gap-1">
+                <span className="font-mono text-xs font-bold text-[#548CA8] dark:text-cyan-400 flex items-center gap-1">
                   <Award className="w-3.5 h-3.5" />
                   <span>+{activeDetailQuestion.points} Poin</span>
                 </span>
@@ -563,27 +563,27 @@ export const QuizManagerPage: React.FC = () => {
                 {/* Edit Button */}
                 <button
                   onClick={() => handleOpenEdit(activeDetailQuestion)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/20 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-[#334257] dark:text-white transition cursor-pointer flex items-center gap-1.5"
                   title="Edit data soal kuis ini"
                 >
-                  <Pencil className="w-3.5 h-3.5 text-[#548CA8]" />
+                  <Pencil className="w-3.5 h-3.5 text-[#548CA8] dark:text-cyan-400" />
                   <span>Edit Soal</span>
                 </button>
 
                 {/* Copy Button */}
                 <button
                   onClick={() => handleCopyQuestion(activeDetailQuestion)}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-[#334257] transition cursor-pointer flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/20 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-[#334257] dark:text-white transition cursor-pointer flex items-center gap-1.5"
                   title="Salin soal kuis untuk pengujian"
                 >
-                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{isCopied ? 'Tersalin' : 'Salin Soal'}</span>
                 </button>
 
                 {/* Delete Button */}
                 <button
                   onClick={() => handleDelete(activeDetailQuestion.id)}
-                  className="p-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                  className="p-1.5 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/30 text-rose-600 dark:text-rose-300 transition cursor-pointer"
                   title="Hapus soal kuis ini"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -592,7 +592,7 @@ export const QuizManagerPage: React.FC = () => {
                 {/* Close Button */}
                 <button
                   onClick={() => setActiveDetailQuestion(null)}
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 cursor-pointer"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                   title="Tutup pop-up"
                 >
                   <X className="w-5 h-5" />
@@ -601,33 +601,33 @@ export const QuizManagerPage: React.FC = () => {
             </div>
 
             {/* Skenario Kasus */}
-            <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-1.5">
-              <span className="text-[10px] font-bold font-mono text-[#476072] uppercase tracking-wider block">
+            <div className="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-white/10 space-y-1.5">
+              <span className="text-[10px] font-bold font-mono text-[#476072] dark:text-slate-400 uppercase tracking-wider block">
                 Skenario Kasus yang Dialami Peserta:
               </span>
-              <p className="text-xs text-[#1A202C] leading-relaxed italic font-medium">
+              <p className="text-xs text-[#1A202C] dark:text-slate-200 leading-relaxed italic font-medium">
                 "{activeDetailQuestion.scenario}"
               </p>
             </div>
 
             {/* Pertanyaan Utama */}
             <div className="space-y-1">
-              <span className="text-[10px] font-bold font-mono text-[#548CA8] uppercase tracking-wider block">
+              <span className="text-[10px] font-bold font-mono text-[#548CA8] dark:text-cyan-400 uppercase tracking-wider block">
                 Pertanyaan Evaluasi:
               </span>
-              <h2 className="text-base sm:text-lg font-black text-[#1A202C] leading-snug tracking-tight">
+              <h2 className="text-base sm:text-lg font-black text-[#1A202C] dark:text-white leading-snug tracking-tight">
                 {activeDetailQuestion.question}
               </h2>
             </div>
 
             {/* 4 Pilihan Jawaban (Interactive Simulator) */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] text-[#476072]">
+              <div className="flex items-center justify-between text-[11px] text-[#476072] dark:text-slate-400">
                 <span className="font-bold font-mono uppercase tracking-wider">
                   Pilihan Jawaban (Klik opsi untuk mencoba simulasi):
                 </span>
-                <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   <span>Hijau = Kunci Benar</span>
                 </span>
               </div>
@@ -644,10 +644,10 @@ export const QuizManagerPage: React.FC = () => {
                       onClick={() => setSimulatedAnswerIdx(idx)}
                       className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
                         isCorrect
-                          ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300 text-emerald-950 font-medium'
+                          ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-500/40 ring-1 ring-emerald-300 dark:ring-emerald-500/30 text-emerald-950 dark:text-emerald-200 font-medium'
                           : isSimulatedChosen
-                          ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-300 text-rose-950 font-medium'
-                          : 'bg-white hover:bg-slate-50 border-slate-200 text-[#334257]'
+                          ? 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-300 dark:border-rose-500/40 ring-1 ring-rose-300 dark:ring-rose-500/30 text-rose-950 dark:text-rose-200 font-medium'
+                          : 'bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700/80 border-slate-200 dark:border-white/10 text-[#334257] dark:text-slate-200'
                       }`}
                     >
                       <span
@@ -656,7 +656,7 @@ export const QuizManagerPage: React.FC = () => {
                             ? 'bg-emerald-600 text-white'
                             : isSimulatedChosen
                             ? 'bg-rose-600 text-white'
-                            : 'bg-slate-100 text-[#476072]'
+                            : 'bg-slate-100 dark:bg-slate-700 text-[#476072] dark:text-slate-300'
                         }`}
                       >
                         {letter}
@@ -667,15 +667,15 @@ export const QuizManagerPage: React.FC = () => {
                       </div>
 
                       {isCorrect && (
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold shrink-0 flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-[10px] font-mono font-bold shrink-0 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-700 dark:text-emerald-400" />
                           <span>KUNCI</span>
                         </span>
                       )}
 
                       {!isCorrect && isSimulatedChosen && (
-                        <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 text-[10px] font-mono font-bold shrink-0 flex items-center gap-1">
-                          <XCircle className="w-3 h-3 text-rose-700" />
+                        <span className="px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-900/60 text-rose-800 dark:text-rose-300 text-[10px] font-mono font-bold shrink-0 flex items-center gap-1">
+                          <XCircle className="w-3 h-3 text-rose-700 dark:text-rose-400" />
                           <span>SALAH</span>
                         </span>
                       )}
@@ -686,21 +686,21 @@ export const QuizManagerPage: React.FC = () => {
             </div>
 
             {/* Penjelasan Edukatif */}
-            <div className="p-4 rounded-xl bg-[#548CA8]/10 border border-[#548CA8]/30 space-y-1">
-              <div className="flex items-center gap-1.5 text-[#334257]">
-                <BookOpen className="w-4 h-4 text-[#548CA8]" />
+            <div className="p-4 rounded-xl bg-[#548CA8]/10 dark:bg-[#548CA8]/15 border border-[#548CA8]/30 dark:border-[#548CA8]/40 space-y-1">
+              <div className="flex items-center gap-1.5 text-[#334257] dark:text-cyan-300">
+                <BookOpen className="w-4 h-4 text-[#548CA8] dark:text-cyan-400" />
                 <span className="text-xs font-bold font-mono uppercase tracking-wider">
                   Penjelasan Analisis &amp; Edukasi Peserta:
                 </span>
               </div>
-              <p className="text-xs text-[#334257] leading-relaxed pl-5">
+              <p className="text-xs text-[#334257] dark:text-slate-200 leading-relaxed pl-5">
                 {activeDetailQuestion.explanation}
               </p>
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-              <span className="text-[11px] font-mono text-[#476072]">
+            <div className="pt-4 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs">
+              <span className="text-[11px] font-mono text-[#476072] dark:text-slate-400">
                 ID: {activeDetailQuestion.id} &bull; Bobot: +{activeDetailQuestion.points} Poin
               </span>
               <button
@@ -718,22 +718,22 @@ export const QuizManagerPage: React.FC = () => {
 
       {/* 6. MODAL: TAMBAH SOAL KUIS BARU */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] dark:text-cyan-400 uppercase">
                   Editor Bank Soal
                 </span>
-                <h3 className="text-base font-bold text-[#1A202C]">
+                <h3 className="text-base font-bold text-[#1A202C] dark:text-white">
                   Tambah Soal Studi Kasus Kuis Baru
                 </h3>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -741,35 +741,35 @@ export const QuizManagerPage: React.FC = () => {
 
             {/* Quick Presets Bar */}
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-              <span className="text-[11px] font-bold text-[#476072] font-mono shrink-0 flex items-center gap-1">
+              <span className="text-[11px] font-bold text-[#476072] dark:text-slate-400 font-mono shrink-0 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 Template Kasus:
               </span>
               <button
                 type="button"
                 onClick={() => applyPreset('apk')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 📦 Resi APK
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('spoofing')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 🏦 Subdomain Bank
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('task')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 💼 Task Scam
               </button>
               <button
                 type="button"
                 onClick={() => applyPreset('vishing')}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#334257] font-semibold text-[11px] whitespace-nowrap cursor-pointer transition"
+                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-[#334257] dark:text-slate-200 font-semibold text-[11px] whitespace-nowrap cursor-pointer transition border border-transparent dark:border-white/10"
               >
                 📞 Vishing Call
               </button>
@@ -917,22 +917,22 @@ export const QuizManagerPage: React.FC = () => {
 
       {/* 7. MODAL: EDIT SOAL KUIS */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
             
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
               <div className="space-y-0.5">
-                <span className="text-[10px] font-mono font-bold text-[#548CA8] uppercase">
+                <span className="text-[10px] font-mono font-bold text-[#548CA8] dark:text-cyan-400 uppercase">
                   Editor Bank Soal
                 </span>
-                <h3 className="text-base font-bold text-[#1A202C]">
+                <h3 className="text-base font-bold text-[#1A202C] dark:text-white">
                   Edit Soal Studi Kasus Kuis
                 </h3>
               </div>
               <button
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
