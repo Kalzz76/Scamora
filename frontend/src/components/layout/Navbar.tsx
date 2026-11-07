@@ -56,6 +56,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
     { path: '/komunitas', label: 'Komunitas' },
   ];
 
+  // Mobile Bottom Navigation Links (thumb-friendly access everywhere)
+  const bottomNavLinks = [
+    { path: '/', label: 'Beranda', icon: Home },
+    { path: '/laporan', label: 'Publik', icon: Globe },
+    { path: '/panduan', label: 'Panduan', icon: Compass },
+    { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
+    { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
+    { path: '/komunitas', label: 'Komunitas', icon: Users },
+  ];
+
   // Mobile categorized navigation groups (Konsep 2)
   const menuGroups = [
     {
@@ -85,13 +95,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
   const isTransparent = isHome && !scrolled;
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isTransparent 
-          ? 'bg-transparent border-transparent' 
-          : 'bg-[#faf8f5]/95 backdrop-blur-md shadow-xs border-b border-[#d9d6d0]'
-      }`}
-    >
+    <>
+      <header 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isTransparent 
+            ? 'bg-transparent border-transparent' 
+            : 'bg-[#faf8f5]/95 backdrop-blur-md shadow-xs border-b border-[#d9d6d0]'
+        }`}
+      >
       <div className={`w-full mx-auto transition-all duration-300 ${
         isTransparent 
           ? 'px-6 sm:px-10 lg:px-[calc(var(--u16)*6.5)]' 
@@ -282,5 +293,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
         )}
       </AnimatePresence>
     </header>
+
+    {/* Mobile Ergonomic Bottom Bar (Accessible anywhere on the page) */}
+    <nav 
+      aria-label="Navigasi cepat mobile" 
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#faf8f5]/95 backdrop-blur-md border-t border-[#d9d6d0] px-1 py-1.5 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] flex items-center justify-around"
+    >
+      {bottomNavLinks.map((link) => {
+        const active = isActive(link.path);
+        const IconComponent = link.icon;
+        return (
+          <Link
+            key={link.path}
+            to={link.path}
+            aria-current={active ? 'page' : undefined}
+            className={`flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all cursor-pointer min-w-[48px] flex-1 ${
+              active
+                ? 'text-[#0f9b8a] font-bold'
+                : 'text-[#64748b] hover:text-[#0f9b8a]'
+            }`}
+          >
+            <span className={`p-1 rounded-xl transition-all ${
+              active ? 'bg-teal-100/70 text-[#0f9b8a]' : 'text-[#64748b]'
+            }`}>
+              <IconComponent className="w-4.5 h-4.5" />
+            </span>
+            <span className="text-[10px] tracking-tight mt-0.5 whitespace-nowrap">
+              {link.label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  </>
   );
 };

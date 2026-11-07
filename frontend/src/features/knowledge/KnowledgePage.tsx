@@ -445,7 +445,7 @@ export const KnowledgePage: React.FC = () => {
               </span>
               <span className="text-red-400">MALWARE INFECTION</span>
             </div>
-            <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-sans">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-[10px] font-sans">
               <div className="p-2 rounded-xl bg-gray-800/80 border border-gray-700">
                 <span className="block font-bold text-gray-200">1. Pesan WA</span>
                 <span className="text-gray-400 text-[9px]">File berekstensi .apk</span>
@@ -476,7 +476,7 @@ export const KnowledgePage: React.FC = () => {
               </span>
               <span className="text-amber-300">BAITING PYRAMID</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-sans">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-[10px] font-sans">
               <div className="p-2 rounded-xl bg-emerald-950/80 border border-emerald-700/60 text-emerald-300">
                 <span className="font-bold block text-emerald-400">+ Rp 30.000</span>
                 <span className="text-[9px]">Misi 1: Cair Asli (Umpan)</span>
@@ -559,7 +559,7 @@ export const KnowledgePage: React.FC = () => {
               </span>
               <span className="text-amber-400">PASAL TPPU</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-sans">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-center text-[10px] font-sans">
               <div className="p-2 rounded-xl bg-slate-800 border border-slate-700">
                 <span className="block font-bold text-gray-200">1. Sindikat</span>
                 <span className="text-[9px] text-gray-400">Dana hasil tipuan</span>
@@ -862,7 +862,7 @@ export const KnowledgePage: React.FC = () => {
                     {/* Hotspot 1 Pin: Pengirim Asing */}
                     <button
                       onClick={() => setSelectedHotspotId(currentCase.hotspots[0].id)}
-                      className={`absolute -top-3 left-2 sm:-left-3 sm:-top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 sm:ring-4 cursor-pointer transition-transform hover:scale-110 z-10 ${
+                      className={`absolute -top-3 left-3 sm:-left-3 sm:-top-3 w-7 h-7 sm:w-8 sm:h-8 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 sm:ring-4 cursor-pointer transition-transform hover:scale-110 z-10 ${
                         selectedHotspotId === currentCase.hotspots[0].id
                           ? 'bg-[#E86A33] text-white ring-orange-300 scale-105'
                           : 'bg-white text-gray-800 border-2 border-[#E86A33] ring-orange-100'
@@ -881,7 +881,7 @@ export const KnowledgePage: React.FC = () => {
                       {/* Hotspot 2 Pin: Manipulasi Urgensi / Teks */}
                       <button
                         onClick={() => setSelectedHotspotId(currentCase.hotspots[1].id)}
-                        className={`absolute -top-2 right-0 sm:right-1 w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 cursor-pointer transition-transform hover:scale-110 z-10 ${
+                        className={`absolute -top-2 right-1 sm:right-2 w-7 h-7 rounded-full font-black text-xs flex items-center justify-center shadow-md ring-2 cursor-pointer transition-transform hover:scale-110 z-10 ${
                           selectedHotspotId === currentCase.hotspots[1].id
                             ? 'bg-[#143826] text-white ring-emerald-300 scale-105'
                             : 'bg-white text-[#143826] border-2 border-[#143826] ring-emerald-100'
@@ -999,7 +999,7 @@ export const KnowledgePage: React.FC = () => {
                 </div>
 
                 {/* Hotspot Quick Dock: 1 | 2 | 3 | 4 buttons */}
-                <div className="flex items-center justify-center gap-1.5 sm:gap-2 pt-1">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 pt-1">
                   <span className="text-[11px] font-bold text-gray-600 mr-1 hidden sm:inline">Pilih Titik:</span>
                   {currentCase.hotspots.map((h) => {
                     const isSelected = selectedHotspotId === h.id;

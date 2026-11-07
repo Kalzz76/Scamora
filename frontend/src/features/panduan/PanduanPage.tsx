@@ -395,7 +395,7 @@ export const PanduanPage: React.FC = () => {
               <span className="text-[11px] font-mono font-bold tracking-wider text-slate-500 uppercase block">
                 Pilih Protokol Penanganan:
               </span>
-              <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 max-w-full overflow-x-auto gap-1">
+              <div className="inline-flex p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 max-w-full overflow-x-auto gap-1 scrollbar-none">
                 {tutorials.map((tut) => {
                   const isActive = activeTutorialId === tut.id && !showChecklistView;
                   return (

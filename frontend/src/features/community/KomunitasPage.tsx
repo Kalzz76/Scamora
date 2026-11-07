@@ -496,7 +496,7 @@ export const KomunitasPage: React.FC = () => {
                 Pilih Ruang Diskusi
               </div>
 
-              <div className="space-y-1.5">
+              <div className="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {CHANNELS.map(channel => {
                   const isActive = activeChannelId === channel.id;
                   return (
@@ -506,7 +506,7 @@ export const KomunitasPage: React.FC = () => {
                         setActiveChannelId(channel.id);
                         setReplyTarget(null);
                       }}
-                      className={`w-full text-left p-3 sm:p-3.5 rounded-2xl transition-all cursor-pointer flex items-center gap-3 sm:gap-3.5 border ${
+                      className={`shrink-0 min-w-[200px] lg:min-w-0 lg:w-full text-left p-3 sm:p-3.5 rounded-2xl transition-all cursor-pointer flex items-center gap-3 sm:gap-3.5 border ${
                         isActive
                           ? 'bg-[#143826] text-white border-[#143826] shadow-sm'
                           : 'bg-white hover:bg-gray-50 text-gray-800 border-gray-100'
@@ -618,7 +618,11 @@ export const KomunitasPage: React.FC = () => {
             {/* Chat Header Bar */}
             <div className="p-3.5 px-4 sm:p-4 sm:px-6 border-b border-gray-100 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-2.5">
-                <span className="text-xl">{currentChannel.icon}</span>
+                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-[#143826] flex items-center justify-center shrink-0">
+                  {currentChannel.id === 'tanya-jawab' && <MessageSquare className="w-4 h-4 text-[#143826]" />}
+                  {currentChannel.id === 'lapor-modus' && <AlertTriangle className="w-4 h-4 text-amber-600" />}
+                  {currentChannel.id === 'solusi-korban' && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
+                </div>
                 <div>
                   <h2 className="font-extrabold text-sm sm:text-base text-gray-900 leading-none">
                     #{currentChannel.name}
@@ -905,8 +909,8 @@ export const KomunitasPage: React.FC = () => {
               </AnimatePresence>
 
               {/* Tag Selector & Anonim Toggle */}
-              <div className="flex items-center justify-between text-xs px-1">
-                <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs px-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-gray-500 font-semibold text-[11px]">Kirim sebagai:</span>
                   <div className="flex items-center gap-1">
                     {[

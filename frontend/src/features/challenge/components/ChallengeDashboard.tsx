@@ -198,7 +198,7 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
           onClick={onStartSimulation}
           disabled={isLoading || isGeneratingAi}
           type="button"
-          className="inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-[#143826] hover:bg-[#1D4E36] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-2xl bg-[#143826] hover:bg-[#1D4E36] text-white font-bold text-sm transition-all shadow-md hover:shadow-lg disabled:opacity-60 cursor-pointer"
         >
           <Play className="w-4 h-4 text-[#E86A33] fill-[#E86A33]" />
           <span>{isLoading ? 'tunggu sebentar yahh...' : 'Mulai Simulasi Interaktif'}</span>

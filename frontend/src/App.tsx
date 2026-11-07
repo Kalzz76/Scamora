@@ -78,7 +78,7 @@ export function App() {
 
   return (
     <HashRouter>
-      <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c]">
+      <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0">
         
         {/* Navigation Bar */}
         <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />

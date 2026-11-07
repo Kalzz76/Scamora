@@ -395,7 +395,7 @@ export const ReportPage: React.FC = () => {
               </div>
 
               {totalPages > 1 && (
-                <div className="inline-flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
