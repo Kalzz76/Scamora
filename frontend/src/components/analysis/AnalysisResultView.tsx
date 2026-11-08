@@ -190,13 +190,10 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
   const isCapped = rawScore > 100;
   const riskScore = Math.min(100, Math.max(0, result.risk_score ?? rawScore));
 
-  const hasCritical = 
-    result.category_reason === 'critical_indicator' ||
-    (result.indicators || []).some((i) => i.weight && i.weight >= 40);
-
-  const effectiveScore = hasCritical ? Math.max(70, riskScore) : riskScore;
+  // The displayed score always reflects the actual calculated risk score
+  const effectiveScore = riskScore;
   const riskLevel: 'high' | 'review' | 'low' = 
-    effectiveScore >= 70 ? 'high' : effectiveScore >= 26 ? 'review' : 'low';
+    result.risk_level || (effectiveScore >= 70 ? 'high' : effectiveScore >= 26 ? 'review' : 'low');
 
   const levelLabels = {
     high: { 

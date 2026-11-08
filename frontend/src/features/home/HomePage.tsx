@@ -1394,7 +1394,7 @@ export const HomePage: React.FC = () => {
                     {item.domain}
                   </div>
                   <div className="text-xs sm:text-sm text-[#5B5850] my-2">
-                    {item.riskPercent}% hasil Risiko Tinggi dari {item.count} pemeriksaan
+                    Skor risiko: {item.riskPercent}/100 • {item.count}x diperiksa
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F5F3EE]">

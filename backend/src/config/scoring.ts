@@ -7,11 +7,8 @@ export const SCORE_THRESHOLDS = {
 
 export const CRITICAL_INDICATOR_TYPES = [
   'safe_browsing_match',
-  'otp_request',
-  'credential_harvesting_form',
   'malicious_apk_download',
-  'ssl_expired',
-  'password_form_insecure',
+  'otp_request',
 ];
 
 export const URL_INDICATOR_WEIGHTS: Record<string, number> = {
