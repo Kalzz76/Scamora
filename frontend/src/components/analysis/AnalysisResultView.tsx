@@ -238,21 +238,82 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
   const currentLevel = levelLabels[riskLevel];
   const evidenceList = result.indicators?.map((i) => i.evidence).filter(Boolean) as string[] || [];
 
+  // Helper: Membuat laporan analisis lengkap untuk disalin & dibagikan
+  const generateFullReportText = () => {
+    const target = result.input_sanitized || 'Tautan/Pesan';
+    const lines: string[] = [];
+
+    lines.push(`🛡️ LAPORAN PEMERIKSAAN KEAMANAN SCAMORA`);
+    lines.push(`Target: ${target}`);
+    lines.push(`Skor Risiko: ${effectiveScore}/100 (${currentLevel.title})`);
+    if (result.explanation) {
+      lines.push(`Keterangan: ${result.explanation}`);
+    }
+    lines.push('');
+
+    // 1. Tanda Bahaya yang Ditemukan
+    lines.push(`⚠️ TANDA BAHAYA YANG DITEMUKAN (${displayedIndicators.length}):`);
+    if (displayedIndicators.length === 0) {
+      lines.push(`• Tidak ditemukan tanda bahaya umum dalam pemeriksaan.`);
+    } else {
+      displayedIndicators.forEach((ind) => {
+        const sev = ind.type === 'critical_escalation' ? 'PROTEKSI' : (ind.severity?.toUpperCase() || 'INFO');
+        lines.push(`• [${sev}] ${ind.title} (+${ind.weight})`);
+        if (ind.evidence) {
+          lines.push(`   Bukti: "${ind.evidence}"`);
+        } else if (ind.description) {
+          lines.push(`   Info: ${ind.description}`);
+        }
+      });
+    }
+    lines.push('');
+
+    // 2. Pemeriksaan yang Dilakukan
+    if (result.checks && result.checks.length > 0) {
+      lines.push(`🔍 PEMERIKSAAN YANG DILAKUKAN (${result.checks.length}):`);
+      result.checks.forEach((c) => {
+        const checkLabel = CHECK_LABELS[c.name.toLowerCase()] || c.name.replace(/_/g, ' ');
+        const statusCfg = STATUS_LABELS[c.status.toLowerCase()] || { label: c.status };
+        let checkLine = `• ${checkLabel}: [${statusCfg.label}]`;
+        if (c.note) {
+          checkLine += ` (${c.note})`;
+        }
+        lines.push(checkLine);
+      });
+      lines.push('');
+    }
+
+    // 3. Langkah Aman yang Disarankan
+    if (result.recommended_actions && result.recommended_actions.length > 0) {
+      lines.push(`💡 LANGKAH AMAN YANG DISARANKAN:`);
+      result.recommended_actions.forEach((act, idx) => {
+        lines.push(`${idx + 1}. ${act}`);
+      });
+      lines.push('');
+    }
+
+    // 4. Catatan / Disclaimer Penting (Bukan Vonis Mutlak)
+    lines.push(`📌 CATATAN PENTING:`);
+    lines.push(`Hasil evaluasi merupakan indikasi risiko berbasis aturan dan pola deteksi sistem, BUKAN VONIS MUTLAK atau jaminan hukum. Jangan jadikan hasil ini sebagai acuan mutlak semata; selalu lakukan verifikasi mandiri sebelum mengambil keputusan atau bertransaksi.`);
+    lines.push('');
+    lines.push(`Periksa tautan & chat mencurigakan di Scamora: ${window.location.origin}`);
+
+    return lines.join('\n');
+  };
+
   // Share to WhatsApp Handler
   const handleShareWhatsApp = () => {
-    const target = result.input_sanitized || 'Tautan/Pesan';
-    const msg = `⚠️ Peringatan Investigasi Scamora\n\nTarget: ${target}\nSkor Risiko: ${effectiveScore}/100 (${currentLevel.title})\n\nKeterangan: ${result.explanation || 'Harap waspada dan jangan berikan data rahasia.'}\n\nCek tautan & chat mencurigakan gratis di Scamora: ${window.location.origin}`;
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    const report = generateFullReportText();
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(report)}`;
     window.open(waUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Copy Summary Handler
   const handleCopySummary = () => {
-    const target = result.input_sanitized || 'Tautan/Pesan';
-    const msg = `[Scamora] Peringatan Keamanan\nTarget: ${target}\nSkor Risiko: ${effectiveScore}/100 (${currentLevel.title})\nCatatan: ${result.explanation || 'Berhati-hatilah terhadap potensi penipuan.'}`;
-    navigator.clipboard.writeText(msg);
+    const report = generateFullReportText();
+    navigator.clipboard.writeText(report);
     setSummaryCopied(true);
-    toast.success('Ringkasan peringatan berhasil disalin!');
+    toast.success('Laporan lengkap berhasil disalin ke clipboard!');
     setTimeout(() => setSummaryCopied(false), 2000);
   };
 
