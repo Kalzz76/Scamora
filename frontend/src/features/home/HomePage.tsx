@@ -295,13 +295,13 @@ export const HomePage: React.FC = () => {
   return (
     <div className="flex flex-col w-full bg-[#faf8f5] text-[#14161c] pb-20 lg:pb-0">
       
-      {/* 1. HERO FOLD: FULL PAGE VIEWPORT (100dvh) SESUAI DESAIN REFERENSI */}
+      {/* 1. HERO FOLD: FULL PAGE VIEWPORT */}
       <section 
         ref={inputSectionRef} 
         className="relative w-full min-h-[100dvh] h-auto lg:h-[100dvh] flex flex-col justify-center items-center pt-20 sm:pt-24 lg:pt-20 pb-16 sm:pb-12 px-4 sm:px-6 lg:px-8 text-center"
       >
-        {/* Background Vector Shapes 16:9 Full Page */}
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+        {/* Background Vector Shapes: Desktop Only to prevent severe distortion on mobile */}
+        <div className="hidden lg:block absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
           <svg viewBox="0 0 1847 852" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
             <path d="M0 0H440L380 120Q365 134 345 134H0Z" fill="#2b2f3a" />
             <path d="M440 0H545L470 134H380Z" fill="#e9e8e6" />
@@ -313,13 +313,13 @@ export const HomePage: React.FC = () => {
           </svg>
         </div>
 
-        {/* Soft Bottom Transition Fade to eliminate cut-off (Desktop only) */}
+        {/* Soft Bottom Transition Fade (Desktop only) */}
         <div 
           className="hidden lg:block absolute bottom-0 left-0 right-0 h-32 sm:h-44 lg:h-56 pointer-events-none bg-gradient-to-t from-[#faf8f5] via-[#faf8f5]/85 to-transparent z-10" 
           aria-hidden="true" 
         />
 
-        {/* Center Content: Sesuai Ukuran Proporsional Referensi */}
+        {/* Center Content */}
         <div className="relative z-10 w-full max-w-[1200px] mx-auto flex flex-col items-center">
 
           {/* Headline */}
@@ -344,7 +344,7 @@ export const HomePage: React.FC = () => {
               role="tab"
               aria-selected={activeTab === 'url'}
               onClick={() => { setActiveTab('url'); setErrorMessage(null); }}
-              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-3.5 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
+              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-4 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
                 activeTab === 'url'
                   ? 'bg-[#14161c] text-white font-bold shadow-xs'
                   : 'bg-transparent text-[#14161c] font-medium hover:text-black'
@@ -357,7 +357,7 @@ export const HomePage: React.FC = () => {
               role="tab"
               aria-selected={activeTab === 'chat'}
               onClick={() => { setActiveTab('chat'); setErrorMessage(null); }}
-              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-3.5 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
+              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-4 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
                 activeTab === 'chat'
                   ? 'bg-[#14161c] text-white font-bold shadow-xs'
                   : 'bg-transparent text-[#14161c] font-medium hover:text-black'
@@ -367,49 +367,41 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Row Form */}
-          <div 
-            className="w-full max-w-[680px] lg:w-[calc(var(--u16)*66)] mx-auto mt-4 sm:mt-6"
-          >
+          {/* Row Form: Single Unified Pill Container */}
+          <div className="w-full max-w-[680px] lg:max-w-[760px] mx-auto mt-4 sm:mt-6 px-1">
             {activeTab === 'url' ? (
-              <div 
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 lg:gap-[calc(var(--u16)*1.2)]"
-              >
-                <div 
-                  className="flex-1 flex items-center h-12 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-4 sm:px-5 lg:px-[calc(var(--u16)*2)] gap-2.5 sm:gap-3 bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
+              <div className="flex items-center bg-white border border-[#d9d6d0] rounded-full shadow-[0_4px_24px_-6px_rgba(20,22,28,0.1)] focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all p-1.5 sm:p-2 pl-3.5 sm:pl-5 gap-2">
+                <svg 
+                  className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-[#706C62]" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                 >
-                  <svg 
-                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-[calc(var(--u16)*1.7)] lg:h-[calc(var(--u16)*1.7)] shrink-0 text-[#14161c]" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>
-                    <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
-                  </svg>
-                  <input
-                    id="inp-url"
-                    type="url"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleScanUrl(); }}
-                    placeholder="Tempel tautan di sini, contoh: http://bank-nusa-login.xyz"
-                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
-                  />
-                </div>
+                  <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>
+                  <path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>
+                </svg>
+                <input
+                  id="inp-url"
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleScanUrl(); }}
+                  placeholder="Tempel tautan (misal: bank-nusa.xyz)..."
+                  className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-base text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none py-1"
+                />
                 <button
                   type="button"
                   id="go"
                   disabled={loading}
                   onClick={() => handleScanUrl()}
-                  className="h-11 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-6 sm:px-7 lg:px-[calc(var(--u16)*2.3)] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
+                  className="h-10 sm:h-12 px-4 sm:px-7 rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold text-xs sm:text-sm transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs shrink-0"
                 >
                   <span>{loading ? 'Memeriksa...' : 'Periksa'}</span>
                   <svg 
-                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-[calc(var(--u16)*1.3)] lg:h-[calc(var(--u16)*1.3)]"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4" 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -422,43 +414,37 @@ export const HomePage: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div 
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 lg:gap-[calc(var(--u16)*1.2)]"
-              >
-                <div 
-                  className="flex-1 flex items-center h-12 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-4 sm:px-5 lg:px-[calc(var(--u16)*2)] gap-2.5 sm:gap-3 bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
+              <div className="flex items-center bg-white border border-[#d9d6d0] rounded-full shadow-[0_4px_24px_-6px_rgba(20,22,28,0.1)] focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all p-1.5 sm:p-2 pl-3.5 sm:pl-5 gap-2">
+                <svg 
+                  className="w-4 h-4 sm:w-5 sm:h-5 shrink-0 text-[#706C62]" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
                 >
-                  <svg 
-                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-[calc(var(--u16)*1.7)] lg:h-[calc(var(--u16)*1.7)] shrink-0 text-[#14161c]" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  <input
-                    id="inp-chat"
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleScanChat(); }}
-                    placeholder="Tempel isi chat WhatsApp yang bikin curiga di sini"
-                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
-                  />
-                </div>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <input
+                  id="inp-chat"
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleScanChat(); }}
+                  placeholder="Tempel isi chat WhatsApp yang bikin curiga..."
+                  className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-base text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none py-1"
+                />
                 <button
                   type="button"
                   id="go"
                   disabled={loading}
                   onClick={() => handleScanChat()}
-                  className="h-11 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-6 sm:px-7 lg:px-[calc(var(--u16)*2.3)] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
+                  className="h-10 sm:h-12 px-4 sm:px-7 rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold text-xs sm:text-sm transition-all cursor-pointer inline-flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs shrink-0"
                 >
                   <span>{loading ? 'Memeriksa...' : 'Periksa'}</span>
                   <svg 
-                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-[calc(var(--u16)*1.3)] lg:h-[calc(var(--u16)*1.3)]"
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4" 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -472,9 +458,9 @@ export const HomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Checkbox Persetujuan (Sesuai Logika Asli Scamora) */}
-            <div className="text-left font-['DM_Sans',sans-serif] text-[#14161c] mt-3 sm:mt-3.5">
-              <label className="flex items-start gap-2 text-xs sm:text-sm cursor-pointer select-none">
+            {/* Checkbox Persetujuan (Center aligned & sleek) */}
+            <div className="mt-3 sm:mt-3.5 flex justify-center text-center">
+              <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-[#5B5850] cursor-pointer select-none">
                 <input
                   type="checkbox"
                   id="c1"
@@ -486,9 +472,9 @@ export const HomePage: React.FC = () => {
                       setPrivacyAgreedChat(e.target.checked);
                     }
                   }}
-                  className="scamora-check mt-0.5 shrink-0"
+                  className="scamora-check shrink-0"
                 />
-                <span className="text-[#5B5850]">Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
+                <span>Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
               </label>
             </div>
           </div>
