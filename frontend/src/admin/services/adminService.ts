@@ -203,7 +203,13 @@ export const adminService = {
       updatedAt: new Date().toISOString(),
     };
     try {
-      await adminApiClient.post('/presets', newPreset);
+      const res = await adminApiClient.post('/presets', newPreset);
+      if (res.data?.success && res.data.data) {
+        list.unshift(res.data.data);
+        setStored(STORAGE_KEYS.PRESETS, list);
+        await this.logAction('CREATE_PRESET', newPreset.title, `Tipe: ${newPreset.type}, Skor: ${newPreset.expectedScore}`);
+        return res.data.data;
+      }
     } catch {
       // Fallback
     }
@@ -256,6 +262,9 @@ export const adminService = {
     if (!item) return false;
     item.isActive = !item.isActive;
     item.updatedAt = new Date().toISOString();
+    try {
+      await adminApiClient.put(`/presets/${id}`, { isActive: item.isActive });
+    } catch {}
     setStored(STORAGE_KEYS.PRESETS, list);
     await this.logAction('TOGGLE_PRESET', item.title, `Status aktif: ${item.isActive}`);
     return true;
@@ -263,6 +272,13 @@ export const adminService = {
 
   // Knowledge Base Articles
   async getArticles(): Promise<KnowledgeArticleItem[]> {
+    try {
+      const res = await adminApiClient.get('/articles');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.ARTICLES, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<KnowledgeArticleItem[]>(STORAGE_KEYS.ARTICLES, INITIAL_ARTICLES);
   },
 
@@ -274,6 +290,15 @@ export const adminService = {
       views: 0,
       updatedAt: new Date().toISOString(),
     };
+    try {
+      const res = await adminApiClient.post('/articles', newArt);
+      if (res.data?.success && res.data.data) {
+        list.unshift(res.data.data);
+        setStored(STORAGE_KEYS.ARTICLES, list);
+        await this.logAction('CREATE_ARTICLE', newArt.title, `Kategori: ${newArt.categoryName}`);
+        return res.data.data;
+      }
+    } catch {}
     list.unshift(newArt);
     setStored(STORAGE_KEYS.ARTICLES, list);
     await this.logAction('CREATE_ARTICLE', newArt.title, `Kategori: ${newArt.categoryName}`);
@@ -285,6 +310,9 @@ export const adminService = {
     const idx = list.findIndex((a) => a.id === id);
     if (idx === -1) return null;
     list[idx] = { ...list[idx], ...updates, updatedAt: new Date().toISOString() };
+    try {
+      await adminApiClient.put(`/articles/${id}`, updates);
+    } catch {}
     setStored(STORAGE_KEYS.ARTICLES, list);
     await this.logAction('UPDATE_ARTICLE', list[idx].title, 'Artikel diperbarui');
     return list[idx];
@@ -293,6 +321,9 @@ export const adminService = {
   async deleteArticle(id: string): Promise<boolean> {
     const list = await this.getArticles();
     const filtered = list.filter((a) => a.id !== id);
+    try {
+      await adminApiClient.delete(`/articles/${id}`);
+    } catch {}
     setStored(STORAGE_KEYS.ARTICLES, filtered);
     await this.logAction('DELETE_ARTICLE', id, 'Artikel dihapus', 'warning');
     return true;
@@ -300,11 +331,25 @@ export const adminService = {
 
   // Categories
   async getCategories(): Promise<ScamCategoryItem[]> {
+    try {
+      const res = await adminApiClient.get('/categories');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.CATEGORIES, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<ScamCategoryItem[]>(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
   },
 
   // Guardian Challenge Questions
   async getQuestions(): Promise<QuizQuestionItem[]> {
+    try {
+      const res = await adminApiClient.get('/questions');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.QUESTIONS, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<QuizQuestionItem[]>(STORAGE_KEYS.QUESTIONS, INITIAL_QUESTIONS);
   },
 
@@ -314,6 +359,15 @@ export const adminService = {
       ...question,
       id: `quiz-${Date.now()}`,
     };
+    try {
+      const res = await adminApiClient.post('/questions', newQ);
+      if (res.data?.success && res.data.data) {
+        list.push(res.data.data);
+        setStored(STORAGE_KEYS.QUESTIONS, list);
+        await this.logAction('CREATE_QUIZ_QUESTION', newQ.scenario.slice(0, 30), `Poin: ${newQ.points}`);
+        return res.data.data;
+      }
+    } catch {}
     list.push(newQ);
     setStored(STORAGE_KEYS.QUESTIONS, list);
     await this.logAction('CREATE_QUIZ_QUESTION', newQ.scenario.slice(0, 30), `Poin: ${newQ.points}`);
@@ -325,6 +379,9 @@ export const adminService = {
     const idx = list.findIndex((q) => q.id === id);
     if (idx === -1) return null;
     list[idx] = { ...list[idx], ...updates };
+    try {
+      await adminApiClient.put(`/questions/${id}`, updates);
+    } catch {}
     setStored(STORAGE_KEYS.QUESTIONS, list);
     await this.logAction('UPDATE_QUIZ_QUESTION', list[idx].scenario.slice(0, 30), `Poin: ${list[idx].points}`);
     return list[idx];
@@ -333,6 +390,9 @@ export const adminService = {
   async deleteQuestion(id: string): Promise<boolean> {
     const list = await this.getQuestions();
     const filtered = list.filter((q) => q.id !== id);
+    try {
+      await adminApiClient.delete(`/questions/${id}`);
+    } catch {}
     setStored(STORAGE_KEYS.QUESTIONS, filtered);
     await this.logAction('DELETE_QUIZ_QUESTION', id, 'Soal kuis dihapus', 'warning');
     return true;
@@ -340,6 +400,13 @@ export const adminService = {
 
   // Moderation Queue
   async getCommunityPosts(): Promise<CommunityPostItem[]> {
+    try {
+      const res = await adminApiClient.get('/posts');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.POSTS, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<CommunityPostItem[]>(STORAGE_KEYS.POSTS, INITIAL_COMMUNITY_POSTS);
   },
 
@@ -348,6 +415,9 @@ export const adminService = {
     const post = list.find((p) => p.id === id);
     if (!post) return false;
     post.status = status;
+    try {
+      await adminApiClient.put(`/posts/${id}/status`, { status });
+    } catch {}
     setStored(STORAGE_KEYS.POSTS, list);
     await this.logAction('MODERATE_POST', post.title, `Status diubah ke ${status}`);
     return true;
@@ -367,6 +437,9 @@ export const adminService = {
     const list = await this.getCommunityPosts();
     const post = list.find((p) => p.id === id);
     const filtered = list.filter((p) => p.id !== id);
+    try {
+      await adminApiClient.delete(`/posts/${id}`);
+    } catch {}
     setStored(STORAGE_KEYS.POSTS, filtered);
     if (post) {
       await this.logAction('DELETE_COMMUNITY_POST', post.title, `Postingan komunitas dihapus`, 'warning');
@@ -381,6 +454,15 @@ export const adminService = {
       id: `post-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
+    try {
+      const res = await adminApiClient.post('/posts', newPost);
+      if (res.data?.success && res.data.data) {
+        list.unshift(res.data.data);
+        setStored(STORAGE_KEYS.POSTS, list);
+        await this.logAction('CREATE_COMMUNITY_POST', newPost.title, `Postingan baru ditambahkan admin`);
+        return res.data.data;
+      }
+    } catch {}
     list.unshift(newPost);
     setStored(STORAGE_KEYS.POSTS, list);
     await this.logAction('CREATE_COMMUNITY_POST', newPost.title, `Postingan baru ditambahkan admin`);
@@ -388,6 +470,13 @@ export const adminService = {
   },
 
   async getReports(): Promise<ModerationReportItem[]> {
+    try {
+      const res = await adminApiClient.get('/reports');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.REPORTS, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<ModerationReportItem[]>(STORAGE_KEYS.REPORTS, INITIAL_REPORTS);
   },
 
@@ -396,6 +485,9 @@ export const adminService = {
     const rep = list.find((r) => r.id === id);
     if (!rep) return false;
     rep.status = action === 'resolve' ? 'resolved' : 'dismissed';
+    try {
+      await adminApiClient.put(`/reports/${id}/resolve`, { action });
+    } catch {}
     setStored(STORAGE_KEYS.REPORTS, list);
     await this.logAction('RESOLVE_REPORT', rep.postTitle, `Laporan diselesaikan (${action})`);
     return true;
@@ -403,6 +495,13 @@ export const adminService = {
 
   // Audit Logs
   async getAuditLogs(): Promise<AuditLogItem[]> {
+    try {
+      const res = await adminApiClient.get('/audit-logs');
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        setStored(STORAGE_KEYS.LOGS, res.data.data);
+        return res.data.data;
+      }
+    } catch {}
     return getStored<AuditLogItem[]>(STORAGE_KEYS.LOGS, INITIAL_AUDIT_LOGS);
   },
 
@@ -415,13 +514,16 @@ export const adminService = {
     const logs = await this.getAuditLogs();
     const item: AuditLogItem = {
       id: `log-${Date.now()}`,
-      actor: 'admin@scamora.ai',
+      actor: 'admin@scamora.id',
       action,
       target,
       details,
       timestamp: new Date().toISOString(),
       severity,
     };
+    try {
+      await adminApiClient.post('/audit-logs', item);
+    } catch {}
     logs.unshift(item);
     setStored(STORAGE_KEYS.LOGS, logs.slice(0, 100)); // Keep latest 100 logs
   },

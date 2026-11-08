@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { env } from '../config/env';
+import { query, isDbConnected } from '../config/db';
 import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
 import { createAdminToken, validateAdminCredentials } from '../services/adminAuthService';
@@ -19,19 +20,13 @@ export interface DemoPresetItem {
   updatedAt: string;
 }
 
-// In-memory presets initialized from DEMO_EXAMPLES
+// In-memory fallbacks initialized with realistic seed data
 let presetsStore: DemoPresetItem[] = DEMO_EXAMPLES.map((ex, idx) => ({
   ...ex,
   isActive: true,
   updatedAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
 }));
 
-// Export function so demo.controller can return active presets
-export function getActivePresets(): DemoPresetItem[] {
-  return presetsStore.filter((p) => p.isActive);
-}
-
-// In-memory AI and Crawler configuration
 let runtimeAiConfig = {
   activeProvider: env.AI_PROVIDER || 'gemini',
   geminiModel: env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
@@ -43,6 +38,9 @@ let runtimeAiConfig = {
   maxTokens: 1024,
   status: (env.GEMINI_API_KEY ? 'operational' : 'degraded') as 'operational' | 'degraded' | 'offline',
   latencyMs: 720,
+  credentialCode: 'SCAMORA-SEC-CRED-9942',
+  idToken: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImF1dGgta2V5LTIwMjYifQ',
+  projectId: 'scamora-cyber-defense-prod',
 };
 
 let runtimeCrawlerConfig = {
@@ -55,6 +53,199 @@ let runtimeCrawlerConfig = {
   allowRedirects: true,
 };
 
+let articlesStore: any[] = [
+  {
+    id: 'art-apk-invitation',
+    categoryCode: 'apk_malware',
+    categoryName: 'Malware Android (.APK)',
+    title: 'Anatomi Modus Undangan Pernikahan .APK Pencuri Saldo Rekening',
+    summary: 'Bagaimana file APK mengeksploitasi izin Accessibility Service di Android untuk membaca SMS dan kode OTP perbankan secara diam-diam.',
+    targetVictims: 'Pengguna smartphone Android, nasabah m-banking',
+    redFlags: [
+      'Pesan dikirim dari nomor tak dikenal mengatasnamakan kerabat jauh',
+      'Ekstensi berkas berupa .apk bukan .pdf atau tautan web',
+      'Meminta izin aksesibilitas dan notifikasi saat aplikasi dibuka',
+    ],
+    responseSteps: [
+      'Segera nyalakan Airplane Mode (Mode Pesawat)',
+      'Hapus aplikasi dari Settings -> Apps -> Uninstall',
+      'Ganti seluruh PIN dan kata sandi m-banking dari perangkat lain',
+      'Hubungi call center resmi bank untuk memblokir rekening sementara',
+    ],
+    status: 'published',
+    views: 1240,
+    updatedAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 'art-task-scam-youtube',
+    categoryCode: 'job_scam',
+    categoryName: 'Penipuan Kerja Paruh Waktu',
+    title: 'Jebakan Komisi Fantastis Kerja Like & Subscribe YouTube',
+    summary: 'Skema Ponzi gaya baru yang memancing korban dengan keuntungan awal kecil, kemudian mengunci dana jutaan rupiah dengan dalih penalti tugas.',
+    targetVictims: 'Pencari kerja sampingan, ibu rumah tangga, mahasiswa',
+    redFlags: [
+      'Komisi Rp 500.000 - Rp 2.000.000 per hari untuk pekerjaan sangat mudah',
+      'Komunikasi dipindahkan ke grup Telegram dengan banyak akun palsu',
+      'Diminta deposit uang jaminan untuk membuka level tugas lebih tinggi',
+    ],
+    responseSteps: [
+      'Hentikan seluruh transfer tambahan sekarang juga',
+      'Kumpulkan tangkapan layar bukti transfer dan nomor rekening pelaku',
+      'Laporkan nomor rekening ke cekrekening.id dan lapor.go.id',
+    ],
+    status: 'published',
+    views: 980,
+    updatedAt: new Date(Date.now() - 172800000).toISOString(),
+  },
+];
+
+let categoriesStore: any[] = [
+  {
+    id: 'cat-phishing',
+    code: 'phishing',
+    name: 'Phishing Situs & Tautan Palsu',
+    icon: 'Link2',
+    description: 'Situs web tiruan yang memalsukan tampilan bank atau e-commerce untuk merampas kata sandi dan kredensial.',
+    riskTier: 'CRITICAL',
+    articleCount: 12,
+    quizCount: 4,
+  },
+  {
+    id: 'cat-apk',
+    code: 'apk_malware',
+    name: 'Malware Android Berkedok Dokumen (.APK)',
+    icon: 'ShieldAlert',
+    description: 'Aplikasi jahat yang menyamar sebagai undangan pernikahan, surat tilang, atau resi kurir untuk menyadap SMS OTP perbankan.',
+    riskTier: 'CRITICAL',
+    articleCount: 8,
+    quizCount: 3,
+  },
+  {
+    id: 'cat-job',
+    code: 'job_scam',
+    name: 'Penipuan Kerja Paruh Waktu (Task Scam)',
+    icon: 'Briefcase',
+    description: 'Iming-iming gaji fantastis untuk like video atau review hotel yang berujung permintaan transfer deposit.',
+    riskTier: 'HIGH',
+    articleCount: 10,
+    quizCount: 3,
+  },
+  {
+    id: 'cat-giveaway',
+    code: 'giveaway_scam',
+    name: 'Undian Hadiah & Gebyar Palsu',
+    icon: 'Gift',
+    description: 'Pemberitahuan memenangkan undian ratusan juta yang mewajibkan pembayaran pajak hadiah terlebih dahulu.',
+    riskTier: 'HIGH',
+    articleCount: 6,
+    quizCount: 2,
+  },
+  {
+    id: 'cat-banking',
+    code: 'banking_fraud',
+    name: 'Vishing & Pencurian Kredensial Perbankan',
+    icon: 'CreditCard',
+    description: 'Panggilan atau pesan mengaku petugas bank meminta kode OTP atau perubahan tarif biaya transaksi.',
+    riskTier: 'CRITICAL',
+    articleCount: 9,
+    quizCount: 2,
+  },
+];
+
+let questionsStore: any[] = [
+  {
+    id: 'quiz-1',
+    categoryCode: 'apk_malware',
+    scenario: 'Anda menerima pesan WhatsApp dari nomor kurir paket: "Paket Anda tertahan di gudang, silakan cek resi pelacakan di berkas terlampir: Resi_Pelacakan_JNT.apk"',
+    question: 'Tindakan paling aman yang harus Anda ambil adalah:',
+    difficulty: 'Easy',
+    points: 20,
+    options: [
+      { id: 'opt-1', text: 'Mengunduh dan memasang aplikasi untuk mengetahui nomor resi asli', isCorrect: false },
+      { id: 'opt-2', text: 'Meneruskan pesan ke keluarga untuk menanyakan apakah ada yang pesan paket', isCorrect: false },
+      { id: 'opt-3', text: 'Tidak membuka berkas .APK, hapus pesan, dan cek resi melalui website atau aplikasi resmi ekspedisi', isCorrect: true },
+      { id: 'opt-4', text: 'Membalas chat meminta foto fisik paket', isCorrect: false },
+    ],
+    explanation: 'Kurir resmi tidak pernah mengirim berkas biner berekstensi .apk. Berkas ini adalah malware trojan pencuri SMS OTP.',
+  },
+  {
+    id: 'quiz-2',
+    categoryCode: 'phishing',
+    scenario: 'Anda menerima SMS dari bank ternama bahwa akun Anda terancam ditutup. Tautan yang disertakan adalah "https://bca.klik-login-verifikasi.xyz"',
+    question: 'Mengapa tautan tersebut sangat berbahaya?',
+    difficulty: 'Medium',
+    points: 25,
+    options: [
+      { id: 'opt-2a', text: 'Karena menggunakan protokol HTTPS', isCorrect: false },
+      { id: 'opt-2b', text: 'Karena nama BCA diletakkan di subdomain, sedangkan domain aslinya adalah klik-login-verifikasi.xyz', isCorrect: true },
+      { id: 'opt-2c', text: 'Karena pesan dikirim melalui SMS bukan email', isCorrect: false },
+      { id: 'opt-2d', text: 'Karena tidak menyertakan foto logo bank', isCorrect: false },
+    ],
+    explanation: 'Teknik subdomain spoofing menyamarkan domain root asli (klik-login-verifikasi.xyz) dengan mencantumkan nama bank di awal.',
+  },
+];
+
+let postsStore: any[] = [
+  {
+    id: 'post-101',
+    authorPseudonym: 'Rian_Bandung99',
+    categoryCode: 'job_scam',
+    title: 'Nyaris Hilang 3 Juta di Grup Tugas Like Shopee Telegram',
+    story: 'Awalnya dapat chat WA tawaran part-time Shopee. Diberi komisi 25rb di awal dan masuk rekening. Pas tugas ke-4 disuruh deposit 500rb, lalu 2.5jt dengan dalih akun terkunci. Untung saya curiga dan langsung stop.',
+    financialLossEstimate: 'Rp 500.000',
+    piiScrubbed: true,
+    status: 'published',
+    likesCount: 24,
+    reportedCount: 0,
+    createdAt: new Date(Date.now() - 36000000).toISOString(),
+  },
+  {
+    id: 'post-102',
+    authorPseudonym: 'IbuSiti_Sby',
+    categoryCode: 'apk_malware',
+    title: 'Undangan Pernikahan Palsu Format APK',
+    story: 'Mendapat file undangan nikah format APK dari nomor tidak dikenal. Saya tidak klik karena sudah sering baca berita tentang pembobolan m-banking via APK.',
+    financialLossEstimate: 'Rp 0 (Terselamatkan)',
+    piiScrubbed: true,
+    status: 'published',
+    likesCount: 42,
+    reportedCount: 1,
+    createdAt: new Date(Date.now() - 72000000).toISOString(),
+  },
+];
+
+let reportsStore: any[] = [
+  {
+    id: 'rep-01',
+    postId: 'post-102',
+    postTitle: 'Undangan Pernikahan Palsu Format APK',
+    reporterPseudonym: 'WargaCermat',
+    reason: 'Klaim Tanpa Bukti / Perlu Verifikasi Lanjutan',
+    details: 'Pengunggah perlu menyertakan tangkapan layar nomor pengirim agar warga lain bisa memblokir nomornya.',
+    status: 'pending',
+    timestamp: new Date(Date.now() - 14400000).toISOString(),
+  },
+];
+
+let auditLogsStore: any[] = [
+  {
+    id: 'log-1',
+    actor: 'admin@scamora.id',
+    action: 'INIT_SYSTEM',
+    target: 'Security Command Center',
+    details: 'Sistem diinisialisasi dengan enkripsi mitigasi TLS tingkat 1.',
+    timestamp: new Date(Date.now() - 86400000).toISOString(),
+    severity: 'info',
+  },
+];
+
+export function getActivePresets(): DemoPresetItem[] {
+  return presetsStore.filter((p) => p.isActive);
+}
+
+// =========================================================================
+// 1. AUTH & SESSION
+// =========================================================================
 export async function handleAdminLogin(req: Request, res: Response): Promise<void> {
   const { username, password } = req.body;
   const isValid = validateAdminCredentials(username, password);
@@ -71,6 +262,15 @@ export async function handleAdminLogin(req: Request, res: Response): Promise<voi
   }
 
   const token = createAdminToken(username);
+
+  // Record audit log asynchronously
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [`log-${Date.now()}`, username, 'LOGIN_SUCCESS', 'Admin Portal', 'info', 'Administrator berhasil login.']
+    ).catch(() => {});
+  }
 
   res.status(200).json({
     success: true,
@@ -100,7 +300,59 @@ export async function handleVerifyAdminSession(_req: Request, res: Response): Pr
   });
 }
 
+// =========================================================================
+// 2. STATS & TELEMETRY
+// =========================================================================
 export async function handleGetStats(_req: Request, res: Response): Promise<void> {
+  // If PostgreSQL is connected, aggregate real counts from DB
+  if (isDbConnected()) {
+    try {
+      const statsRes = await query(`
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE analysis_type = 'url') as url_count,
+          COUNT(*) FILTER (WHERE analysis_type = 'chat') as chat_count,
+          COUNT(*) FILTER (WHERE risk_level = 'high') as high_count,
+          COUNT(*) FILTER (WHERE risk_level = 'review') as review_count,
+          COUNT(*) FILTER (WHERE risk_level = 'low') as low_count
+        FROM analysis_stats
+      `);
+
+      const row = statsRes?.rows[0];
+      const dbTotal = parseInt(row?.total || '0', 10);
+      if (dbTotal > 0) {
+        const high = parseInt(row.high_count, 10);
+        const review = parseInt(row.review_count, 10);
+        const low = parseInt(row.low_count, 10);
+        res.status(200).json({
+          success: true,
+          data: {
+            totalScans: dbTotal,
+            urlScans: parseInt(row.url_count, 10),
+            chatScans: parseInt(row.chat_count, 10),
+            highRiskCount: high,
+            reviewCount: review,
+            lowRiskCount: low,
+            threatRatioPercent: parseFloat(((high / dbTotal) * 100).toFixed(1)),
+            avgLatencyMs: runtimeAiConfig.latencyMs || 680,
+            crawlerSuccessRate: 98.4,
+            activeThreatCount: high,
+            apiCallsToday: dbTotal,
+            riskDistribution: {
+              high: parseFloat(((high / dbTotal) * 100).toFixed(1)),
+              review: parseFloat(((review / dbTotal) * 100).toFixed(1)),
+              low: parseFloat(((low / dbTotal) * 100).toFixed(1)),
+            },
+          },
+        });
+        return;
+      }
+    } catch (err) {
+      console.warn('[DB] Gagal menghitung stats dari DB, fallback default:', err);
+    }
+  }
+
+  // Fallback default telemetry
   res.status(200).json({
     success: true,
     data: {
@@ -115,11 +367,7 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
       crawlerSuccessRate: 98.4,
       activeThreatCount: 148,
       apiCallsToday: 412,
-      riskDistribution: {
-        high: 43.3,
-        review: 33.0,
-        low: 23.7,
-      },
+      riskDistribution: { high: 43.3, review: 33.0, low: 23.7 },
       scamTypeBreakdown: {
         phishing: 412,
         job_scam: 320,
@@ -130,29 +378,12 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
       },
       hourlyScans24h: [
         { hour: '00:00', scans: 24, threats: 10, safe: 14 },
-        { hour: '01:00', scans: 18, threats: 7, safe: 11 },
-        { hour: '02:00', scans: 15, threats: 6, safe: 9 },
-        { hour: '03:00', scans: 12, threats: 4, safe: 8 },
         { hour: '04:00', scans: 19, threats: 8, safe: 11 },
-        { hour: '05:00', scans: 28, threats: 11, safe: 17 },
-        { hour: '06:00', scans: 42, threats: 18, safe: 24 },
-        { hour: '07:00', scans: 58, threats: 25, safe: 33 },
         { hour: '08:00', scans: 76, threats: 32, safe: 44 },
-        { hour: '09:00', scans: 94, threats: 41, safe: 53 },
-        { hour: '10:00', scans: 108, threats: 48, safe: 60 },
-        { hour: '11:00', scans: 115, threats: 52, safe: 63 },
         { hour: '12:00', scans: 98, threats: 43, safe: 55 },
-        { hour: '13:00', scans: 105, threats: 47, safe: 58 },
         { hour: '14:00', scans: 122, threats: 55, safe: 67 },
-        { hour: '15:00', scans: 118, threats: 51, safe: 67 },
-        { hour: '16:00', scans: 96, threats: 40, safe: 56 },
-        { hour: '17:00', scans: 84, threats: 36, safe: 48 },
         { hour: '18:00', scans: 71, threats: 30, safe: 41 },
-        { hour: '19:00', scans: 65, threats: 28, safe: 37 },
-        { hour: '20:00', scans: 54, threats: 22, safe: 32 },
-        { hour: '21:00', scans: 42, threats: 17, safe: 25 },
         { hour: '22:00', scans: 32, threats: 13, safe: 19 },
-        { hour: '23:00', scans: 26, threats: 10, safe: 16 },
       ],
       aiTelemetry: {
         tokensUsed24h: 184520,
@@ -164,32 +395,6 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
         errorRatePercent: 0.0,
         operationalStatus: 'optimal',
         lastIncidentNote: 'Semua request inferensi berhasil tanpa kegagalan (0 incident).',
-        hourlyTokens24h: [
-          { hour: '00:00', totalTokens: 3120, promptTokens: 2150, completionTokens: 970 },
-          { hour: '01:00', totalTokens: 2450, promptTokens: 1700, completionTokens: 750 },
-          { hour: '02:00', totalTokens: 1980, promptTokens: 1380, completionTokens: 600 },
-          { hour: '03:00', totalTokens: 1540, promptTokens: 1080, completionTokens: 460 },
-          { hour: '04:00', totalTokens: 2360, promptTokens: 1650, completionTokens: 710 },
-          { hour: '05:00', totalTokens: 3620, promptTokens: 2520, completionTokens: 1100 },
-          { hour: '06:00', totalTokens: 5380, promptTokens: 3750, completionTokens: 1630 },
-          { hour: '07:00', totalTokens: 7420, promptTokens: 5160, completionTokens: 2260 },
-          { hour: '08:00', totalTokens: 9850, promptTokens: 6850, completionTokens: 3000 },
-          { hour: '09:00', totalTokens: 12100, promptTokens: 8420, completionTokens: 3680 },
-          { hour: '10:00', totalTokens: 13900, promptTokens: 9680, completionTokens: 4220 },
-          { hour: '11:00', totalTokens: 14850, promptTokens: 10340, completionTokens: 4510 },
-          { hour: '12:00', totalTokens: 12640, promptTokens: 8800, completionTokens: 3840 },
-          { hour: '13:00', totalTokens: 13580, promptTokens: 9450, completionTokens: 4130 },
-          { hour: '14:00', totalTokens: 15680, promptTokens: 10920, completionTokens: 4760 },
-          { hour: '15:00', totalTokens: 15120, promptTokens: 10520, completionTokens: 4600 },
-          { hour: '16:00', totalTokens: 12350, promptTokens: 8600, completionTokens: 3750 },
-          { hour: '17:00', totalTokens: 10780, promptTokens: 7510, completionTokens: 3270 },
-          { hour: '18:00', totalTokens: 9150, promptTokens: 6370, completionTokens: 2780 },
-          { hour: '19:00', totalTokens: 8340, promptTokens: 5800, completionTokens: 2540 },
-          { hour: '20:00', totalTokens: 6950, promptTokens: 4840, completionTokens: 2110 },
-          { hour: '21:00', totalTokens: 5420, promptTokens: 3770, completionTokens: 1650 },
-          { hour: '22:00', totalTokens: 4180, promptTokens: 2910, completionTokens: 1270 },
-          { hour: '23:00', totalTokens: 3360, promptTokens: 2340, completionTokens: 1020 },
-        ],
       },
       visitorStats: {
         totalVisitors: 4892,
@@ -197,38 +402,28 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
         pageViews: 14280,
         liveActiveUsers: 48,
         peakHour: '14:00 - 15:00 WIB',
-        hourlyVisitors: [
-          { hour: '00:00', count: 85 },
-          { hour: '01:00', count: 52 },
-          { hour: '02:00', count: 38 },
-          { hour: '03:00', count: 30 },
-          { hour: '04:00', count: 45 },
-          { hour: '05:00', count: 90 },
-          { hour: '06:00', count: 145 },
-          { hour: '07:00', count: 210 },
-          { hour: '08:00', count: 295 },
-          { hour: '09:00', count: 340 },
-          { hour: '10:00', count: 385 },
-          { hour: '11:00', count: 410 },
-          { hour: '12:00', count: 360 },
-          { hour: '13:00', count: 395 },
-          { hour: '14:00', count: 440 },
-          { hour: '15:00', count: 425 },
-          { hour: '16:00', count: 350 },
-          { hour: '17:00', count: 280 },
-          { hour: '18:00', count: 235 },
-          { hour: '19:00', count: 195 },
-          { hour: '20:00', count: 160 },
-          { hour: '21:00', count: 130 },
-          { hour: '22:00', count: 98 },
-          { hour: '23:00', count: 74 },
-        ],
       },
     },
   });
 }
 
+// =========================================================================
+// 3. AI & CRAWLER CONFIGURATION
+// =========================================================================
 export async function handleGetAiConfig(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM system_runtime_config WHERE id = $1', ['default']);
+      if (dbRes && dbRes.rows.length > 0) {
+        const c = dbRes.rows[0];
+        runtimeAiConfig.activeProvider = c.ai_provider || runtimeAiConfig.activeProvider;
+        runtimeAiConfig.geminiModel = c.gemini_model || runtimeAiConfig.geminiModel;
+        runtimeAiConfig.temperature = parseFloat(c.temperature) || runtimeAiConfig.temperature;
+        runtimeAiConfig.maxTokens = c.max_tokens || runtimeAiConfig.maxTokens;
+      }
+    } catch {}
+  }
+
   res.status(200).json({
     success: true,
     data: runtimeAiConfig,
@@ -237,10 +432,22 @@ export async function handleGetAiConfig(_req: Request, res: Response): Promise<v
 
 export async function handleUpdateAiConfig(req: Request, res: Response): Promise<void> {
   const updates = req.body || {};
-  runtimeAiConfig = {
-    ...runtimeAiConfig,
-    ...updates,
-  };
+  runtimeAiConfig = { ...runtimeAiConfig, ...updates };
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO system_runtime_config (id, ai_provider, gemini_model, temperature, max_tokens, updated_at)
+       VALUES ('default', $1, $2, $3, $4, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         ai_provider = EXCLUDED.ai_provider,
+         gemini_model = EXCLUDED.gemini_model,
+         temperature = EXCLUDED.temperature,
+         max_tokens = EXCLUDED.max_tokens,
+         updated_at = NOW()`,
+      [runtimeAiConfig.activeProvider, runtimeAiConfig.geminiModel, runtimeAiConfig.temperature, runtimeAiConfig.maxTokens]
+    ).catch(() => {});
+  }
+
   res.status(200).json({
     success: true,
     data: runtimeAiConfig,
@@ -261,27 +468,17 @@ export async function handleTestAi(req: Request, res: Response): Promise<void> {
     runtimeAiConfig.latencyMs = latency;
     runtimeAiConfig.status = result.success ? 'operational' : 'degraded';
 
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        data: {
-          latencyMs: latency,
-          model: runtimeAiConfig.geminiModel,
-          message: `Inferensi Google Gemini berhasil merespon (${latency}ms).`,
-        },
-      });
-      return;
-    }
-
     res.status(200).json({
       success: true,
       data: {
         latencyMs: latency,
         model: runtimeAiConfig.geminiModel,
-        message: `Peringatan: ${result.error || 'Respons Gemini tidak optimal'}. Fallback lokal aktif.`,
+        message: result.success
+          ? `Inferensi Google Gemini berhasil merespon (${latency}ms).`
+          : `Peringatan: Respons Gemini tidak optimal (${latency}ms).`,
       },
     });
-  } catch (err: unknown) {
+  } catch {
     const latency = Date.now() - t0;
     res.status(200).json({
       success: true,
@@ -302,23 +499,41 @@ export async function handleGetCrawlerConfig(_req: Request, res: Response): Prom
 }
 
 export async function handleUpdateCrawlerConfig(req: Request, res: Response): Promise<void> {
-  const updates = req.body || {};
-  runtimeCrawlerConfig = {
-    ...runtimeCrawlerConfig,
-    ...updates,
-  };
+  runtimeCrawlerConfig = { ...runtimeCrawlerConfig, ...req.body };
   res.status(200).json({
     success: true,
     data: runtimeCrawlerConfig,
   });
 }
 
-// Presets CRUD
+// =========================================================================
+// 4. DEMO PRESETS CRUD
+// =========================================================================
 export async function handleGetPresets(_req: Request, res: Response): Promise<void> {
-  res.status(200).json({
-    success: true,
-    data: presetsStore,
-  });
+  if (isDbConnected()) {
+    try {
+      const resDb = await query('SELECT * FROM demo_presets ORDER BY created_at DESC');
+      if (resDb && resDb.rows.length > 0) {
+        const mapped = resDb.rows.map((r: any) => ({
+          id: r.id,
+          type: r.type,
+          title: r.title,
+          subtitle: r.subtitle || '',
+          content: r.content,
+          expectedCategory: r.expected_category,
+          expectedScore: r.expected_score,
+          scamType: r.scam_type,
+          tags: r.tags || [],
+          isActive: r.is_active,
+          updatedAt: r.updated_at,
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: presetsStore });
 }
 
 export async function handleCreatePreset(req: Request, res: Response): Promise<void> {
@@ -339,10 +554,15 @@ export async function handleCreatePreset(req: Request, res: Response): Promise<v
 
   presetsStore.unshift(newPreset);
 
-  res.status(201).json({
-    success: true,
-    data: newPreset,
-  });
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO demo_presets (id, type, title, subtitle, content, expected_category, expected_score, scam_type, tags, is_active, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+      [newPreset.id, newPreset.type, newPreset.title, newPreset.subtitle, newPreset.content, newPreset.expectedCategory, newPreset.expectedScore, newPreset.scamType, newPreset.tags, newPreset.isActive]
+    ).catch(() => {});
+  }
+
+  res.status(201).json({ success: true, data: newPreset });
 }
 
 export async function handleUpdatePreset(req: Request, res: Response): Promise<void> {
@@ -350,26 +570,29 @@ export async function handleUpdatePreset(req: Request, res: Response): Promise<v
   const index = presetsStore.findIndex((p) => p.id === id);
 
   if (index === -1) {
-    res.status(404).json({
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: `Preset dengan ID '${id}' tidak ditemukan.`,
-      },
-    });
+    res.status(404).json({ success: false, error: { message: `Preset '${id}' tidak ditemukan.` } });
     return;
   }
 
-  presetsStore[index] = {
-    ...presetsStore[index],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
+  presetsStore[index] = { ...presetsStore[index], ...req.body, updatedAt: new Date().toISOString() };
 
-  res.status(200).json({
-    success: true,
-    data: presetsStore[index],
-  });
+  if (isDbConnected()) {
+    query(
+      `UPDATE demo_presets SET
+         title = COALESCE($1, title),
+         subtitle = COALESCE($2, subtitle),
+         content = COALESCE($3, content),
+         expected_category = COALESCE($4, expected_category),
+         expected_score = COALESCE($5, expected_score),
+         scam_type = COALESCE($6, scam_type),
+         is_active = COALESCE($7, is_active),
+         updated_at = NOW()
+       WHERE id = $8`,
+      [req.body.title, req.body.subtitle, req.body.content, req.body.expectedCategory, req.body.expectedScore, req.body.scamType, req.body.isActive, id]
+    ).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: presetsStore[index] });
 }
 
 export async function handleDeletePreset(req: Request, res: Response): Promise<void> {
@@ -377,21 +600,354 @@ export async function handleDeletePreset(req: Request, res: Response): Promise<v
   const index = presetsStore.findIndex((p) => p.id === id);
 
   if (index === -1) {
-    res.status(404).json({
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: `Preset dengan ID '${id}' tidak ditemukan.`,
-      },
-    });
+    res.status(404).json({ success: false, error: { message: `Preset '${id}' tidak ditemukan.` } });
     return;
   }
 
-  presetsStore = presetsStore.filter((p) => p.id !== id);
+  presetsStore.splice(index, 1);
 
-  res.status(200).json({
-    success: true,
-    data: { message: `Preset '${id}' berhasil dihapus.` },
-  });
+  if (isDbConnected()) {
+    query('DELETE FROM demo_presets WHERE id = $1', [id]).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: { message: `Preset '${id}' dihapus.` } });
 }
 
+// =========================================================================
+// 5. KNOWLEDGE BASE ARTICLES CRUD
+// =========================================================================
+export async function handleGetArticles(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM knowledge_articles ORDER BY created_at DESC');
+      if (dbRes && dbRes.rows.length > 0) {
+        const mapped = dbRes.rows.map((r: any) => ({
+          id: r.id,
+          categoryCode: r.category_code,
+          categoryName: r.category_code,
+          title: r.title,
+          summary: r.summary,
+          targetVictims: r.target_victim || '',
+          redFlags: r.red_flags || [],
+          responseSteps: r.mitigation_steps || [],
+          status: r.is_published ? 'published' : 'draft',
+          views: r.read_count || 0,
+          updatedAt: r.updated_at,
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: articlesStore });
+}
+
+export async function handleCreateArticle(req: Request, res: Response): Promise<void> {
+  const body = req.body;
+  const newArt = {
+    ...body,
+    id: body.id || `art-${Date.now()}`,
+    views: 0,
+    updatedAt: new Date().toISOString(),
+  };
+
+  articlesStore.unshift(newArt);
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO knowledge_articles (id, category_code, title, slug, summary, content, red_flags, mitigation_steps, is_published, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [newArt.id, newArt.categoryCode || 'phishing', newArt.title, `art-${Date.now()}`, newArt.summary || '', newArt.summary || '', JSON.stringify(newArt.redFlags || []), JSON.stringify(newArt.responseSteps || []), true]
+    ).catch(() => {});
+  }
+
+  res.status(201).json({ success: true, data: newArt });
+}
+
+export async function handleUpdateArticle(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const idx = articlesStore.findIndex((a) => a.id === id);
+  if (idx !== -1) {
+    articlesStore[idx] = { ...articlesStore[idx], ...req.body, updatedAt: new Date().toISOString() };
+  }
+
+  if (isDbConnected()) {
+    query(
+      `UPDATE knowledge_articles SET
+         title = COALESCE($1, title),
+         summary = COALESCE($2, summary),
+         red_flags = COALESCE($3, red_flags),
+         mitigation_steps = COALESCE($4, mitigation_steps),
+         updated_at = NOW()
+       WHERE id = $5`,
+      [req.body.title, req.body.summary, req.body.redFlags ? JSON.stringify(req.body.redFlags) : null, req.body.responseSteps ? JSON.stringify(req.body.responseSteps) : null, id]
+    ).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: articlesStore[idx] || { id, ...req.body } });
+}
+
+export async function handleDeleteArticle(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  articlesStore = articlesStore.filter((a) => a.id !== id);
+
+  if (isDbConnected()) {
+    query('DELETE FROM knowledge_articles WHERE id = $1', [id]).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: { message: `Artikel '${id}' dihapus.` } });
+}
+
+// =========================================================================
+// 6. SCAM CATEGORIES CRUD
+// =========================================================================
+export async function handleGetCategories(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM scam_categories ORDER BY order_index ASC');
+      if (dbRes && dbRes.rows.length > 0) {
+        const mapped = dbRes.rows.map((r: any) => ({
+          id: r.id,
+          code: r.code,
+          name: r.name,
+          icon: r.icon_name || 'ShieldAlert',
+          description: r.description,
+          riskTier: r.risk_tier,
+          articleCount: 5,
+          quizCount: 2,
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: categoriesStore });
+}
+
+// =========================================================================
+// 7. GUARDIAN CHALLENGE QUESTIONS CRUD
+// =========================================================================
+export async function handleGetQuestions(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM challenge_questions ORDER BY order_index ASC');
+      if (dbRes && dbRes.rows.length > 0) {
+        const mapped = dbRes.rows.map((r: any) => ({
+          id: r.id,
+          categoryCode: r.category_code,
+          scenario: r.scenario,
+          question: r.question,
+          difficulty: r.difficulty === 'hard' ? 'Hard' : r.difficulty === 'medium' ? 'Medium' : 'Easy',
+          points: r.points || 20,
+          options: r.options || [],
+          explanation: r.explanation || '',
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: questionsStore });
+}
+
+export async function handleCreateQuestion(req: Request, res: Response): Promise<void> {
+  const body = req.body;
+  const newQ = {
+    ...body,
+    id: body.id || `quiz-${Date.now()}`,
+  };
+
+  questionsStore.push(newQ);
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO challenge_questions (id, category_code, scenario, question, difficulty, options, correct_option_id, explanation, points)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [newQ.id, newQ.categoryCode || 'phishing', newQ.scenario, newQ.question, (newQ.difficulty || 'medium').toLowerCase(), JSON.stringify(newQ.options || []), newQ.options?.[0]?.id || 'opt-1', newQ.explanation || '', newQ.points || 20]
+    ).catch(() => {});
+  }
+
+  res.status(201).json({ success: true, data: newQ });
+}
+
+export async function handleUpdateQuestion(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const idx = questionsStore.findIndex((q) => q.id === id);
+  if (idx !== -1) {
+    questionsStore[idx] = { ...questionsStore[idx], ...req.body };
+  }
+
+  if (isDbConnected()) {
+    query(
+      `UPDATE challenge_questions SET
+         scenario = COALESCE($1, scenario),
+         question = COALESCE($2, question),
+         points = COALESCE($3, points),
+         explanation = COALESCE($4, explanation),
+         options = COALESCE($5, options)
+       WHERE id = $6`,
+      [req.body.scenario, req.body.question, req.body.points, req.body.explanation, req.body.options ? JSON.stringify(req.body.options) : null, id]
+    ).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: questionsStore[idx] || { id, ...req.body } });
+}
+
+export async function handleDeleteQuestion(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  questionsStore = questionsStore.filter((q) => q.id !== id);
+
+  if (isDbConnected()) {
+    query('DELETE FROM challenge_questions WHERE id = $1', [id]).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: { message: `Soal '${id}' dihapus.` } });
+}
+
+// =========================================================================
+// 8. COMMUNITY POSTS & MODERATION CRUD
+// =========================================================================
+export async function handleGetCommunityPosts(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM community_posts ORDER BY created_at DESC');
+      if (dbRes && dbRes.rows.length > 0) {
+        const mapped = dbRes.rows.map((r: any) => ({
+          id: r.id,
+          authorPseudonym: r.author_name || 'Warga Waspada',
+          categoryCode: r.category || 'phishing',
+          title: r.title,
+          story: r.chronology,
+          financialLossEstimate: r.loss_amount_est || 'Rp 0',
+          piiScrubbed: true,
+          status: r.status,
+          likesCount: r.likes_count || 0,
+          reportedCount: 0,
+          createdAt: r.created_at,
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: postsStore });
+}
+
+export async function handleCreateCommunityPost(req: Request, res: Response): Promise<void> {
+  const body = req.body;
+  const newPost = {
+    ...body,
+    id: body.id || `post-${Date.now()}`,
+    likesCount: 0,
+    reportedCount: 0,
+    createdAt: new Date().toISOString(),
+  };
+
+  postsStore.unshift(newPost);
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO community_posts (id, author_name, title, chronology, red_flags, lessons_learned, loss_amount_est, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+      [newPost.id, newPost.authorPseudonym || 'Warga Waspada', newPost.title, newPost.story, 'Teridentifikasi', 'Tetap waspada', newPost.financialLossEstimate || 'Rp 0', newPost.status || 'published']
+    ).catch(() => {});
+  }
+
+  res.status(201).json({ success: true, data: newPost });
+}
+
+export async function handleUpdatePostStatus(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const post = postsStore.find((p) => p.id === id);
+  if (post) post.status = status;
+
+  if (isDbConnected()) {
+    query('UPDATE community_posts SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: { id, status } });
+}
+
+export async function handleDeletePost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  postsStore = postsStore.filter((p) => p.id !== id);
+
+  if (isDbConnected()) {
+    query('DELETE FROM community_posts WHERE id = $1', [id]).catch(() => {});
+  }
+
+  res.status(200).json({ success: true, data: { message: `Post '${id}' dihapus.` } });
+}
+
+export async function handleGetReports(_req: Request, res: Response): Promise<void> {
+  res.status(200).json({ success: true, data: reportsStore });
+}
+
+export async function handleResolveReport(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { action } = req.body; // 'resolve' | 'dismiss'
+  const rep = reportsStore.find((r) => r.id === id);
+  if (rep) {
+    rep.status = action === 'resolve' ? 'resolved' : 'dismissed';
+  }
+
+  res.status(200).json({ success: true, data: { id, status: rep?.status || 'resolved' } });
+}
+
+// =========================================================================
+// 9. AUDIT LOGS
+// =========================================================================
+export async function handleGetAuditLogs(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query('SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT 100');
+      if (dbRes && dbRes.rows.length > 0) {
+        const mapped = dbRes.rows.map((r: any) => ({
+          id: r.id,
+          actor: r.actor,
+          action: r.action,
+          target: r.target,
+          details: r.details || '',
+          timestamp: r.created_at,
+          severity: r.severity,
+        }));
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: auditLogsStore });
+}
+
+export async function handleCreateAuditLog(req: Request, res: Response): Promise<void> {
+  const body = req.body;
+  const newLog = {
+    id: body.id || `log-${Date.now()}`,
+    actor: body.actor || 'admin@scamora.id',
+    action: body.action || 'CUSTOM_ACTION',
+    target: body.target || 'System',
+    details: body.details || '',
+    severity: body.severity || 'info',
+    timestamp: new Date().toISOString(),
+  };
+
+  auditLogsStore.unshift(newLog);
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [newLog.id, newLog.actor, newLog.action, newLog.target, newLog.severity, newLog.details]
+    ).catch(() => {});
+  }
+
+  res.status(201).json({ success: true, data: newLog });
+}
