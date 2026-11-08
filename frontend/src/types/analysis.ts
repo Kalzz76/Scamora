@@ -7,7 +7,7 @@ export type RiskLevel = 'high' | 'review' | 'low';
 
 export type IndicatorSeverity = 'high' | 'medium' | 'low';
 
-export type IndicatorSource = 'url_structure' | 'threat_db' | 'ai' | 'chat_heuristic' | 'reputation';
+export type IndicatorSource = 'url_structure' | 'threat_db' | 'ai' | 'chat_heuristic' | 'reputation' | 'web_crawler' | 'content_ai';
 
 export type ScamType = 
   | 'job_scam'

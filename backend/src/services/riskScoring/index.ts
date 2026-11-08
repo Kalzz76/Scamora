@@ -26,7 +26,14 @@ export interface RiskScoringOutput {
 
 export function determineScamType(indicators: Indicator[]): ScamType {
   for (const ind of indicators) {
+    if (ind.type === 'malicious_apk_download') {
+      return 'apk_malware';
+    }
+    if (ind.type === 'fake_giveaway_content') {
+      return 'giveaway_scam';
+    }
     if (
+      ind.type === 'credential_harvesting_form' ||
       ind.type === 'safe_browsing_match' ||
       ind.type === 'typosquatting' ||
       ind.type === 'punycode_homograph' ||
@@ -34,13 +41,19 @@ export function determineScamType(indicators: Indicator[]): ScamType {
     ) {
       return 'phishing';
     }
-    if (ind.type === 'otp_request') {
+    if (
+      ind.type === 'otp_request' ||
+      ind.type === 'financial_data_request'
+    ) {
       return 'banking_fraud';
     }
     if (ind.type === 'advance_fee' || ind.type === 'unrealistic_offer') {
       return 'job_scam';
     }
-    if (ind.type === 'impersonation_data') {
+    if (
+      ind.type === 'brand_impersonation_content' ||
+      ind.type === 'impersonation_data'
+    ) {
       return 'impersonation';
     }
     if (ind.type === 'guaranteed_profit') {
@@ -119,7 +132,7 @@ export function generateRecommendedActions(
 
     let hasOtp = false;
     for (const ind of indicators) {
-      if (ind.type === 'otp_request') {
+      if (ind.type === 'otp_request' || ind.type === 'financial_data_request') {
         hasOtp = true;
         break;
       }
@@ -141,7 +154,7 @@ export function generateRecommendedActions(
 export function generateLimitations(isPartial: boolean): string[] {
   const limitations = [
     'Hasil evaluasi merupakan indikasi risiko berdasarkan aturan dan data latih, bukan vonis mutlak atau jaminan hukum.',
-    'Sistem tidak membuka, mengunduh, atau mengeksekusi isi server tautan secara langsung demi keamanan pengujian.',
+    'Perayapan konten web dilakukan dalam sandbox statis terisolasi tanpa eksekusi skrip aktif klien demi keamanan pengujian.',
   ];
 
   if (isPartial) {
@@ -203,4 +216,3 @@ export function calculateRiskScore(
     limitations,
   };
 }
-

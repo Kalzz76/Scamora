@@ -10,14 +10,16 @@ const app = express();
 const allowedOrigins = [
   env.FRONTEND_ORIGIN,
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
 ].filter(Boolean);
 
 app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, server-to-server)
+      // Allow requests with no origin (mobile apps, curl, server-to-server) or in whitelist
       if (!origin || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -28,7 +30,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '50kb' }));
 
 app.use('/api/v1', routes);
 
@@ -45,4 +47,3 @@ app.use((_req, res) => {
 app.use(errorHandler);
 
 export default app;
-

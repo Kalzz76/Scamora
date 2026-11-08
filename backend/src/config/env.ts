@@ -10,10 +10,14 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(''),
   CLAUDE_MODEL: z.string().default('claude-3-5-haiku-20241022'),
   GEMINI_API_KEY: z.string().default(''),
-  GEMINI_MODEL: z.string().default('gemini-3-flash-preview'),
+  GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
+  AI_PROVIDER: z.enum(['auto', 'gemini', 'anthropic']).default('auto'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
   SUPABASE_URL: z.string().default(''),
   SUPABASE_KEY: z.string().default(''),
+  ADMIN_USERNAME: z.string().default('admin'),
+  ADMIN_PASSWORD: z.string().default('admin123'),
+  ADMIN_SECRET: z.string().default('scamora-super-secret-admin-key-2026'),
 });
 
 const parsed = envSchema.safeParse(process.env);

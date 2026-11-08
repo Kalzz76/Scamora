@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import "./admin/admin.css";
+
 @theme {
   /* Modern Cyber Slate Palette */
   --color-slate-primary: #0F172A;

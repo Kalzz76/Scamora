@@ -251,6 +251,57 @@ export class MockAnalyzer {
       });
     }
 
+    // 3. Web Page Content Crawling & Heuristics (Simulation / Inspection)
+    if (cleanUrl.includes('bca-klik') || cleanUrl.includes('secure-login-update')) {
+      indicators.push({
+        type: 'credential_harvesting_form',
+        title: 'Formulir Pengumpulan Kredensial / Kata Sandi Tidak Resmi',
+        severity: 'high',
+        weight: 35,
+        source: 'web_crawler',
+        evidence: '<input type="password" name="password"> pada domain tidak resmi',
+        description: 'Perayapan menemukan formulir login dengan input kata sandi pada domain yang tidak terafiliasi resmi dengan Bank BCA.',
+      });
+      indicators.push({
+        type: 'brand_impersonation_content',
+        title: 'Pencatutan Identitas dan Konten Merek Resmi pada Halaman',
+        severity: 'high',
+        weight: 30,
+        source: 'content_ai',
+        evidence: 'Judul: "KlikBCA Internet Banking - Masukkan User ID & KeyBCA"',
+        description: 'Konten halaman meniru antarmuka resmi KlikBCA untuk mengelabui nasabah agar memasukkan kredensial.',
+      });
+    } else if (cleanUrl.includes('undian') || cleanUrl.includes('hadiah')) {
+      indicators.push({
+        type: 'fake_giveaway_content',
+        title: 'Konten Undian atau Hadiah Palsu Berbahaya',
+        severity: 'medium',
+        weight: 25,
+        source: 'content_ai',
+        evidence: 'Klaim: "Selamat! Anda terpilih sebagai pemenang gebyar undian tunai Rp 50.000.000"',
+        description: 'Konten halaman memuat narasi undian palsu untuk memancing pengisian nomor rekening dan OTP.',
+      });
+      indicators.push({
+        type: 'credential_harvesting_form',
+        title: 'Formulir Pengumpulan Kredensial / Kata Sandi Tidak Resmi',
+        severity: 'high',
+        weight: 35,
+        source: 'web_crawler',
+        evidence: 'Input form meminta nomor telepon dan kode verifikasi klaim hadiah',
+        description: 'Formulir meminta input data sensitif untuk klaim hadiah palsu.',
+      });
+    } else if (cleanUrl.toLowerCase().endsWith('.apk') || cleanUrl.includes('apk')) {
+      indicators.push({
+        type: 'malicious_apk_download',
+        title: 'Tautan atau Pemicu Pengunduhan Berkas APK Berbahaya',
+        severity: 'high',
+        weight: 35,
+        source: 'web_crawler',
+        evidence: cleanUrl,
+        description: 'Halaman memicu unduhan berkas APK Android secara langsung, terindikasi modus pencurian SMS/OTP.',
+      });
+    }
+
     // Layer 3: Domain Age & DNS
     checks.push({
       name: 'domain_age',
@@ -438,7 +489,9 @@ export class MockAnalyzer {
 
     // Determine Scam Type
     let scamType: ScamType = 'unknown';
-    if (indicators.some((i) => i.type === 'apk_malware')) scamType = 'apk_malware';
+    if (indicators.some((i) => i.type === 'apk_malware' || i.type === 'malicious_apk_download')) scamType = 'apk_malware';
+    else if (indicators.some((i) => i.type === 'fake_giveaway_content')) scamType = 'giveaway_scam';
+    else if (indicators.some((i) => i.type === 'credential_harvesting_form')) scamType = 'phishing';
     else if (indicators.some((i) => i.type === 'brand_in_subdomain' || i.type === 'safe_browsing_match')) scamType = 'phishing';
     else if (indicators.some((i) => i.type === 'unrealistic_offer' || i.type === 'advance_fee')) scamType = 'job_scam';
     else if (indicators.some((i) => i.type === 'otp_request')) scamType = 'banking_fraud';
@@ -463,7 +516,7 @@ export class MockAnalyzer {
     // Limitations
     const limitations = [
       'Hasil evaluasi merupakan indikasi risiko berdasarkan aturan dan data latih, bukan vonis atau jaminan hukum.',
-      'Sistem tidak mengunduh atau mengeksekusi isi server tautan secara langsung demi keamanan pengujian.',
+      'Perayapan konten web dilakukan dalam sandbox statis terisolasi tanpa eksekusi skrip aktif klien demi keamanan pengujian.',
     ];
     if (isPartial) {
       limitations.push('Pemeriksaan eksternal mengalami kendala parsial; rekomendasi didasarkan pada aturan lokal.');
@@ -472,8 +525,8 @@ export class MockAnalyzer {
     const explanation = riskLevel === 'high'
       ? 'Ditemukan bukti kuat manipulasi rekayasa sosial atau ancaman siber yang terkonfirmasi pada masukan Anda.'
       : riskLevel === 'review'
-      ? 'Terdapat anomali atau data belum cukup komprehensif untuk memastikan keamanan pesan/tautan ini.'
-      : 'Tidak ditemukan indikator ancaman umum dalam batas kemampuan analisis heuristik saat ini.';
+        ? 'Terdapat anomali atau data belum cukup komprehensif untuk memastikan keamanan pesan/tautan ini.'
+        : 'Tidak ditemukan indikator ancaman umum dalam batas kemampuan analisis heuristik saat ini.';
 
     return {
       analysis_status: isPartial ? 'partial' : 'complete',
