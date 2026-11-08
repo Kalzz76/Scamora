@@ -6,7 +6,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenPrivacy }) => {
   return (
-    <footer className="w-full bg-white/80 backdrop-blur-sm border-t border-slate-200/90 text-[#0F172A] mt-auto">
+    <footer className="w-full bg-white/80 backdrop-blur-sm border-t border-slate-200/90 text-[#0F172A] mt-auto pb-20 lg:pb-0">
       <div className="max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
         
         {/* Main Footer Links Container */}

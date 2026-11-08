@@ -293,12 +293,12 @@ export const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full bg-[#faf8f5] text-[#14161c]">
+    <div className="flex flex-col w-full bg-[#faf8f5] text-[#14161c] pb-20 lg:pb-0">
       
       {/* 1. HERO FOLD: FULL PAGE VIEWPORT (100dvh) SESUAI DESAIN REFERENSI */}
       <section 
         ref={inputSectionRef} 
-        className="relative w-full h-[100dvh] min-h-[100dvh] flex flex-col justify-center items-center overflow-hidden pt-16 lg:pt-20 pb-12 px-4 sm:px-6 lg:px-8 text-center"
+        className="relative w-full min-h-[100dvh] h-auto lg:h-[100dvh] flex flex-col justify-center items-center pt-20 sm:pt-24 lg:pt-20 pb-16 sm:pb-12 px-4 sm:px-6 lg:px-8 text-center"
       >
         {/* Background Vector Shapes 16:9 Full Page */}
         <div className="absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
@@ -313,9 +313,9 @@ export const HomePage: React.FC = () => {
           </svg>
         </div>
 
-        {/* Soft Bottom Transition Fade to eliminate cut-off */}
+        {/* Soft Bottom Transition Fade to eliminate cut-off (Desktop only) */}
         <div 
-          className="absolute bottom-0 left-0 right-0 h-32 sm:h-44 lg:h-56 pointer-events-none bg-gradient-to-t from-[#faf8f5] via-[#faf8f5]/85 to-transparent z-10" 
+          className="hidden lg:block absolute bottom-0 left-0 right-0 h-32 sm:h-44 lg:h-56 pointer-events-none bg-gradient-to-t from-[#faf8f5] via-[#faf8f5]/85 to-transparent z-10" 
           aria-hidden="true" 
         />
 
@@ -324,13 +324,7 @@ export const HomePage: React.FC = () => {
 
           {/* Headline */}
           <h1 
-            style={{
-              fontSize: 'calc(var(--u16)*4.5)',
-              lineHeight: 1.03,
-              letterSpacing: '-0.035em',
-              marginBottom: 'calc(var(--u16)*1.3)',
-            }}
-            className="font-bold font-['DM_Sans',sans-serif] text-[#14161c]"
+            className="font-bold font-['DM_Sans',sans-serif] text-[#14161c] text-3xl sm:text-5xl lg:text-[calc(var(--u16)*4.5)] leading-[1.12] sm:leading-[1.05] lg:leading-[1.03] tracking-tight mb-3 sm:mb-4 lg:mb-[calc(var(--u16)*1.3)]"
           >
             Cek dulu sebelum<br />
             kamu <span className="text-[#1d3f6e]">klik</span> atau <span className="text-[#1d3f6e]">balas.</span>
@@ -338,27 +332,19 @@ export const HomePage: React.FC = () => {
 
           {/* Subtitle */}
           <p 
-            style={{
-              fontSize: 'calc(var(--u16)*1.3)',
-              marginBottom: 'calc(var(--u16)*2)',
-            }}
-            className="text-[#4b5160] max-w-[calc(var(--u16)*52)] mx-auto leading-relaxed font-['DM_Sans',sans-serif]"
+            className="text-[#4b5160] text-xs sm:text-base lg:text-[calc(var(--u16)*1.3)] max-w-[92vw] sm:max-w-xl lg:max-w-[calc(var(--u16)*52)] mx-auto leading-relaxed font-['DM_Sans',sans-serif] mb-5 sm:mb-6 lg:mb-[calc(var(--u16)*2)] px-2"
           >
             Tempel tautan atau chat WhatsApp yang bikin curiga. Hasilnya langsung muncul di bawah.
           </p>
 
           {/* Tab Switcher Pills */}
-          <div className="inline-flex bg-[#eeece8] rounded-full shadow-2xs" role="tablist">
+          <div className="inline-flex p-1 bg-[#eeece8] rounded-full shadow-2xs max-w-full" role="tablist">
             <button
               type="button"
               role="tab"
               aria-selected={activeTab === 'url'}
               onClick={() => { setActiveTab('url'); setErrorMessage(null); }}
-              style={{
-                fontSize: 'calc(var(--u16)*1.05)',
-                padding: 'calc(var(--u16)*1.05) calc(var(--u16)*2.8)',
-              }}
-              className={`font-['DM_Sans',sans-serif] rounded-full transition-all cursor-pointer ${
+              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-3.5 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
                 activeTab === 'url'
                   ? 'bg-[#14161c] text-white font-bold shadow-xs'
                   : 'bg-transparent text-[#14161c] font-medium hover:text-black'
@@ -371,11 +357,7 @@ export const HomePage: React.FC = () => {
               role="tab"
               aria-selected={activeTab === 'chat'}
               onClick={() => { setActiveTab('chat'); setErrorMessage(null); }}
-              style={{
-                fontSize: 'calc(var(--u16)*1.05)',
-                padding: 'calc(var(--u16)*1.05) calc(var(--u16)*2.8)',
-              }}
-              className={`font-['DM_Sans',sans-serif] rounded-full transition-all cursor-pointer ${
+              className={`font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] py-2 px-3.5 sm:py-2.5 sm:px-6 lg:py-[calc(var(--u16)*1.05)] lg:px-[calc(var(--u16)*2.8)] rounded-full transition-all cursor-pointer ${
                 activeTab === 'chat'
                   ? 'bg-[#14161c] text-white font-bold shadow-xs'
                   : 'bg-transparent text-[#14161c] font-medium hover:text-black'
@@ -387,28 +369,17 @@ export const HomePage: React.FC = () => {
 
           {/* Row Form */}
           <div 
-            style={{
-              width: 'min(calc(var(--u16)*66), 94vw)',
-              marginTop: 'calc(var(--u16)*1.9)',
-            }}
-            className="mx-auto"
+            className="w-full max-w-[680px] lg:w-[calc(var(--u16)*66)] mx-auto mt-4 sm:mt-6"
           >
             {activeTab === 'url' ? (
               <div 
-                style={{ gap: 'calc(var(--u16)*1.2)' }}
-                className="flex items-center"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 lg:gap-[calc(var(--u16)*1.2)]"
               >
                 <div 
-                  style={{
-                    height: 'calc(var(--u16)*4.4)',
-                    padding: '0 calc(var(--u16)*2)',
-                    gap: 'calc(var(--u16)*1.2)',
-                  }}
-                  className="flex-1 flex items-center bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
+                  className="flex-1 flex items-center h-12 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-4 sm:px-5 lg:px-[calc(var(--u16)*2)] gap-2.5 sm:gap-3 bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
                 >
                   <svg 
-                    style={{ width: 'calc(var(--u16)*1.7)', height: 'calc(var(--u16)*1.7)' }}
-                    className="shrink-0 text-[#14161c]" 
+                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-[calc(var(--u16)*1.7)] lg:h-[calc(var(--u16)*1.7)] shrink-0 text-[#14161c]" 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -425,9 +396,8 @@ export const HomePage: React.FC = () => {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleScanUrl(); }}
-                    placeholder="Tempel tautan di sini, contoh: http://bank-nusa-login.xyz/verifikasi-akun"
-                    style={{ fontSize: 'calc(var(--u16)*1.05)', outline: 'none' }}
-                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
+                    placeholder="Tempel tautan di sini, contoh: http://bank-nusa-login.xyz"
+                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
                   />
                 </div>
                 <button
@@ -435,17 +405,11 @@ export const HomePage: React.FC = () => {
                   id="go"
                   disabled={loading}
                   onClick={() => handleScanUrl()}
-                  style={{
-                    height: 'calc(var(--u16)*4.4)',
-                    padding: '0 calc(var(--u16)*2.3)',
-                    fontSize: 'calc(var(--u16)*1.05)',
-                    gap: 'calc(var(--u16)*0.8)',
-                  }}
-                  className="rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
+                  className="h-11 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-6 sm:px-7 lg:px-[calc(var(--u16)*2.3)] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
                 >
                   <span>{loading ? 'Memeriksa...' : 'Periksa'}</span>
                   <svg 
-                    style={{ width: 'calc(var(--u16)*1.3)', height: 'calc(var(--u16)*1.3)' }}
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-[calc(var(--u16)*1.3)] lg:h-[calc(var(--u16)*1.3)]"
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -459,20 +423,13 @@ export const HomePage: React.FC = () => {
               </div>
             ) : (
               <div 
-                style={{ gap: 'calc(var(--u16)*1.2)' }}
-                className="flex items-center"
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 lg:gap-[calc(var(--u16)*1.2)]"
               >
                 <div 
-                  style={{
-                    height: 'calc(var(--u16)*4.4)',
-                    padding: '0 calc(var(--u16)*2)',
-                    gap: 'calc(var(--u16)*1.2)',
-                  }}
-                  className="flex-1 flex items-center bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
+                  className="flex-1 flex items-center h-12 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-4 sm:px-5 lg:px-[calc(var(--u16)*2)] gap-2.5 sm:gap-3 bg-white border border-[#d9d6d0] rounded-full shadow-xs focus-within:border-[#14161c] focus-within:ring-2 focus-within:ring-[#14161c]/10 transition-all"
                 >
                   <svg 
-                    style={{ width: 'calc(var(--u16)*1.7)', height: 'calc(var(--u16)*1.7)' }}
-                    className="shrink-0 text-[#14161c]" 
+                    className="w-4 h-4 sm:w-5 sm:h-5 lg:w-[calc(var(--u16)*1.7)] lg:h-[calc(var(--u16)*1.7)] shrink-0 text-[#14161c]" 
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -489,8 +446,7 @@ export const HomePage: React.FC = () => {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleScanChat(); }}
                     placeholder="Tempel isi chat WhatsApp yang bikin curiga di sini"
-                    style={{ fontSize: 'calc(var(--u16)*1.05)', outline: 'none' }}
-                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
+                    className="flex-1 min-w-0 border-0 outline-none bg-transparent font-['DM_Sans',sans-serif] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] text-[#14161c] placeholder:text-[#8a8f9c] focus:outline-none focus:ring-0 focus-visible:outline-none"
                   />
                 </div>
                 <button
@@ -498,17 +454,11 @@ export const HomePage: React.FC = () => {
                   id="go"
                   disabled={loading}
                   onClick={() => handleScanChat()}
-                  style={{
-                    height: 'calc(var(--u16)*4.4)',
-                    padding: '0 calc(var(--u16)*2.3)',
-                    fontSize: 'calc(var(--u16)*1.05)',
-                    gap: 'calc(var(--u16)*0.8)',
-                  }}
-                  className="rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
+                  className="h-11 sm:h-13 lg:h-[calc(var(--u16)*4.4)] px-6 sm:px-7 lg:px-[calc(var(--u16)*2.3)] text-xs sm:text-sm lg:text-[calc(var(--u16)*1.05)] rounded-full bg-[#14161c] hover:bg-[#2b2f3a] disabled:opacity-50 text-white font-['DM_Sans',sans-serif] font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow-[0_0.6rem_1.5rem_rgba(0,0,0,0.18)] shrink-0"
                 >
                   <span>{loading ? 'Memeriksa...' : 'Periksa'}</span>
                   <svg 
-                    style={{ width: 'calc(var(--u16)*1.3)', height: 'calc(var(--u16)*1.3)' }}
+                    className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-[calc(var(--u16)*1.3)] lg:h-[calc(var(--u16)*1.3)]"
                     viewBox="0 0 24 24" 
                     fill="none" 
                     stroke="currentColor" 
@@ -523,16 +473,8 @@ export const HomePage: React.FC = () => {
             )}
 
             {/* Checkbox Persetujuan (Sesuai Logika Asli Scamora) */}
-            <div 
-              style={{
-                marginTop: 'calc(var(--u16)*1.1)',
-              }}
-              className="text-left font-['DM_Sans',sans-serif] text-[#14161c]"
-            >
-              <label 
-                style={{ gap: 'calc(var(--u16)*0.8)', fontSize: 'calc(var(--u16)*1)' }}
-                className="flex items-center cursor-pointer"
-              >
+            <div className="text-left font-['DM_Sans',sans-serif] text-[#14161c] mt-3 sm:mt-3.5">
+              <label className="flex items-start gap-2 text-xs sm:text-sm cursor-pointer select-none">
                 <input
                   type="checkbox"
                   id="c1"
@@ -544,10 +486,9 @@ export const HomePage: React.FC = () => {
                       setPrivacyAgreedChat(e.target.checked);
                     }
                   }}
-                  style={{ width: 'calc(var(--u16)*1.4)', height: 'calc(var(--u16)*1.4)' }}
-                  className="scamora-check"
+                  className="scamora-check mt-0.5 shrink-0"
                 />
-                <span>Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
+                <span className="text-[#5B5850]">Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
               </label>
             </div>
           </div>
@@ -555,8 +496,7 @@ export const HomePage: React.FC = () => {
           {/* Error Message */}
           {errorMessage && (
             <div 
-              style={{ width: 'min(calc(var(--u16)*66), 94vw)', marginTop: 'calc(var(--u16)*1)' }}
-              className="p-3.5 rounded-2xl bg-[#fee4e2] text-[#b42318] text-xs sm:text-sm font-semibold border border-[#fda29b] text-left mx-auto"
+              className="w-full max-w-[680px] lg:w-[calc(var(--u16)*66)] p-3.5 rounded-2xl bg-[#fee4e2] text-[#b42318] text-xs sm:text-sm font-semibold border border-[#fda29b] text-left mx-auto mt-3"
             >
               {errorMessage}
             </div>
@@ -568,8 +508,7 @@ export const HomePage: React.FC = () => {
             const progress = Math.min(96, Math.round(((loadingStep + 1) / currentSteps.length) * 100));
             return (
               <div 
-                style={{ width: 'min(calc(var(--u16)*66), 94vw)', marginTop: 'calc(var(--u16)*1.5)' }}
-                className="p-4 sm:p-5 rounded-2xl bg-white border border-[#d9d6d0] shadow-[0_12px_32px_-12px_rgba(20,22,28,0.15)] mx-auto overflow-hidden text-left animate-in fade-in duration-200"
+                className="w-full max-w-[680px] lg:w-[calc(var(--u16)*66)] p-4 sm:p-5 rounded-2xl bg-white border border-[#d9d6d0] shadow-[0_12px_32px_-12px_rgba(20,22,28,0.15)] mx-auto overflow-hidden text-left animate-in fade-in duration-200 mt-4"
               >
                 {/* Header: Scanner Badge + Step Count + Percentage */}
                 <div className="flex items-center justify-between gap-3 mb-2.5">
@@ -611,8 +550,8 @@ export const HomePage: React.FC = () => {
 
         </div>
 
-        {/* Scroll Down Indicator */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-[#8c887b] opacity-80 hover:opacity-100 transition-opacity pointer-events-none">
+        {/* Scroll Down Indicator (Desktop & Tablet only) */}
+        <div className="hidden sm:flex absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex-col items-center gap-1 text-[#8c887b] opacity-80 hover:opacity-100 transition-opacity pointer-events-none">
           <span className="text-[11px] font-medium tracking-wide">Scroll</span>
           <ChevronDown className="w-4 h-4 animate-bounce text-[#4b5160]" />
         </div>
@@ -1255,11 +1194,11 @@ export const HomePage: React.FC = () => {
 
       {/* 7. SECTION: KENAPA SCAMORA */}
       <section className="sec-enhanced sec-kenapa max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="kenapa">
-        <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
+        <h2 className="sec-heading-bar font-display text-2xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
           Kenapa Scamora
         </h2>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-5 sm:mt-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 mt-5 sm:mt-7">
           <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-4 sm:p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
             <span className="font-display font-bold text-2xl sm:text-[38px] leading-none text-[#C9D6EA] block mb-2 sm:mb-3.5 transition-colors group-hover:text-[#0f9b8a]">01</span>
             <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Ada bukti, bukan sekadar label</h3>
@@ -1341,18 +1280,18 @@ export const HomePage: React.FC = () => {
 
       {/* 8. SECTION: SUDAH DICEK ORANG LAIN */}
       <section className="sec-enhanced sec-direktori max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="direktori">
-        <div className="flex justify-between items-end gap-4 flex-wrap mb-5 sm:mb-7">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-5 sm:mb-7">
           <div>
-            <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
+            <h2 className="sec-heading-bar font-display text-2xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
               Sudah dicek orang lain
             </h2>
-            <p className="text-base sm:text-lg text-[#5B5850] mt-3">
+            <p className="text-sm sm:text-lg text-[#5B5850] mt-2 sm:mt-3">
               Domain yang pernah diperiksa pengguna lain di Direktori Komunitas.
             </p>
           </div>
           <Link
             to="/laporan"
-            className="h-10 sm:h-11 px-4 sm:px-5 rounded-full border border-[#CFCABD] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14130F] font-semibold text-xs sm:text-sm inline-flex items-center transition-all cursor-pointer shadow-xs"
+            className="self-start sm:self-auto h-9 sm:h-11 px-4 sm:px-5 rounded-full border border-[#CFCABD] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14130F] font-semibold text-xs sm:text-sm inline-flex items-center transition-all cursor-pointer shadow-xs shrink-0"
           >
             Lihat Direktori
           </Link>
@@ -1414,15 +1353,15 @@ export const HomePage: React.FC = () => {
       {/* 9. SECTION: PANDUAN DARURAT */}
       <section className="sec-enhanced sec-darurat max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="darurat">
         <div>
-          <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
+          <h2 className="sec-heading-bar font-display text-2xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
             Sudah terlanjur klik atau transfer?
           </h2>
-          <p className="text-base sm:text-lg text-[#5B5850] mt-3">
+          <p className="text-sm sm:text-lg text-[#5B5850] mt-2 sm:mt-3">
             Tenang, lakukan berurutan. Pemblokiran lewat bank paling efektif dalam 24 jam pertama.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-5 sm:mt-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5 mt-5 sm:mt-7">
           <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-4 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
             <div>
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display mb-2.5 sm:mb-3">1</div>
