@@ -300,7 +300,7 @@ export const HomePage: React.FC = () => {
         ref={inputSectionRef} 
         className="relative w-full min-h-[100dvh] h-auto lg:h-[100dvh] flex flex-col justify-center items-center pt-20 sm:pt-24 lg:pt-20 pb-16 sm:pb-12 px-4 sm:px-6 lg:px-8 text-center"
       >
-        {/* Background Vector Shapes: Desktop Only to prevent severe distortion on mobile */}
+        {/* Background Vector Shapes: Desktop (16:9 Full Page) */}
         <div className="hidden lg:block absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
           <svg viewBox="0 0 1847 852" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
             <path d="M0 0H440L380 120Q365 134 345 134H0Z" fill="#2b2f3a" />
@@ -310,6 +310,27 @@ export const HomePage: React.FC = () => {
             <path d="M1847 430V852H1450Q1460 780 1560 730Q1700 690 1750 560Q1790 470 1847 430Z" fill="#2b2f3a" />
             <path d="M1640 740Q1760 700 1847 720V852H1590Z" fill="#8e98ab" opacity="0.7" />
             <path d="M630 0Q560 120 330 175Q60 230 50 520Q47 620 0 700" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.6" />
+          </svg>
+        </div>
+
+        {/* Background Vector Shapes: Mobile & Tablet (Dedicated Portrait 9:16 Framing) */}
+        <div className="lg:hidden absolute inset-0 pointer-events-none select-none overflow-hidden" aria-hidden="true">
+          <svg viewBox="0 0 400 850" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full">
+            {/* Top Right Angular Polygon Accent (Framing top-right safely away from logo) */}
+            <path d="M240 0 H400 V80 L310 80 Q280 80 265 60 L240 0 Z" fill="#2b2f3a" opacity="0.95" />
+            <path d="M180 0 H240 L265 60 L245 80 H200 Z" fill="#e9e8e6" />
+            <path d="M340 80 L400 80 V145 L320 145 Z" fill="#8e98ab" opacity="0.5" />
+
+            {/* Bottom Right Layered Sculpted Curves */}
+            <path d="M400 520 V850 H190 Q260 760 330 670 Q370 600 400 520 Z" fill="#e9e8e6" opacity="0.75" />
+            <path d="M400 610 V850 H270 Q325 785 360 720 Q385 660 400 610 Z" fill="#2b2f3a" />
+            <path d="M400 735 V850 H330 Q370 805 400 735 Z" fill="#8e98ab" opacity="0.6" />
+
+            {/* Bottom Left Angular Accent */}
+            <path d="M0 720 L100 850 H0 Z" fill="#8e98ab" opacity="0.3" />
+
+            {/* Dynamic Ambient Contour Stroke */}
+            <path d="M260 0 Q190 160 100 290 Q30 390 45 560 Q65 680 0 760" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.45" />
           </svg>
         </div>
 
@@ -458,9 +479,9 @@ export const HomePage: React.FC = () => {
               </div>
             )}
 
-            {/* Checkbox Persetujuan (Center aligned & sleek) */}
-            <div className="mt-3 sm:mt-3.5 flex justify-center text-center">
-              <label className="inline-flex items-center gap-2 text-xs sm:text-sm text-[#5B5850] cursor-pointer select-none">
+            {/* Checkbox Persetujuan: 1 Baris Rapi & Ukuran Proporsional */}
+            <div className="mt-3 sm:mt-3.5 flex justify-center items-center w-full px-1">
+              <label className="inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-[#5B5850] cursor-pointer select-none whitespace-nowrap">
                 <input
                   type="checkbox"
                   id="c1"
@@ -474,7 +495,9 @@ export const HomePage: React.FC = () => {
                   }}
                   className="scamora-check shrink-0"
                 />
-                <span>Saya menyetujui ketentuan dan kebijakan privasi Scamora.</span>
+                <span className="whitespace-nowrap tracking-tight">
+                  Saya menyetujui ketentuan dan kebijakan privasi Scamora.
+                </span>
               </label>
             </div>
           </div>

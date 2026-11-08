@@ -216,10 +216,10 @@ textarea:focus-visible {
 /* Scamora Custom Form Controls */
 .scamora-check {
   appearance: none;
-  width: 1.4rem;
-  height: 1.4rem;
-  border: 0.13rem solid #4b5160;
-  border-radius: 0.3rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 0.1rem solid #5b5850;
+  border-radius: 0.25rem;
   background: #ffffff;
   margin: 0;
   flex: none;
@@ -234,11 +234,11 @@ textarea:focus-visible {
 }
 .scamora-check:checked::after {
   content: "";
-  width: 0.35rem;
-  height: 0.7rem;
+  width: 0.25rem;
+  height: 0.52rem;
   border: solid #ffffff;
-  border-width: 0 0.15rem 0.15rem 0;
-  transform: rotate(45deg) translate(-0.05rem, -0.05rem);
+  border-width: 0 0.12rem 0.12rem 0;
+  transform: rotate(45deg) translate(-0.03rem, -0.04rem);
 }
 
 /* 16:9 Proportional Unit Scaling (Sesuai Referensi min(1vw, 1.7778vh)) */
