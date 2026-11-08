@@ -603,10 +603,39 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 sm:gap-6 lg:gap-8 items-stretch">
           
-          {/* Kolom Kiri: 4 Step Buttons with Vertical Connecting Line */}
-          <div className="cara-steps-line flex flex-col gap-2 justify-center">
+          {/* Mobile Only: Horizontal Segmented Stepper Bar */}
+          <div className="lg:hidden flex items-center gap-1.5 p-1.5 bg-[#EEEAE0]/75 backdrop-blur-sm rounded-2xl border border-[#D5D0C3]/70 overflow-x-auto scrollbar-none">
+            {CARA_STEPS.map((step, idx) => {
+              const active = currentCaraStep === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setCaraInteracted(true);
+                    setCurrentCaraStep(idx);
+                  }}
+                  className={`flex-1 min-w-[70px] py-2 px-1.5 rounded-xl font-display font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                    active
+                      ? 'bg-[#1d3f6e] text-white shadow-xs'
+                      : 'bg-transparent text-[#5B5850] hover:text-[#14161C]'
+                  }`}
+                >
+                  <span className={`w-4.5 h-4.5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                    active ? 'bg-white/20 text-white' : 'bg-black/5 text-[#5B5850]'
+                  }`}>
+                    {step.num}
+                  </span>
+                  <span className="truncate">{step.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Kolom Kiri Desktop: 4 Step Buttons with Vertical Connecting Line */}
+          <div className="hidden lg:flex cara-steps-line flex-col gap-2 justify-center">
             {CARA_STEPS.map((step, idx) => {
               const active = currentCaraStep === idx;
               return (
@@ -646,12 +675,20 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Kolom Kanan: Pratinjau Interaktif */}
-          <div className="preview-card-glow bg-white border border-[#E3E0DA] rounded-[26px] p-6 sm:p-7 flex flex-col justify-between shadow-[0_30px_60px_-30px_rgba(29,63,110,0.4)] min-h-[460px]">
-            <div className="flex items-center justify-between border-b border-[#EEEAE0] pb-4 mb-5">
-              <div className="flex items-center gap-2.5 text-sm font-bold font-display text-[#14161C]">
+          <div className="preview-card-glow bg-white border border-[#E3E0DA] rounded-[26px] p-5 sm:p-6 lg:p-7 flex flex-col justify-between shadow-[0_30px_60px_-30px_rgba(29,63,110,0.4)] min-h-[420px] sm:min-h-[460px]">
+            <div className="flex items-center justify-between border-b border-[#EEEAE0] pb-3 sm:pb-4 mb-3 sm:mb-5">
+              <div className="flex items-center gap-2.5 text-xs sm:text-sm font-bold font-display text-[#14161C]">
                 <span className="w-2 h-2 rounded-full bg-[#14161C]"></span>
                 <span>{CARA_STEPS[currentCaraStep].label}</span>
               </div>
+              <span className="text-[11px] font-mono text-[#8C887B]">
+                Langkah {currentCaraStep + 1}/4
+              </span>
+            </div>
+
+            {/* Mobile Active Step Description Banner */}
+            <div className="lg:hidden -mt-1 mb-3 bg-[#FAF8F5] border border-[#EAE6DC] rounded-xl p-2.5 text-xs text-[#4B5160] leading-snug">
+              <b>{CARA_STEPS[currentCaraStep].title}:</b> {CARA_STEPS[currentCaraStep].desc}
             </div>
 
             {/* Slide 0: Tempel */}
@@ -880,6 +917,50 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* Step Walkthrough Controller (Prev / Next & Dots) */}
+            <div className="flex items-center justify-between pt-3.5 mt-4 border-t border-[#EEEAE0] text-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  setCaraInteracted(true);
+                  setCurrentCaraStep((prev) => (prev > 0 ? prev - 1 : 3));
+                }}
+                className="h-8 px-3 rounded-full border border-[#D5D0C3] text-[#5B5850] hover:text-[#14161C] hover:bg-[#FAF8F5] font-semibold transition cursor-pointer flex items-center gap-1 text-xs"
+              >
+                <span>&larr;</span>
+                <span>Sebelumnya</span>
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                {CARA_STEPS.map((_, dotIdx) => (
+                  <button
+                    key={dotIdx}
+                    type="button"
+                    onClick={() => {
+                      setCaraInteracted(true);
+                      setCurrentCaraStep(dotIdx);
+                    }}
+                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                      currentCaraStep === dotIdx ? 'w-5 bg-[#1d3f6e]' : 'w-1.5 bg-[#D5D0C3]'
+                    }`}
+                    aria-label={`Langkah ${dotIdx + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCaraInteracted(true);
+                  setCurrentCaraStep((prev) => (prev < 3 ? prev + 1 : 0));
+                }}
+                className="h-8 px-3.5 rounded-full bg-[#1d3f6e] hover:bg-[#2b2f3a] text-white font-semibold shadow-xs transition cursor-pointer flex items-center gap-1 text-xs"
+              >
+                <span>{currentCaraStep === 3 ? 'Ulangi' : 'Berikutnya'}</span>
+                <span>&rarr;</span>
+              </button>
+            </div>
           </div>
 
         </div>
