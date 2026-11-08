@@ -11,7 +11,7 @@ import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
-import { AdminLoginPage } from './features/admin-auth/AdminLoginPage';
+import { AdminApp } from './admin/AdminApp';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,7 +30,7 @@ function ScrollToTop() {
   return null;
 }
 
-function AnimatedRoutes() {
+function PublicRoutes() {
   const location = useLocation();
 
   return (
@@ -55,8 +55,6 @@ function AnimatedRoutes() {
             <Route path="/kuis" element={<QuizPage />} />
             <Route path="/pengetahuan" element={<KnowledgePage />} />
             <Route path="/komunitas" element={<KomunitasPage />} />
-            <Route path="/admin" element={<AdminLoginPage />} />
-            <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>
@@ -65,43 +63,49 @@ function AnimatedRoutes() {
   );
 }
 
-function MainContent() {
+function PublicLayout() {
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === '/';
 
   return (
-    <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-20 lg:pt-24'}`}>
-      <AnimatedRoutes />
-    </main>
+    <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c]">
+      {/* Navigation Bar */}
+      <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />
+
+      {/* Main Content */}
+      <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-20 lg:pt-24'}`}>
+        <PublicRoutes />
+      </main>
+
+      {/* Universal Footer */}
+      <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
+
+      {/* Global Privacy Modal */}
+      <PrivacyModal
+        isOpen={privacyModalOpen}
+        onClose={() => setPrivacyModalOpen(false)}
+      />
+    </div>
   );
 }
 
-export function App() {
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+function AppContent() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
+  if (isAdminRoute) {
+    return <AdminApp />;
+  }
+
+  return <PublicLayout />;
+}
+
+export function App() {
   return (
     <HashRouter>
-      <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c]">
-        
-        {/* Navigation Bar */}
-        <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />
-
-        {/* Dynamic Route Content with Smooth Page Transitions */}
-        <MainContent />
-
-        {/* Universal Footer */}
-        <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
-
-        {/* Global Privacy Modal */}
-        <PrivacyModal
-          isOpen={privacyModalOpen}
-          onClose={() => setPrivacyModalOpen(false)}
-        />
-
-        {/* High-Craft Stacked Toast Notifications */}
-        <Toaster position="top-right" richColors closeButton />
-
-      </div>
+      <AppContent />
+      <Toaster position="top-right" richColors closeButton />
     </HashRouter>
   );
 }
