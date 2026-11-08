@@ -265,17 +265,31 @@ export const KomunitasPage: React.FC = () => {
   const [focusedThread, setFocusedThread] = useState<ChatMessage | null>(null);
   const [threadReplyInput, setThreadReplyInput] = useState<string>('');
 
-  // Lock background scroll when thread modal is open
+  // Lock background scroll when thread modal is open (Mobile touch proof)
   useEffect(() => {
     if (focusedThread) {
+      const scrollY = window.scrollY;
+      const originalPosition = document.body.style.position;
+      const originalTop = document.body.style.top;
+      const originalWidth = document.body.style.width;
       const originalOverflow = document.body.style.overflow;
+
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
+
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') setFocusedThread(null);
       };
       window.addEventListener('keydown', handleKeyDown);
+
       return () => {
+        document.body.style.position = originalPosition;
+        document.body.style.top = originalTop;
+        document.body.style.width = originalWidth;
         document.body.style.overflow = originalOverflow;
+        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -1057,14 +1071,18 @@ export const KomunitasPage: React.FC = () => {
       {/* THREAD DETAIL MODAL (Inspired by community_post_detail.html) */}
       {focusedThread && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain touch-none animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setFocusedThread(null);
           }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
           <div 
-            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-2xl w-full p-5 sm:p-6 relative my-auto max-h-[90vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left"
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-2xl w-full p-5 sm:p-6 relative my-auto max-h-[90vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left overscroll-contain touch-auto"
             onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
           >

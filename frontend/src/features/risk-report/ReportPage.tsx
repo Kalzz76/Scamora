@@ -34,17 +34,31 @@ export const ReportPage: React.FC = () => {
     setCurrentPage(1);
   }, [searchQuery, activeFilter]);
 
-  // Lock background body scroll and listen for Escape key when modal is open
+  // Lock background body scroll and listen for Escape key when modal is open (Mobile touch proof)
   useEffect(() => {
     if (isModalOpen) {
+      const scrollY = window.scrollY;
+      const originalPosition = document.body.style.position;
+      const originalTop = document.body.style.top;
+      const originalWidth = document.body.style.width;
       const originalOverflow = document.body.style.overflow;
+
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
+
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') setIsModalOpen(false);
       };
       window.addEventListener('keydown', handleKeyDown);
+
       return () => {
+        document.body.style.position = originalPosition;
+        document.body.style.top = originalTop;
+        document.body.style.width = originalWidth;
         document.body.style.overflow = originalOverflow;
+        window.scrollTo(0, scrollY);
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -457,14 +471,18 @@ export const ReportPage: React.FC = () => {
       {/* MODAL LAPORAN KOMUNITAS (Mounted via portal to escape stacking context) */}
       {isModalOpen && typeof document !== 'undefined' && createPortal(
         <div 
-          className="fixed inset-0 z-[999] bg-[#14161C]/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-0 z-[999] bg-[#14161C]/65 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 overflow-y-auto overscroll-contain touch-none animate-in fade-in duration-150"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsModalOpen(false);
           }}
+          onTouchMove={(e) => {
+            if (e.target === e.currentTarget) e.preventDefault();
+          }}
         >
           <div 
-            className="bg-white rounded-[24px] border border-[#E3E0DA] shadow-[0_24px_48px_-12px_rgba(20,22,28,0.35)] max-w-md w-full p-6 sm:p-7 relative my-auto max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
+            className="bg-white rounded-[24px] border border-[#E3E0DA] shadow-[0_24px_48px_-12px_rgba(20,22,28,0.35)] max-w-md w-full p-6 sm:p-7 relative my-auto max-h-[90vh] overflow-y-auto overscroll-contain touch-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="modal-report-title"
