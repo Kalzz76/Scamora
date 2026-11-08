@@ -4,6 +4,7 @@ import {
   INDICATOR_TITLES,
   URL_INDICATOR_WEIGHTS,
 } from '../../config/scoring';
+import { formatNetworkError } from './networkErrors';
 import type { CheckStatusValue, Indicator } from '../../types/analysis';
 
 function buildDomainIndicator(type: string, evidence: string, description: string): Indicator {
@@ -72,7 +73,7 @@ export async function inspectDomainAndDns(hostname: string): Promise<{
     dnsNote = `DNS A record ditemukan: ${resolvedIps.slice(0, 3).join(', ')}`;
   } catch (err: any) {
     dnsStatus = 'partial';
-    dnsNote = `Resolusi DNS tidak dapat menemukan record A: ${err.message || 'Domain tidak merespon'}`;
+    dnsNote = `Resolusi DNS tidak dapat menemukan record A: ${formatNetworkError(err)}`;
   }
 
   // 2. Domain Age Check via RDAP REST API
@@ -137,7 +138,7 @@ export async function inspectDomainAndDns(hostname: string): Promise<{
     }
   } catch (err: any) {
     ageStatus = 'partial';
-    ageNote = `Pemeriksaan RDAP waktu habis (timeout) atau registrar tidak mendukung: ${err.message}`;
+    ageNote = `Pemeriksaan RDAP waktu habis (timeout) atau registrar tidak mendukung: ${formatNetworkError(err)}`;
   }
 
   return {

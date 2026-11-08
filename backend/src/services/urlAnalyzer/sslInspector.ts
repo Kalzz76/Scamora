@@ -1,4 +1,5 @@
 import tls from 'node:tls';
+import { formatNetworkError } from './networkErrors';
 import {
   getSeverityFromWeight,
   INDICATOR_TITLES,
@@ -141,10 +142,11 @@ export async function inspectSslCertificate(hostname: string): Promise<{
         isResolved = true;
         socket.destroy();
 
+        const friendlyMsg = formatNetworkError(err);
         indicators.push(
           buildSslIndicator(
             'ssl_error',
-            err.message,
+            friendlyMsg,
             'Koneksi SSL/TLS ke server gagal atau ditolak.'
           )
         );
@@ -152,17 +154,18 @@ export async function inspectSslCertificate(hostname: string): Promise<{
         resolve({
           indicators,
           status: 'partial',
-          note: `Koneksi SSL port 443 gagal: ${err.message}`,
+          note: `Koneksi SSL port 443 gagal: ${friendlyMsg}`,
         });
       });
     } catch (err: any) {
       if (!isResolved) {
         clearTimeout(timeoutTimer);
         isResolved = true;
+        const friendlyMsg = formatNetworkError(err);
         resolve({
           indicators: [],
           status: 'partial',
-          note: `Inspeksi SSL tidak dapat diselesaikan: ${err.message}`,
+          note: `Inspeksi SSL tidak dapat diselesaikan: ${friendlyMsg}`,
         });
       }
     }

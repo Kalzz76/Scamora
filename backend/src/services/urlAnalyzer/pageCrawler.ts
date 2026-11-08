@@ -1,3 +1,4 @@
+import { formatNetworkError } from './networkErrors';
 export interface ExtractedForm {
   action: string;
   method: string;
@@ -430,7 +431,7 @@ export async function crawlWebPage(targetUrl: string): Promise<CrawlResult> {
       apkLinks: [],
       note: isAbort
         ? 'Perayapan konten melebihi batas waktu (timeout 6 detik). Server target lambat atau menolak bot.'
-        : `Gagal merayapi konten web: ${err.message || 'Koneksi ditolak atau domain tidak dapat dihubungi.'}`,
+        : `Gagal merayapi konten web: ${formatNetworkError(err)}`,
     };
   }
 }
