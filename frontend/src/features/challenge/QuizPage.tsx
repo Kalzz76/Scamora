@@ -72,10 +72,10 @@ export const QuizPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, delay: 0.05 }}
-              className="lg:col-span-4 flex justify-center lg:justify-end"
+              className="lg:col-span-4 flex justify-center lg:justify-end w-full"
             >
-              <div className="w-full max-w-[200px] sm:max-w-[280px] p-2 rounded-2xl bg-slate-800/50 border border-slate-700/60 backdrop-blur-sm shadow-xl">
-                <QuizArenaIllustration />
+              <div className="w-full max-w-[240px] sm:max-w-[280px] p-3 sm:p-4 rounded-2xl bg-slate-800/50 border border-slate-700/60 backdrop-blur-sm shadow-xl flex items-center justify-center mx-auto lg:mx-0 overflow-hidden">
+                <QuizArenaIllustration className="w-full h-auto max-h-[170px] sm:max-h-[200px] object-contain mx-auto" />
               </div>
             </motion.div>
 

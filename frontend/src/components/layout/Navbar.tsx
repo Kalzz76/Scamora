@@ -125,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
               }}
               className={`flex items-center justify-center transition-all duration-300 shadow-xs group-hover:scale-105 p-1 bg-white ${
                 isTransparent 
-                  ? '' 
+                  ? 'border border-slate-200/80 lg:border-transparent' 
                   : 'border border-slate-200'
               }`}
             >
@@ -142,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                 }}
                 className={`font-bold tracking-tight leading-none transition-colors duration-300 font-['DM_Sans',sans-serif] ${
                   isTransparent 
-                    ? 'text-white' 
+                    ? 'text-[#14161c] lg:text-white' 
                     : 'text-[#14161c]'
                 }`}
               >

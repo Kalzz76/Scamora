@@ -276,7 +276,7 @@ export const GuidebookIllustration: React.FC<{ className?: string }> = ({ classN
 // ============================================================================
 // 5. TANTANGAN AI: 2D DETECTIVE CHALLENGE & TROPHY ARENA ILLUSTRATION
 // ============================================================================
-export const QuizArenaIllustration: React.FC<{ className?: string }> = ({ className = 'w-64 h-48' }) => {
+export const QuizArenaIllustration: React.FC<{ className?: string }> = ({ className = 'w-full h-auto max-w-[280px] mx-auto' }) => {
   return (
     <svg 
       viewBox="0 0 360 260" 
