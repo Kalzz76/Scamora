@@ -880,10 +880,10 @@ export const HomePage: React.FC = () => {
                     <div style={{ flex: 30 }} className="bg-[#F79009]" />
                     <div style={{ flex: 40 }} className="bg-[#D92D20]" />
                   </div>
-                  <div className="flex justify-between text-xs text-[#5B5850]">
-                    <span>Rendah (0–29)</span>
-                    <span>Perlu ditinjau (30–59)</span>
-                    <span className="font-bold text-[#B42318]">Tinggi (60–100) ▲</span>
+                  <div className="flex justify-between items-center text-[10px] sm:text-xs text-[#5B5850] whitespace-nowrap">
+                    <span className="shrink-0">Rendah (0–29)</span>
+                    <span className="text-center">Perlu ditinjau (30–59)</span>
+                    <span className="font-bold text-[#B42318] text-right shrink-0">Tinggi (60–100) ▲</span>
                   </div>
                 </div>
 

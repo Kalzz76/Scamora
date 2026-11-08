@@ -322,27 +322,42 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
       
       {/* 1. HERO SCORE CARD */}
       <div className="bg-white border border-[#E4E0D6] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="text-[11px] font-bold font-mono uppercase tracking-wider text-[#706C62]">
-              SKOR RISIKO TERDETEKSI
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          {/* Top Row on Mobile: Score (left) and Status Badge (right) */}
+          <div className="flex items-start justify-between gap-3 w-full sm:w-auto">
+            <div>
+              <div className="text-[11px] font-bold font-mono uppercase tracking-wider text-[#706C62]">
+                SKOR RISIKO TERDETEKSI
+              </div>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="font-display text-5xl sm:text-6xl font-bold text-[#14130F] tracking-tight leading-none">
+                  {effectiveScore}
+                </span>
+                <span className="text-base font-bold text-[#8C887B]">/ 100</span>
+              </div>
             </div>
-            <div className="flex items-baseline gap-1.5 mt-1">
-              <span className="font-display text-5xl sm:text-6xl font-bold text-[#14130F] tracking-tight leading-none">
-                {effectiveScore}
+
+            {/* Status Badge on Mobile (pinned to top-right) */}
+            <div className="sm:hidden shrink-0 pt-0.5">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${currentLevel.badgeClass}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${currentLevel.dotColor}`}></span>
+                {currentLevel.title}
               </span>
-              <span className="text-base font-bold text-[#8C887B]">/ 100</span>
             </div>
           </div>
 
-          {/* Badges & Actions */}
-          <div className="flex flex-col items-end gap-2">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${currentLevel.badgeClass}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${currentLevel.dotColor}`}></span>
-              {currentLevel.title}
-            </span>
+          {/* Right Container on Desktop / Actions row on Mobile */}
+          <div className="flex flex-col sm:items-end gap-2.5">
+            {/* Status Badge on Desktop */}
+            <div className="hidden sm:block">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${currentLevel.badgeClass}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${currentLevel.dotColor}`}></span>
+                {currentLevel.title}
+              </span>
+            </div>
 
-            <div className="flex items-center gap-2 flex-wrap justify-end pt-1">
+            {/* Action buttons */}
+            <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end pt-1 sm:pt-0">
               {/* WhatsApp Share Button */}
               <button
                 type="button"
@@ -410,10 +425,10 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
               title={`Skor: ${effectiveScore}`}
             />
           </div>
-          <div className="flex justify-between text-[11px] font-mono text-[#706C62]">
-            <span>Rendah (0–25)</span>
-            <span>Perlu Ditinjau (26–69)</span>
-            <span className="text-right">Tinggi (70–100)</span>
+          <div className="flex justify-between items-center text-[9px] sm:text-[11px] font-mono text-[#706C62] whitespace-nowrap tracking-tight sm:tracking-normal">
+            <span className="shrink-0">Rendah (0–25)</span>
+            <span className="text-center">Perlu Ditinjau (26–69)</span>
+            <span className="text-right shrink-0">Tinggi (70–100)</span>
           </div>
         </div>
       </div>
