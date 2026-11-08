@@ -113,7 +113,7 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
                 key={cat.id}
                 onClick={() => onSelectCategory(cat.id)}
                 type="button"
-                className={`text-left p-4 rounded-2xl border transition-all space-y-2 group ${
+                className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all space-y-2 group ${
                   isSelected
                     ? 'border-[#143826] bg-[#143826]/5 shadow-sm ring-1 ring-[#143826]'
                     : 'border-surface-container bg-surface-container-lowest hover:border-surface-container-high'
@@ -166,7 +166,7 @@ export const ChallengeDashboard: React.FC<ChallengeDashboardProps> = ({
               onClick={() => onSelectDifficulty(item.level)}
               disabled={isLoading}
               type="button"
-              className={`p-4 rounded-2xl border text-left transition-all group space-y-2 shadow-xs disabled:opacity-60 ${
+              className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all group space-y-2 shadow-xs disabled:opacity-60 ${
                 selectedDifficulty === item.level
                   ? 'border-[#143826] bg-[#143826]/5 ring-1 ring-[#143826]'
                   : 'border-surface-container bg-surface-container-lowest hover:border-[#143826] hover:bg-[#143826]/5'

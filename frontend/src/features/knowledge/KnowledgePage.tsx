@@ -1100,8 +1100,8 @@ export const KnowledgePage: React.FC = () => {
                   </motion.div>
                 </AnimatePresence>
 
-                {/* Quick Navigation to Other Hotspots */}
-                <div className="p-4 rounded-2xl bg-[#F2F7F4] border border-[#CFDDD5] space-y-2 text-left">
+                {/* Quick Navigation to Other Hotspots (Desktop only; on mobile, quick dock is above) */}
+                <div className="hidden lg:block p-4 rounded-2xl bg-[#F2F7F4] border border-[#CFDDD5] space-y-2 text-left">
                   <span className="text-xs font-bold text-[#143826] block">
                     Semua Titik Bahaya pada Kasus Ini:
                   </span>
@@ -1348,7 +1348,7 @@ export const KnowledgePage: React.FC = () => {
         )}
 
         {/* 3. CTA BRIDGE TO QUIZ / SCANNER (Tanpa Sparkles atau Bintang) */}
-        <div className="p-8 sm:p-12 rounded-[36px] bg-[#143826] text-white grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-left shadow-2xl relative overflow-hidden">
+        <div className="p-5 sm:p-10 lg:p-12 rounded-[32px] sm:rounded-[36px] bg-[#143826] text-white grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center text-left shadow-2xl relative overflow-hidden">
           
           <div className="lg:col-span-8 space-y-3 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white font-mono text-xs font-bold uppercase tracking-wider">

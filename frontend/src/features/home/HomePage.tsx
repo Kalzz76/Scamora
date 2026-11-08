@@ -559,7 +559,7 @@ export const HomePage: React.FC = () => {
       )}
 
       {/* 3. SECTION: APA ITU SCAMORA */}
-      <section className="sec-enhanced sec-tentang max-w-[1120px] mx-auto px-4 sm:px-8 pt-16 pb-16 w-full" id="tentang">
+      <section className="sec-enhanced sec-tentang max-w-[1120px] mx-auto px-4 sm:px-8 pt-8 sm:pt-12 lg:pt-16 pb-8 sm:pb-12 lg:pb-16 w-full" id="tentang">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div>
             <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
@@ -588,7 +588,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 4. SECTION: CARA KERJA INTERAKTIF */}
-      <section className="sec-enhanced sec-cara max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="cara">
+      <section className="sec-enhanced sec-cara max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="cara">
         <div className="flex justify-between items-end gap-4 flex-wrap mb-8">
           <div>
             <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
@@ -886,7 +886,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 5. SECTION: CIRI-CIRI TAUTAN PHISHING */}
-      <section className="sec-enhanced sec-phishing max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="ciri">
+      <section className="sec-enhanced sec-phishing max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="ciri">
         <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
           Ciri-ciri tautan phishing
         </h2>
@@ -894,10 +894,10 @@ export const HomePage: React.FC = () => {
           Enam tanda yang paling sering muncul saat penipuan mencoba mengelabui korban.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-7">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory gap-4 sm:gap-5 mt-5 sm:mt-7 pb-3 sm:pb-0 scrollbar-none">
           
           {/* Card 1 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -919,7 +919,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 2 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -944,7 +944,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 3 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -964,7 +964,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 4 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -984,7 +984,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 5 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -1004,7 +1004,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Card 6 */}
-          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
+          <div className="w-[82vw] max-w-[310px] shrink-0 sm:w-auto snap-start bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#1d3f6e] p-5 sm:p-6 flex flex-col justify-between shadow-[0_14px_34px_-18px_rgba(29,63,110,0.25)] hover:border-[#14161C] transition-all">
             <div>
               <div className="mb-3">
                 <span className="bg-[#E8EEF7] text-[#1d3f6e] px-2.5 py-1 rounded-full text-xs font-bold font-mono tracking-wider">
@@ -1055,7 +1055,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 6. SECTION: MODUS YANG SERING DITEMUI */}
-      <section className="sec-enhanced sec-modus max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="modus">
+      <section className="sec-enhanced sec-modus max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="modus">
         <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
           Modus yang sering ditemui
         </h2>
@@ -1063,7 +1063,7 @@ export const HomePage: React.FC = () => {
           Klik salah satu untuk mencoba contohnya.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-7">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory gap-4 sm:gap-5 mt-5 sm:mt-7 pb-3 sm:pb-0 scrollbar-none">
           {MODUS_EXAMPLES.map((modus, idx) => {
             const numStr = `0${idx + 1}`;
             return (
@@ -1074,7 +1074,7 @@ export const HomePage: React.FC = () => {
                 style={{
                   borderTopColor: modus.color,
                 }}
-                className="group relative overflow-hidden rounded-[22px] border border-[#DFE6F0] border-t-[5px] bg-gradient-to-b from-white to-[#F3F6FB] p-6 text-left flex flex-col justify-between shadow-[0_16px_36px_-20px_rgba(29,63,110,0.28)] hover:-translate-y-1 transition-all cursor-pointer"
+                className="w-[78vw] max-w-[290px] shrink-0 sm:w-auto snap-start group relative overflow-hidden rounded-[22px] border border-[#DFE6F0] border-t-[5px] bg-gradient-to-b from-white to-[#F3F6FB] p-5 sm:p-6 text-left flex flex-col justify-between shadow-[0_16px_36px_-20px_rgba(29,63,110,0.28)] hover:-translate-y-1 transition-all cursor-pointer"
               >
                 {/* Giant watermark number */}
                 <span
@@ -1099,40 +1099,40 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 7. SECTION: KENAPA SCAMORA */}
-      <section className="sec-enhanced sec-kenapa max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="kenapa">
+      <section className="sec-enhanced sec-kenapa max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="kenapa">
         <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
           Kenapa Scamora
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-7">
-          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
-            <span className="font-display font-bold text-[38px] leading-none text-[#C9D6EA] block mb-3.5 transition-colors group-hover:text-[#0f9b8a]">01</span>
-            <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Ada bukti, bukan sekadar label</h3>
-            <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-5 sm:mt-7">
+          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-4 sm:p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
+            <span className="font-display font-bold text-2xl sm:text-[38px] leading-none text-[#C9D6EA] block mb-2 sm:mb-3.5 transition-colors group-hover:text-[#0f9b8a]">01</span>
+            <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Ada bukti, bukan sekadar label</h3>
+            <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
               Bukan cuma "bahaya" atau "aman". Tiap tanda bahaya dijabarkan dengan alasan dan bobot risikonya.
             </p>
           </div>
 
-          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
-            <span className="font-display font-bold text-[38px] leading-none text-[#C9D6EA] block mb-3.5 transition-colors group-hover:text-[#0f9b8a]">02</span>
-            <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Tautan dan chat satu tempat</h3>
-            <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-4 sm:p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
+            <span className="font-display font-bold text-2xl sm:text-[38px] leading-none text-[#C9D6EA] block mb-2 sm:mb-3.5 transition-colors group-hover:text-[#0f9b8a]">02</span>
+            <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Tautan dan chat satu tempat</h3>
+            <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
               Periksa tautan web mencurigakan dan percakapan WhatsApp tanpa perlu berpindah aplikasi.
             </p>
           </div>
 
-          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
-            <span className="font-display font-bold text-[38px] leading-none text-[#C9D6EA] block mb-3.5 transition-colors group-hover:text-[#0f9b8a]">03</span>
-            <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Privasi lebih dulu</h3>
-            <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-4 sm:p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
+            <span className="font-display font-bold text-2xl sm:text-[38px] leading-none text-[#C9D6EA] block mb-2 sm:mb-3.5 transition-colors group-hover:text-[#0f9b8a]">03</span>
+            <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Privasi lebih dulu</h3>
+            <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
               Nomor HP, rekening, dan data pribadi di chat disamarkan otomatis, serta input tidak disimpan.
             </p>
           </div>
 
-          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
-            <span className="font-display font-bold text-[38px] leading-none text-[#C9D6EA] block mb-3.5 transition-colors group-hover:text-[#0f9b8a]">04</span>
-            <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Ada langkah setelahnya</h3>
-            <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+          <div className="group bg-white rounded-[20px] border border-[#E4E0D6] p-4 sm:p-6 shadow-xs hover:border-[#14161C] hover:-translate-y-0.5 transition-all">
+            <span className="font-display font-bold text-2xl sm:text-[38px] leading-none text-[#C9D6EA] block mb-2 sm:mb-3.5 transition-colors group-hover:text-[#0f9b8a]">04</span>
+            <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Ada langkah setelahnya</h3>
+            <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
               Saran tindakan nyata dan kanal pelaporan resmi ke bank atau otoritas, bukan berhenti di skor.
             </p>
           </div>
@@ -1185,8 +1185,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 8. SECTION: SUDAH DICEK ORANG LAIN */}
-      <section className="sec-enhanced sec-direktori max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="direktori">
-        <div className="flex justify-between items-end gap-4 flex-wrap mb-7">
+      <section className="sec-enhanced sec-direktori max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="direktori">
+        <div className="flex justify-between items-end gap-4 flex-wrap mb-5 sm:mb-7">
           <div>
             <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
               Sudah dicek orang lain
@@ -1197,13 +1197,13 @@ export const HomePage: React.FC = () => {
           </div>
           <Link
             to="/laporan"
-            className="h-11 px-5 rounded-full border border-[#CFCABD] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14130F] font-semibold text-sm inline-flex items-center transition-all cursor-pointer shadow-xs"
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-full border border-[#CFCABD] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14130F] font-semibold text-xs sm:text-sm inline-flex items-center transition-all cursor-pointer shadow-xs"
           >
             Lihat Direktori
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory gap-4 sm:gap-5 pb-3 sm:pb-0 scrollbar-none">
           {recentDomains.map((item, idx) => {
             const isHigh = item.category === 'high' || item.riskPercent >= 60;
             const isReview = item.category === 'review' || (item.riskPercent >= 30 && item.riskPercent < 60);
@@ -1229,7 +1229,7 @@ export const HomePage: React.FC = () => {
                   inputSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                   handleScanUrl(item.domain, true);
                 }}
-                className="bg-white rounded-[22px] border border-[#E3E0DA] hover:border-[#14161C] p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between text-left transition-all hover:-translate-y-1 cursor-pointer group"
+                className="w-[80vw] max-w-[300px] shrink-0 sm:w-auto snap-start bg-white rounded-[22px] border border-[#E3E0DA] hover:border-[#14161C] p-5 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between text-left transition-all hover:-translate-y-1 cursor-pointer group"
               >
                 <div>
                   <div className="font-mono text-sm sm:text-base font-semibold text-[#14161C] break-all group-hover:text-[#1d3f6e] transition-colors">
@@ -1254,7 +1254,7 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 9. SECTION: PANDUAN DARURAT */}
-      <section className="sec-enhanced sec-darurat max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="darurat">
+      <section className="sec-enhanced sec-darurat max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="darurat">
         <div>
           <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight">
             Sudah terlanjur klik atau transfer?
@@ -1264,48 +1264,48 @@ export const HomePage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mt-7">
-          <div className="bg-white rounded-[22px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mt-5 sm:mt-7">
+          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-4 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-sm font-display mb-3">1</div>
-              <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Berhenti</h3>
-              <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display mb-2.5 sm:mb-3">1</div>
+              <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Berhenti</h3>
+              <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
                 Tutup halaman dan jangan kirim uang, kode OTP, PIN, atau data apa pun lagi kepada pelaku.
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-[22px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
+          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-4 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-sm font-display mb-3">2</div>
-              <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Amankan akun</h3>
-              <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display mb-2.5 sm:mb-3">2</div>
+              <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Amankan akun</h3>
+              <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
                 Segera ganti kata sandi email, m-banking, dan aktifkan verifikasi dua langkah (2FA).
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-[22px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
+          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-4 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-sm font-display mb-3">3</div>
-              <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Hubungi bank</h3>
-              <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display mb-2.5 sm:mb-3">3</div>
+              <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Hubungi bank</h3>
+              <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed">
                 Minta pemblokiran rekening atau penahanan transaksi, lalu simpan nomor laporan buktinya.
               </p>
             </div>
           </div>
 
-          <div className="bg-white rounded-[22px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
+          <div className="bg-white rounded-[20px] border border-[#E3E0DA] border-t-4 border-t-[#D92D20] p-4 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-sm font-display mb-3">4</div>
-              <h3 className="font-display font-bold text-base sm:text-lg text-[#14161C] mb-2 leading-snug">Laporkan</h3>
-              <p className="text-xs sm:text-sm text-[#5B5850] leading-relaxed mb-3">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#2B2F3A] text-white flex items-center justify-center font-bold text-xs sm:text-sm font-display mb-2.5 sm:mb-3">4</div>
+              <h3 className="font-display font-bold text-sm sm:text-lg text-[#14161C] mb-1.5 sm:mb-2 leading-snug">Laporkan</h3>
+              <p className="text-[11px] sm:text-sm text-[#5B5850] leading-relaxed mb-2.5">
                 Laporkan insiden ke kanal resmi:
               </p>
-              <div className="flex flex-wrap gap-1.5 font-mono text-xs">
-                <span className="px-2.5 py-1 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">cekrekening.id</span>
-                <span className="px-2.5 py-1 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">aduannomor.id</span>
-                <span className="px-2.5 py-1 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">lapor.go.id</span>
+              <div className="flex flex-wrap gap-1 font-mono text-[10px] sm:text-xs">
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">cekrekening.id</span>
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">aduannomor.id</span>
+                <span className="px-2 py-0.5 rounded bg-[#FAF8F5] border border-[#E4E0D6] text-[#14161C]">lapor.go.id</span>
               </div>
             </div>
           </div>
@@ -1313,8 +1313,8 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* 10. SECTION: FAQ PERTANYAAN UMUM */}
-      <section className="sec-enhanced sec-faq max-w-[1120px] mx-auto px-4 sm:px-8 py-16 w-full" id="faq">
-        <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight mb-7">
+      <section className="sec-enhanced sec-faq max-w-[1120px] mx-auto px-4 sm:px-8 py-8 sm:py-12 lg:py-16 w-full" id="faq">
+        <h2 className="sec-heading-bar font-display text-3xl sm:text-4xl lg:text-[42px] font-bold text-[#14161C] tracking-tight leading-tight mb-5 sm:mb-7">
           Pertanyaan umum
         </h2>
 

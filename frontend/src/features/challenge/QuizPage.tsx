@@ -14,7 +14,7 @@ export const QuizPage: React.FC = () => {
   return (
     <div className="flex flex-col w-full pb-16">
       {/* HEADER BANNER - Cyber Slate Theme with 2D Illustration */}
-      <section className="w-full bg-[#0F172A] text-white py-10 sm:py-12 border-b border-slate-800 relative overflow-hidden">
+      <section className="w-full bg-[#0F172A] text-white py-6 sm:py-10 lg:py-12 border-b border-slate-800 relative overflow-hidden">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             

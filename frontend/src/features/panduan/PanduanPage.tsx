@@ -484,7 +484,7 @@ export const PanduanPage: React.FC = () => {
               </div>
 
               {/* Connected Track Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 relative">
+              <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory gap-3 sm:gap-3.5 pb-2 sm:pb-0 scrollbar-none relative">
                 {currentTutorial.steps.map((step, idx) => {
                   const isActive = idx === activeStepIndex;
                   const isPassed = idx < activeStepIndex;
@@ -494,7 +494,7 @@ export const PanduanPage: React.FC = () => {
                       key={step.stepNumber}
                       onClick={() => setActiveStepIndex(idx)}
                       type="button"
-                      className={`p-4 sm:p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between space-y-3 cursor-pointer ${
+                      className={`shrink-0 w-[230px] sm:w-auto snap-start p-3.5 sm:p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between space-y-2.5 sm:space-y-3 cursor-pointer ${
                         isActive
                           ? 'bg-white border-[#0D9488] shadow-md ring-2 ring-[#0D9488]/20 -translate-y-1'
                           : isPassed
