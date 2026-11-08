@@ -79,6 +79,25 @@ const CARA_STEPS = [
   },
 ];
 
+// Dynamic Loading Steps for URL vs Chat
+const URL_SCAN_STEPS = [
+  'Memvalidasi format URL & struktur domain...',
+  'Mengecek reputasi domain di database ancaman global...',
+  'Merayapi konten web & mendeteksi form login palsu...',
+  'Memindai indikasi berkas APK berbahaya & skrip...',
+  'Menganalisis pola phishing dengan Scamora AI...',
+  'Menyusun skor risiko & rangkuman bukti temuan...',
+];
+
+const CHAT_SCAN_STEPS = [
+  'Menyaring & menyamarkan data sensitif (nomor HP, rekening, nama)...',
+  'Mendeteksi tautan tersembunyi & file mencurigakan (.apk)...',
+  'Menganalisis manipulasi psikologis & urgensi...',
+  'Mencocokkan modus ke database penipuan terbaru...',
+  'Mengevaluasi tingkat ancaman dengan Scamora AI...',
+  'Menyusun rekomendasi & panduan langkah aman...',
+];
+
 export const HomePage: React.FC = () => {
   const location = useLocation();
 
@@ -93,11 +112,26 @@ export const HomePage: React.FC = () => {
 
   // Status & Error
   const [loading, setLoading] = useState(false);
+  const [scanType, setScanType] = useState<'url' | 'chat'>('url');
+  const [loadingStep, setLoadingStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   // Dynamic Community Directory Domains (4 kotak)
   const [recentDomains, setRecentDomains] = useState<ScannedDomain[]>([]);
+
+  // Rotate cool loading steps smoothly
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStep(0);
+      return;
+    }
+    const currentSteps = scanType === 'url' ? URL_SCAN_STEPS : CHAT_SCAN_STEPS;
+    const interval = setInterval(() => {
+      setLoadingStep((prev) => (prev < currentSteps.length - 1 ? prev + 1 : prev));
+    }, 1100);
+    return () => clearInterval(interval);
+  }, [loading, scanType]);
 
   useEffect(() => {
     const updateDomains = () => {
@@ -157,6 +191,8 @@ export const HomePage: React.FC = () => {
       return;
     }
 
+    setScanType('url');
+    setLoadingStep(0);
     setLoading(true);
     setAnalysisResult(null);
 
@@ -203,6 +239,8 @@ export const HomePage: React.FC = () => {
       return;
     }
 
+    setScanType('chat');
+    setLoadingStep(0);
     setLoading(true);
     setAnalysisResult(null);
 
@@ -524,16 +562,52 @@ export const HomePage: React.FC = () => {
             </div>
           )}
 
-          {/* Loading Indicator */}
-          {loading && (
-            <div 
-              style={{ width: 'min(calc(var(--u16)*66), 94vw)', marginTop: 'calc(var(--u16)*1.5)' }}
-              className="p-4 rounded-2xl bg-white border border-[#d9d6d0] flex items-center justify-center gap-3 text-[#4b5160] shadow-xs mx-auto"
-            >
-              <div className="w-5 h-5 border-2 border-[#14161c] border-t-transparent rounded-full animate-spin" />
-              <span className="text-xs sm:text-sm font-semibold">Sedang memeriksa berlapis...</span>
-            </div>
-          )}
+          {/* Cool Dynamic Loading Indicator */}
+          {loading && (() => {
+            const currentSteps = scanType === 'url' ? URL_SCAN_STEPS : CHAT_SCAN_STEPS;
+            const progress = Math.min(96, Math.round(((loadingStep + 1) / currentSteps.length) * 100));
+            return (
+              <div 
+                style={{ width: 'min(calc(var(--u16)*66), 94vw)', marginTop: 'calc(var(--u16)*1.5)' }}
+                className="p-4 sm:p-5 rounded-2xl bg-white border border-[#d9d6d0] shadow-[0_12px_32px_-12px_rgba(20,22,28,0.15)] mx-auto overflow-hidden text-left animate-in fade-in duration-200"
+              >
+                {/* Header: Scanner Badge + Step Count + Percentage */}
+                <div className="flex items-center justify-between gap-3 mb-2.5">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-4 h-4 border-2 border-[#14161c] border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#14161c] text-white">
+                      {scanType === 'url' ? 'URL Scanner' : 'Chat Analyzer'}
+                    </span>
+                    <span className="text-xs text-[#8c887b] font-mono truncate">
+                      Tahap {loadingStep + 1} dari {currentSteps.length}
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-bold text-[#14161c] shrink-0">
+                    {progress}%
+                  </span>
+                </div>
+
+                {/* Animated Dynamic Status Text */}
+                <div className="min-h-[26px] flex items-center">
+                  <div 
+                    key={loadingStep} 
+                    className="text-xs sm:text-sm font-semibold text-[#14161c] flex items-center gap-2 truncate animate-in fade-in duration-200"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-[#0f9b8a] shrink-0 animate-pulse" />
+                    <span className="truncate">{currentSteps[loadingStep]}</span>
+                  </div>
+                </div>
+
+                {/* Mini Progress Bar */}
+                <div className="w-full h-1.5 bg-[#eeeae0] rounded-full overflow-hidden mt-3">
+                  <div 
+                    className="h-full bg-[#14161c] rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
 
