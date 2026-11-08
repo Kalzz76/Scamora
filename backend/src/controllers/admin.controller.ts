@@ -557,7 +557,18 @@ export async function handleCreatePreset(req: Request, res: Response): Promise<v
   if (isDbConnected()) {
     query(
       `INSERT INTO demo_presets (id, type, title, subtitle, content, expected_category, expected_score, scam_type, tags, is_active, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         type = EXCLUDED.type,
+         title = EXCLUDED.title,
+         subtitle = EXCLUDED.subtitle,
+         content = EXCLUDED.content,
+         expected_category = EXCLUDED.expected_category,
+         expected_score = EXCLUDED.expected_score,
+         scam_type = EXCLUDED.scam_type,
+         tags = EXCLUDED.tags,
+         is_active = EXCLUDED.is_active,
+         updated_at = NOW()`,
       [newPreset.id, newPreset.type, newPreset.title, newPreset.subtitle, newPreset.content, newPreset.expectedCategory, newPreset.expectedScore, newPreset.scamType, newPreset.tags, newPreset.isActive]
     ).catch(() => {});
   }
