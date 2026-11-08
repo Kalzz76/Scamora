@@ -200,6 +200,13 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
   // 26 - 69: Perlu Ditinjau
   // 70 - 100: Tinggi (atau jika memiliki tanda kritis)
   const effectiveScore = hasCritical ? Math.max(70, riskScore) : riskScore;
+  const escalationScore = effectiveScore > rawScore ? effectiveScore - rawScore : 0;
+
+  const criticalIndicators = (result.indicators || []).filter(
+    (i) => (i.weight && i.weight >= 40) || i.type === 'otp_request' || i.type === 'credential_harvesting_form' || i.type === 'malicious_apk_download' || i.type === 'safe_browsing_match'
+  );
+  const criticalTitles = criticalIndicators.map((i) => i.title).join(', ') || 'Permintaan Kode OTP / Data Kredensial';
+
   const riskLevel: 'high' | 'review' | 'low' = 
     effectiveScore >= 70 ? 'high' : effectiveScore >= 26 ? 'review' : 'low';
 
@@ -252,11 +259,16 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
             <div className="text-[11px] font-bold font-mono uppercase tracking-wider text-[#706C62]">
               SKOR RISIKO TERDETEKSI
             </div>
-            <div className="flex items-baseline gap-1.5 mt-1">
+            <div className="flex items-baseline gap-2 mt-1 flex-wrap">
               <span className="font-display text-5xl sm:text-6xl font-bold text-[#14130F] tracking-tight leading-none">
                 {effectiveScore}
               </span>
               <span className="text-base font-bold text-[#8C887B]">/ 100</span>
+              {escalationScore > 0 && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B]">
+                  Bobot Dasar {rawScore} + Penyesuaian Kritis +{escalationScore}
+                </span>
+              )}
             </div>
           </div>
 
@@ -311,13 +323,38 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
             (riskLevel === 'high'
               ? 'Ditemukan beberapa indikasi ancaman kuat pada masukan yang diperiksa. Jangan pernah memberikan data atau melanjutkan transaksi.'
               : 'Terdapat beberapa indikasi yang perlu diverifikasi lebih lanjut sebelum mengambil tindakan.')}
-          {hasCritical && riskScore < 70 && (
+        </p>
+
+        {/* Transparansi Eskalasi Skor Kritis */}
+        {escalationScore > 0 ? (
+          <div className="p-3.5 sm:p-4 rounded-xl bg-[#FEF3F2] border border-[#FECDCA] text-xs text-[#7A271A] flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-[#D92D20] shrink-0 mt-0.5" />
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <span className="font-bold text-[#B42318] text-sm">
+                  Transparansi Penyesuaian Skor (+{escalationScore} Poin Proteksi):
+                </span>
+                <span className="font-mono text-[11px] font-bold bg-[#FEE4E2] text-[#B42318] px-2 py-0.5 rounded border border-[#FDA29B]">
+                  Aturan Keamanan Kritis
+                </span>
+              </div>
+              <p className="leading-relaxed">
+                Total akumulasi tanda bahaya dasar adalah <strong>{rawScore} poin</strong> (yang normalnya berstatus Sedang). Namun karena terdeteksi tanda bahaya fatal (<strong>{criticalTitles}</strong>), sistem Scamora menerapkan <strong>Eskalasi Proteksi Kritis (+{escalationScore} poin)</strong> agar status akhir langsung berada pada batas minimum <strong>70 / 100 (Risiko Tinggi)</strong> demi mencegah korban penipuan.
+              </p>
+              <div className="text-[11px] font-mono text-[#912018] pt-1.5 border-t border-[#FECDCA]/70 flex items-center justify-between flex-wrap gap-2">
+                <span>Rincian: Skor Dasar ({rawScore}) + Eskalasi Otomatis (+{escalationScore})</span>
+                <span className="font-bold">= Skor Akhir ({effectiveScore}/100)</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          hasCritical && riskScore < 70 && (
             <span className="inline-flex items-center gap-1.5 mt-1 font-semibold text-[#B42318] text-xs">
               <AlertTriangle className="w-3.5 h-3.5 text-[#B42318] shrink-0" />
               Terdapat tanda bahaya kritis, sehingga hasil otomatis dikategorikan ke Risiko Tinggi.
             </span>
-          )}
-        </p>
+          )
+        )}
 
         {/* Focus Item Detail */}
         {result.analysis_type === 'url' ? (
@@ -357,7 +394,13 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
           </h3>
           <div className="text-right font-mono">
             <span className="text-xs font-bold text-[#706C62]">
-              Jumlah Bobot = {rawScore}
+              {escalationScore > 0 ? (
+                <>
+                  Bobot Dasar = {rawScore} <span className="text-[#B42318] font-semibold">(+{escalationScore} Eskalasi Kritis = {effectiveScore})</span>
+                </>
+              ) : (
+                <>Jumlah Bobot = {rawScore}</>
+              )}
             </span>
             {isCapped && (
               <span className="text-[11px] text-[#8C887B] ml-1.5 font-normal">
@@ -404,6 +447,31 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
                 </div>
               </div>
             ))}
+
+            {/* Transparent Critical Adjustment Item */}
+            {escalationScore > 0 && (
+              <div className="py-3.5 flex items-start justify-between gap-3 bg-[#FEF3F2]/60 -mx-3 px-3 rounded-xl border border-[#FECDCA] mt-2">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded-full bg-[#D92D20] text-white">
+                      ESKALASI KEAMANAN
+                    </span>
+                    <span className="text-sm font-bold text-[#B42318]">
+                      Penyesuaian Proteksi Ancaman Kritis (Failsafe)
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7A271A] leading-relaxed">
+                    Sistem mendeteksi indikator bahaya fatal ({criticalTitles}). Karena permintaan data ini berisiko tinggi menguras rekening/akun, skor otomatis dinaikkan ke batas aman kategori Risiko Tinggi (70).
+                  </p>
+                  <div className="text-[11px] font-mono text-[#912018] font-medium">
+                    Alasan: Pengaman otomatis untuk ancaman fatal OTP / Kredensial
+                  </div>
+                </div>
+                <div className="text-sm font-mono font-bold text-[#B42318] shrink-0 bg-white px-2.5 py-1 rounded-md border border-[#FDA29B] shadow-2xs">
+                  +{escalationScore}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

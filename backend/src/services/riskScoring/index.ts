@@ -97,7 +97,11 @@ export function generateExplanation(
   let base = '';
   if (riskLevel === 'high') {
     if (categoryReason === 'critical_indicator') {
-      base = 'Ditemukan indikator ancaman kritis pada masukan yang diperiksa. Kategori risiko ditetapkan tinggi demi perlindungan keamanan Anda.';
+      if (rawScore < 70) {
+        base = `Ditemukan indikator ancaman kritis pada masukan yang diperiksa. Akumulasi bobot awal (${rawScore}) disesuaikan dengan eskalasi proteksi kritis (+${70 - rawScore}) ke kategori Risiko Tinggi (70) demi mencegah penipuan.`;
+      } else {
+        base = 'Ditemukan indikator ancaman kritis pada masukan yang diperiksa. Kategori risiko ditetapkan tinggi demi perlindungan keamanan Anda.';
+      }
     } else {
       base = 'Ditemukan indikasi risiko tinggi berdasarkan akumulasi tanda bahaya kuat pada data yang diperiksa.';
     }
