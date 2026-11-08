@@ -372,7 +372,7 @@ export class MockAnalyzer {
         type: 'otp_request',
         title: 'Permintaan Kode Rahasia / OTP (Kritis)',
         severity: 'high',
-        weight: 30,
+        weight: 70,
         source: 'ai',
         evidence: match ? match[0].trim() : 'permintaan OTP / PIN',
         description: 'Tuntutan penyerahan kode otentikasi rahasia untuk membajak rekening atau akun.',

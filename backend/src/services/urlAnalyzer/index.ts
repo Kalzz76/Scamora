@@ -77,6 +77,21 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
         };
   rawIndicators.push(...sslData.indicators);
 
+  // Jika koneksi SSL gagal atau tidak ada sertifikat HTTPS yang sah, beri poin risiko
+  if (sslData.status === 'failed' || (sslData.status === 'partial' && sslData.indicators.length === 0 && !cleanUrl.startsWith('https://'))) {
+    if (!rawIndicators.some((i) => i.type === 'no_https' || i.type === 'ssl_error')) {
+      rawIndicators.push({
+        type: 'no_https',
+        title: INDICATOR_TITLES.no_https || 'Koneksi Tidak Terenkripsi (HTTP)',
+        severity: 'medium',
+        weight: URL_INDICATOR_WEIGHTS.no_https || 20,
+        source: 'ssl_certificate',
+        evidence: cleanUrl,
+        description: `Situs web tidak menggunakan enkripsi SSL/HTTPS yang sah (${sslData.note}). Data transmisi tidak aman.`,
+      });
+    }
+  }
+
   // Lapisan 4: Safe Web Page Crawling & DOM Heuristics
   const crawl: CrawlResult =
     crawlRes.status === 'fulfilled'
@@ -99,6 +114,17 @@ export async function analyzeUrl(rawUrl: string): Promise<AnalysisResult> {
     for (const ind of crawlerIndicators) {
       rawIndicators.push(ind);
     }
+  } else if (crawl.status === 'failed') {
+    // Jika server web mati/menolak koneksi, beri poin risiko
+    rawIndicators.push({
+      type: 'unreachable_server',
+      title: INDICATOR_TITLES.unreachable_server || 'Website Tidak Dapat Dihubungi / Server Menolak Akses',
+      severity: 'medium',
+      weight: URL_INDICATOR_WEIGHTS.unreachable_server || 25,
+      source: 'live_content',
+      evidence: parsed.hostname,
+      description: `Server web menolak koneksi atau tidak merespons: ${crawl.note || 'Koneksi gagal'}. Website penipuan kerap kali dinonaktifkan atau memblokir akses investigasi.`,
+    });
   }
 
   // Lapisan 5: AI Semantic Reasoning on Crawled Content

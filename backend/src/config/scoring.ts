@@ -44,6 +44,7 @@ export const URL_INDICATOR_WEIGHTS: Record<string, number> = {
   excessive_subdomains: 10,
   risky_tld: 10,
   no_https: 10,
+  unreachable_server: 25,
   sensitive_keywords: 10,
   unusual_port: 10,
   missing_security_headers: 10,
@@ -52,7 +53,7 @@ export const URL_INDICATOR_WEIGHTS: Record<string, number> = {
 };
 
 export const CHAT_INDICATOR_WEIGHTS: Record<string, number> = {
-  otp_request: 30,
+  otp_request: 70,
   advance_fee: 30,
   threat_link: 30,
   impersonation_data: 30,
@@ -95,6 +96,7 @@ export const INDICATOR_TITLES: Record<string, string> = {
   ssl_expiring_soon: 'Sertifikat SSL/TLS Mendekati Batas Masa Aktif (< 7 Hari)',
   ssl_very_new: 'Sertifikat SSL/TLS Baru Saja Diterbitkan (< 7 Hari)',
   ssl_error: 'Kegagalan Verifikasi Koneksi Terenkripsi SSL/TLS',
+  unreachable_server: 'Website Tidak Dapat Dihubungi / Server Menolak Akses',
   excessive_redirects: 'Pengalihan Tautan Berantai Berlebihan (> 3 Kali)',
   missing_security_headers: 'Header Proteksi Keamanan Web (X-Frame/Options) Tidak Lengkap',
   password_form_insecure: 'Formulir Login / Password Menggunakan Metode Tidak Aman',
@@ -142,6 +144,7 @@ export const INDICATOR_DEFAULT_SOURCES: Record<string, IndicatorSource> = {
   ssl_expiring_soon: 'reputation',
   ssl_very_new: 'reputation',
   ssl_error: 'reputation',
+  unreachable_server: 'live_content',
   excessive_redirects: 'reputation',
   missing_security_headers: 'reputation',
   password_form_insecure: 'reputation',
