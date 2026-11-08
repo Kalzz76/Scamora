@@ -320,33 +320,44 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
 
       const row = statsRes?.rows[0];
       const dbTotal = parseInt(row?.total || '0', 10);
-      if (dbTotal > 0) {
-        const high = parseInt(row.high_count, 10);
-        const review = parseInt(row.review_count, 10);
-        const low = parseInt(row.low_count, 10);
-        res.status(200).json({
-          success: true,
-          data: {
-            totalScans: dbTotal,
-            urlScans: parseInt(row.url_count, 10),
-            chatScans: parseInt(row.chat_count, 10),
-            highRiskCount: high,
-            reviewCount: review,
-            lowRiskCount: low,
-            threatRatioPercent: parseFloat(((high / dbTotal) * 100).toFixed(1)),
-            avgLatencyMs: runtimeAiConfig.latencyMs || 680,
-            crawlerSuccessRate: 98.4,
-            activeThreatCount: high,
-            apiCallsToday: dbTotal,
-            riskDistribution: {
-              high: parseFloat(((high / dbTotal) * 100).toFixed(1)),
-              review: parseFloat(((review / dbTotal) * 100).toFixed(1)),
-              low: parseFloat(((low / dbTotal) * 100).toFixed(1)),
-            },
+      const high = parseInt(row?.high_count || '0', 10);
+      const review = parseInt(row?.review_count || '0', 10);
+      const low = parseInt(row?.low_count || '0', 10);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          totalScans: dbTotal,
+          urlScans: parseInt(row?.url_count || '0', 10),
+          chatScans: parseInt(row?.chat_count || '0', 10),
+          highRiskCount: high,
+          reviewCount: review,
+          lowRiskCount: low,
+          threatRatioPercent: dbTotal > 0 ? parseFloat(((high / dbTotal) * 100).toFixed(1)) : 0,
+          avgLatencyMs: runtimeAiConfig.latencyMs || 0,
+          crawlerSuccessRate: 100,
+          activeThreatCount: high,
+          apiCallsToday: dbTotal,
+          riskDistribution: {
+            high: dbTotal > 0 ? parseFloat(((high / dbTotal) * 100).toFixed(1)) : 0,
+            review: dbTotal > 0 ? parseFloat(((review / dbTotal) * 100).toFixed(1)) : 0,
+            low: dbTotal > 0 ? parseFloat(((low / dbTotal) * 100).toFixed(1)) : 0,
           },
-        });
-        return;
-      }
+          scamTypeBreakdown: {
+            phishing: 0,
+            job_scam: 0,
+            apk_malware: 0,
+            banking_fraud: 0,
+            investment_scam: 0,
+            impersonation: 0,
+          },
+          hourlyScans24h: Array.from({ length: 24 }, (_, i) => ({
+            hour: `${String(i).padStart(2, '0')}:00`,
+            scans: 0,
+          })),
+        },
+      });
+      return;
     } catch (err) {
       console.warn('[DB] Gagal menghitung stats dari DB, fallback default:', err);
     }
@@ -513,7 +524,7 @@ export async function handleGetPresets(_req: Request, res: Response): Promise<vo
   if (isDbConnected()) {
     try {
       const resDb = await query('SELECT * FROM demo_presets ORDER BY created_at DESC');
-      if (resDb && resDb.rows.length > 0) {
+      if (resDb) {
         const mapped = resDb.rows.map((r: any) => ({
           id: r.id,
           type: r.type,
@@ -631,7 +642,7 @@ export async function handleGetArticles(_req: Request, res: Response): Promise<v
   if (isDbConnected()) {
     try {
       const dbRes = await query('SELECT * FROM knowledge_articles ORDER BY created_at DESC');
-      if (dbRes && dbRes.rows.length > 0) {
+      if (dbRes) {
         const mapped = dbRes.rows.map((r: any) => ({
           id: r.id,
           categoryCode: r.category_code,
@@ -745,7 +756,7 @@ export async function handleGetQuestions(_req: Request, res: Response): Promise<
   if (isDbConnected()) {
     try {
       const dbRes = await query('SELECT * FROM challenge_questions ORDER BY order_index ASC');
-      if (dbRes && dbRes.rows.length > 0) {
+      if (dbRes) {
         const mapped = dbRes.rows.map((r: any) => ({
           id: r.id,
           categoryCode: r.category_code,
@@ -826,7 +837,7 @@ export async function handleGetCommunityPosts(_req: Request, res: Response): Pro
   if (isDbConnected()) {
     try {
       const dbRes = await query('SELECT * FROM community_posts ORDER BY created_at DESC');
-      if (dbRes && dbRes.rows.length > 0) {
+      if (dbRes) {
         const mapped = dbRes.rows.map((r: any) => ({
           id: r.id,
           authorPseudonym: r.author_name || 'Warga Waspada',
@@ -919,7 +930,7 @@ export async function handleGetAuditLogs(_req: Request, res: Response): Promise<
   if (isDbConnected()) {
     try {
       const dbRes = await query('SELECT * FROM admin_audit_logs ORDER BY created_at DESC LIMIT 100');
-      if (dbRes && dbRes.rows.length > 0) {
+      if (dbRes) {
         const mapped = dbRes.rows.map((r: any) => ({
           id: r.id,
           actor: r.actor,
