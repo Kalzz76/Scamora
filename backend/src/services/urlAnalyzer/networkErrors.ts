@@ -18,3 +18,4 @@ export function formatNetworkError(err: any): string {
   }
   return msg;
 }
+
