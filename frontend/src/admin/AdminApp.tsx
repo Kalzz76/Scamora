@@ -1,5 +1,5 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AdminSidebar } from './components/layout/AdminSidebar';
 import { AdminHeader } from './components/layout/AdminHeader';
@@ -70,7 +70,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const isAuth = adminAuth.isAuthenticated();
   const location = useLocation();
 
@@ -78,7 +78,7 @@ const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 const AdminLayout: React.FC = () => {
@@ -117,16 +117,7 @@ const AdminLayout: React.FC = () => {
 
         {/* Main Content Area */}
         <main className="flex-1 min-w-0 overflow-y-auto pb-12 bg-transparent">
-          <Routes>
-            <Route path="/" element={<DashboardOverview />} />
-            <Route path="engine" element={<AiEngineConfigPage />} />
-            <Route path="knowledge" element={<KnowledgeBasePage />} />
-            <Route path="quiz" element={<QuizManagerPage />} />
-            <Route path="moderation" element={<ModerationQueuePage />} />
-            <Route path="audit-logs" element={<AuditLogsPage />} />
-            {/* Fallback inside admin */}
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Routes>
+          <Outlet />
         </main>
       </div>
 
@@ -141,14 +132,17 @@ export const AdminApp: React.FC = () => {
       <ThemeProvider>
         <Routes>
           <Route path="login" element={<LoginPage />} />
-          <Route
-            path="*"
-            element={
-              <ProtectedRoute>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="engine" element={<AiEngineConfigPage />} />
+              <Route path="knowledge" element={<KnowledgeBasePage />} />
+              <Route path="quiz" element={<QuizManagerPage />} />
+              <Route path="moderation" element={<ModerationQueuePage />} />
+              <Route path="audit-logs" element={<AuditLogsPage />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </ThemeProvider>
     </ErrorBoundary>

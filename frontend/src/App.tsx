@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Toaster } from 'sonner';
@@ -30,82 +30,81 @@ function ScrollToTop() {
   return null;
 }
 
-function PublicRoutes() {
+function PublicPageWrapper({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
   return (
-    <>
-      <ScrollToTop />
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={location.pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-          className="flex-1 flex flex-col w-full"
-        >
-          <Routes location={location}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/url" element={<Navigate to="/" replace />} />
-            <Route path="/chat" element={<Navigate to="/" replace />} />
-            <Route path="/laporan" element={<ReportPage />} />
-            <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
-            <Route path="/panduan" element={<PanduanPage />} />
-            <Route path="/kuis" element={<QuizPage />} />
-            <Route path="/pengetahuan" element={<KnowledgePage />} />
-            <Route path="/komunitas" element={<KomunitasPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </motion.div>
-      </AnimatePresence>
-    </>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -12 }}
+        transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+        className="flex-1 flex flex-col w-full"
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
-function PublicLayout() {
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
+function MainApp() {
   const location = useLocation();
+  const isAdmin = location.pathname.startsWith('/admin');
   const isHome = location.pathname === '/';
+  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf8f5] text-[#14161c]">
-      {/* Navigation Bar */}
-      <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />
+    <div className={`min-h-screen flex flex-col ${isAdmin ? '' : 'bg-[#faf8f5] text-[#14161c]'}`}>
+      <ScrollToTop />
 
-      {/* Main Content */}
-      <main className={`flex-1 flex flex-col ${isHome ? '' : 'pt-20 lg:pt-24'}`}>
-        <PublicRoutes />
+      {/* Navigation Bar (Only for public website) */}
+      {!isAdmin && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
+
+      {/* Main Content Area */}
+      <main className={`flex-1 flex flex-col ${isAdmin || isHome ? '' : 'pt-20 lg:pt-24'}`}>
+        <Routes>
+          {/* Public Routes with Page Transitions */}
+          <Route path="/" element={<PublicPageWrapper><HomePage /></PublicPageWrapper>} />
+          <Route path="/url" element={<Navigate to="/" replace />} />
+          <Route path="/chat" element={<Navigate to="/" replace />} />
+          <Route path="/laporan" element={<PublicPageWrapper><ReportPage /></PublicPageWrapper>} />
+          <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
+          <Route path="/panduan" element={<PublicPageWrapper><PanduanPage /></PublicPageWrapper>} />
+          <Route path="/kuis" element={<PublicPageWrapper><QuizPage /></PublicPageWrapper>} />
+          <Route path="/pengetahuan" element={<PublicPageWrapper><KnowledgePage /></PublicPageWrapper>} />
+          <Route path="/komunitas" element={<PublicPageWrapper><KomunitasPage /></PublicPageWrapper>} />
+
+          {/* Admin Nested Routes: /admin/* handled by AdminApp */}
+          <Route path="/admin/*" element={<AdminApp />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
 
-      {/* Universal Footer */}
-      <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
+      {/* Universal Footer & Privacy Modal (Only for public website) */}
+      {!isAdmin && (
+        <>
+          <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
+          <PrivacyModal
+            isOpen={privacyModalOpen}
+            onClose={() => setPrivacyModalOpen(false)}
+          />
+        </>
+      )}
 
-      {/* Global Privacy Modal */}
-      <PrivacyModal
-        isOpen={privacyModalOpen}
-        onClose={() => setPrivacyModalOpen(false)}
-      />
+      {/* High-Craft Stacked Toast Notifications */}
+      <Toaster position="top-right" richColors closeButton />
     </div>
   );
-}
-
-function AppContent() {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  if (isAdminRoute) {
-    return <AdminApp />;
-  }
-
-  return <PublicLayout />;
 }
 
 export function App() {
   return (
     <HashRouter>
-      <AppContent />
-      <Toaster position="top-right" richColors closeButton />
+      <MainApp />
     </HashRouter>
   );
 }
