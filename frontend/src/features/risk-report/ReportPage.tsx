@@ -279,31 +279,35 @@ export const ReportPage: React.FC = () => {
                 const style = categoryStyles[item.category] || categoryStyles.review;
                 return (
                   <div key={idx} className="p-4 space-y-2.5 hover:bg-[#FAF8F5] transition-colors">
-                    {/* Top Row: Domain & Category Badge */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                          }}
-                          className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline block truncate text-left cursor-pointer"
-                        >
-                          {item.domain}
-                        </button>
-                        <div className="flex items-center gap-2 text-[11px] font-mono text-[#706C62] mt-0.5">
-                          <span>Diperiksa {item.count}&times;</span>
-                          <span>&bull;</span>
-                          <span>{item.lastChecked}</span>
-                        </div>
-                      </div>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full font-bold text-[11px] shrink-0 ${style.badge}`}>
+                    {/* Top Row: Category Badge & Frequency/Time */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-bold text-[10px] shrink-0 ${style.badge}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
                         {style.text}
                       </span>
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#706C62]">
+                        <span>Diperiksa {item.count}&times;</span>
+                        <span>&bull;</span>
+                        <span>{item.lastChecked}</span>
+                      </div>
                     </div>
 
-                    {/* Middle Row: Progress Bar & Risk Percentage */}
-                    <div className="flex items-center gap-3">
+                    {/* Middle: Full-width Domain with break-all so long links never get cut off */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
+                        }}
+                        className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline block text-left cursor-pointer break-all leading-snug w-full"
+                        title={`Periksa ${item.domain}`}
+                      >
+                        {item.domain}
+                      </button>
+                    </div>
+
+                    {/* Bottom Row: Progress Bar & Risk Percentage */}
+                    <div className="flex items-center gap-3 pt-0.5">
                       <div className="flex-1 h-2 bg-[#EEEAE0] rounded-full overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
@@ -355,7 +359,7 @@ export const ReportPage: React.FC = () => {
                             onClick={() => {
                               navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
                             }}
-                            className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline cursor-pointer text-left transition-colors"
+                            className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline cursor-pointer text-left transition-colors break-all max-w-xs xl:max-w-md block"
                           >
                             {item.domain}
                           </button>
