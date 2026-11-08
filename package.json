@@ -11,3 +11,4 @@
     "dev:backend": "npm --prefix backend run dev"
   }
 }
+
