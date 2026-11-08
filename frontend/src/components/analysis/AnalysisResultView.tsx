@@ -186,14 +186,36 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
     setTimeout(() => setJsonCopied(false), 2000);
   };
 
-  const rawScore = result.raw_score ?? result.risk_score ?? 0;
+  const indicatorsSum = (result.indicators || []).reduce((acc, curr) => acc + (curr.weight || 0), 0);
+  const rawScore = result.raw_score ?? indicatorsSum;
   const isCapped = rawScore > 100;
-  const riskScore = Math.min(100, Math.max(0, result.risk_score ?? rawScore));
 
-  // The displayed score always reflects the actual calculated risk score
-  const effectiveScore = riskScore;
+  // Cek apakah ada eskalasi proteksi kritis (misal minta OTP, APK malware, Safe Browsing)
+  const isCritical = result.category_reason === 'critical_indicator' || (result.risk_level === 'high' && rawScore < 70);
+  const escalationPoints = isCritical && rawScore < 70 ? 70 - rawScore : 0;
+  const effectiveScore = rawScore + escalationPoints;
+
   const riskLevel: 'high' | 'review' | 'low' = 
     result.risk_level || (effectiveScore >= 70 ? 'high' : effectiveScore >= 26 ? 'review' : 'low');
+
+  // Indikator pemicu eskalasi proteksi
+  const triggerIndicator = (result.indicators || []).find((i) =>
+    ['otp_request', 'safe_browsing_match', 'malicious_apk_download'].includes(i.type) || (i.weight && i.weight >= 40)
+  );
+
+  // Buat daftar indikator transparan: jika ada eskalasi poin, masukkan baris proteksi langsung ke rincian tanda bahaya
+  const displayedIndicators = [...(result.indicators || [])];
+  if (isCritical && escalationPoints > 0) {
+    displayedIndicators.push({
+      type: 'critical_escalation',
+      title: 'Eskalasi Proteksi Otomatis (Ancaman Kritis)',
+      severity: 'high',
+      weight: escalationPoints,
+      source: 'system' as any,
+      evidence: `Penyesuaian keamanan otomatis: +${escalationPoints} poin proteksi`,
+      description: `Terdeteksi indikator bahaya fatal (${triggerIndicator?.title || 'Permintaan Kredensial / OTP'}). Sistem Scamora otomatis menambahkan ${escalationPoints} poin proteksi agar skor mencapai batas minimum 70 (Risiko Tinggi) demi perlindungan pengguna.`,
+    });
+  }
 
   const levelLabels = {
     high: { 
@@ -339,11 +361,17 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
       <div className="bg-white border border-[#E4E0D6] rounded-2xl p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-[#EEEAE0] pb-3 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-[#14130F] font-display">
-            Tanda Bahaya yang Ditemukan ({result.indicators?.length || 0})
+            Tanda Bahaya yang Ditemukan ({displayedIndicators.length})
           </h3>
           <div className="text-right font-mono">
             <span className="text-xs font-bold text-[#706C62]">
-              Jumlah Bobot = {rawScore}
+              {isCritical && escalationPoints > 0 ? (
+                <>
+                  Skor Dasar ({rawScore}) + Proteksi (+{escalationPoints}) = <span className="text-[#B42318]">{effectiveScore}</span>
+                </>
+              ) : (
+                `Jumlah Bobot = ${effectiveScore}`
+              )}
             </span>
             {isCapped && (
               <span className="text-[11px] text-[#8C887B] ml-1.5 font-normal">
@@ -353,43 +381,59 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
           </div>
         </div>
 
-        {(!result.indicators || result.indicators.length === 0) ? (
+        {displayedIndicators.length === 0 ? (
           <div className="p-4 rounded-xl bg-[#FAF8F5] text-center text-xs text-[#706C62]">
             Tidak ditemukan indikator ancaman umum dalam pemeriksaan saat ini.
           </div>
         ) : (
           <div className="divide-y divide-[#EEEAE0]">
-            {result.indicators.map((ind, idx) => (
-              <div key={idx} className="py-3.5 first:pt-0 last:pb-0 flex items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded-full ${
-                        ind.severity === 'high'
-                          ? 'bg-[#FEE4E2] text-[#B42318]'
-                          : ind.severity === 'medium'
-                          ? 'bg-[#FEF0C7] text-[#93370D]'
-                          : 'bg-[#EEEAE0] text-[#5B5850]'
-                      }`}
-                    >
-                      {ind.severity}
-                    </span>
-                    <span className="text-sm font-bold text-[#14130F]">{ind.title}</span>
-                  </div>
-                  <p className="text-xs text-[#5B5850] leading-relaxed">
-                    {ind.description}
-                  </p>
-                  {ind.evidence && (
-                    <div className="font-mono text-xs text-[#14130F] bg-[#F5F3EE] px-2.5 py-1 rounded-md inline-block mt-1">
-                      Bukti: "{ind.evidence}"
+            {displayedIndicators.map((ind, idx) => {
+              const isEscalationRow = ind.type === 'critical_escalation';
+              return (
+                <div
+                  key={idx}
+                  className={`py-3.5 first:pt-0 last:pb-0 flex items-start justify-between gap-3 ${
+                    isEscalationRow ? 'bg-[#FEF3F2] -mx-3 px-3 py-3 rounded-xl border border-[#FECDCA] my-1.5' : ''
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded-full ${
+                          isEscalationRow
+                            ? 'bg-[#FEE4E2] text-[#B42318] border border-[#FDA29B]'
+                            : ind.severity === 'high'
+                            ? 'bg-[#FEE4E2] text-[#B42318]'
+                            : ind.severity === 'medium'
+                            ? 'bg-[#FEF0C7] text-[#93370D]'
+                            : 'bg-[#EEEAE0] text-[#5B5850]'
+                        }`}
+                      >
+                        {isEscalationRow ? 'PROTEKSI' : ind.severity}
+                      </span>
+                      <span className="text-sm font-bold text-[#14130F]">{ind.title}</span>
                     </div>
-                  )}
+                    <p className="text-xs text-[#5B5850] leading-relaxed">
+                      {ind.description}
+                    </p>
+                    {ind.evidence && (
+                      <div
+                        className={`font-mono text-xs px-2.5 py-1 rounded-md inline-block mt-1 ${
+                          isEscalationRow
+                            ? 'bg-white text-[#B42318] border border-[#FECDCA]'
+                            : 'bg-[#F5F3EE] text-[#14130F]'
+                        }`}
+                      >
+                        {isEscalationRow ? ind.evidence : `Bukti: "${ind.evidence}"`}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-sm font-mono font-bold text-[#B42318] shrink-0">
+                    +{ind.weight}
+                  </div>
                 </div>
-                <div className="text-sm font-mono font-bold text-[#B42318] shrink-0">
-                  +{ind.weight}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
