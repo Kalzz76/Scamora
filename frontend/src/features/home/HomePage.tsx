@@ -97,11 +97,12 @@ export const HomePage: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
   // Dynamic Community Directory Domains
-  const [recentDomains, setRecentDomains] = useState<ScannedDomain[]>([]);
+  const [visibleDomainCount, setVisibleDomainCount] = useState(6);
+  const [allRecentDomains, setAllRecentDomains] = useState<ScannedDomain[]>([]);
 
   useEffect(() => {
     const updateDomains = () => {
-      setRecentDomains(directoryService.getDomains().slice(0, 3));
+      setAllRecentDomains(directoryService.getDomains());
     };
     updateDomains();
     window.addEventListener('storage', updateDomains);
@@ -170,7 +171,7 @@ export const HomePage: React.FC = () => {
 
       // Record to community directory automatically
       directoryService.recordDomain(raw, res.risk_score || res.raw_score || 0, res.risk_level || 'review');
-      setRecentDomains(directoryService.getDomains().slice(0, 3));
+      setAllRecentDomains(directoryService.getDomains());
 
       // Smooth scroll to results
       setTimeout(() => {
@@ -1284,8 +1285,8 @@ export const HomePage: React.FC = () => {
           </Link>
         </div>
 
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory gap-4 sm:gap-5 pb-3 sm:pb-0 scrollbar-none">
-          {recentDomains.map((item, idx) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {allRecentDomains.slice(0, visibleDomainCount).map((item, idx) => {
             const isHigh = item.category === 'high' || item.riskPercent >= 60;
             const isReview = item.category === 'review' || (item.riskPercent >= 30 && item.riskPercent < 60);
 
@@ -1310,17 +1311,20 @@ export const HomePage: React.FC = () => {
                   inputSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
                   handleScanUrl(item.domain, true);
                 }}
-                className="w-[80vw] max-w-[300px] shrink-0 sm:w-auto snap-start bg-white rounded-[22px] border border-[#E3E0DA] hover:border-[#14161C] p-5 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between text-left transition-all hover:-translate-y-1 cursor-pointer group"
+                className="w-full bg-white rounded-[22px] border border-[#E3E0DA] hover:border-[#14161C] p-5 sm:p-6 shadow-[0_14px_34px_-16px_rgba(29,63,110,0.22)] flex flex-col justify-between text-left transition-all hover:-translate-y-1 cursor-pointer group"
               >
                 <div>
-                  <div className="font-mono text-sm sm:text-base font-semibold text-[#14161C] break-all group-hover:text-[#1d3f6e] transition-colors">
+                  <div 
+                    className="font-mono text-sm sm:text-base font-semibold text-[#14161C] truncate group-hover:text-[#1d3f6e] transition-colors"
+                    title={item.domain}
+                  >
                     {item.domain}
                   </div>
                   <div className="text-xs sm:text-sm text-[#5B5850] my-2">
                     {item.riskPercent}% hasil Risiko Tinggi dari {item.count} pemeriksaan
                   </div>
                 </div>
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-[#F5F3EE]">
                   <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${badgeBg}`}>
                     {badgeLabel}
                   </span>
@@ -1332,6 +1336,22 @@ export const HomePage: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Tombol Muat Lebih Banyak */}
+        {allRecentDomains.length > visibleDomainCount && (
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setVisibleDomainCount((prev) => Math.min(prev + 3, allRecentDomains.length))}
+              className="h-11 px-6 rounded-full border border-[#D5D0C3] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14161C] font-semibold text-xs sm:text-sm inline-flex items-center gap-2 transition-all cursor-pointer shadow-xs"
+            >
+              <span>Muat Lebih Banyak ({allRecentDomains.length - visibleDomainCount} lainnya)</span>
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* 9. SECTION: PANDUAN DARURAT */}
