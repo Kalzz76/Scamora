@@ -28,7 +28,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
   ];
 
   return (
-    <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
+    <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 hidden md:flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
       {/* 1. DOCK MENU AKSES KONTEN: Diketengahkan secara vertikal (my-auto) */}
       <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center my-auto shadow-xl">
         <nav className="flex flex-col items-center gap-3 w-full">

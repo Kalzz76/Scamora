@@ -32,51 +32,51 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Numeric Highlights */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
-          <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Total Scan (24 Jam)
           </span>
-          <div className="text-xl font-black text-[#334257] font-mono mt-0.5">
+          <div className="text-base sm:text-xl font-black text-[#334257] font-mono mt-0.5">
             {totalScans.toLocaleString()}{' '}
-            <span className="text-xs font-semibold text-[#476072]">scan</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-[#476072]">scan</span>
           </div>
-          <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
+          <span className="text-[9px] sm:text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5">
             <TrendingUp className="w-3 h-3" /> +18.4% vs kemarin
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
-          <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Rata-rata Scan / Jam
           </span>
-          <div className="text-xl font-black text-[#334257] font-mono mt-0.5">
+          <div className="text-base sm:text-xl font-black text-[#334257] font-mono mt-0.5">
             {(totalScans / 24).toFixed(1)}{' '}
-            <span className="text-xs font-semibold text-[#476072]">scan/jam</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-[#476072]">scan/jam</span>
           </div>
-          <span className="text-[10px] text-[#476072] flex items-center gap-1 mt-0.5">
-            <Zap className="w-3 h-3 text-[#548CA8]" /> Beban server seimbang
+          <span className="text-[9px] sm:text-[10px] text-[#476072] flex items-center gap-1 mt-0.5">
+            <Zap className="w-3 h-3 text-[#548CA8]" /> Beban normal
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
-          <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
-            Puncak Aktivitas (Peak)
+        <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
+            Puncak (Peak)
           </span>
-          <div className="text-xl font-black text-[#548CA8] font-mono mt-0.5">
+          <div className="text-base sm:text-xl font-black text-[#548CA8] font-mono mt-0.5">
             {peakItem?.hour || '14:00'}{' '}
-            <span className="text-xs font-semibold text-[#476072]">WIB</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-[#476072]">WIB</span>
           </div>
-          <span className="text-[10px] text-[#476072] flex items-center gap-1 mt-0.5">
-            <Clock className="w-3 h-3 text-[#548CA8]" /> {peakItem?.scans || 122} scan pada jam ini
+          <span className="text-[9px] sm:text-[10px] text-[#476072] flex items-center gap-1 mt-0.5">
+            <Clock className="w-3 h-3 text-[#548CA8]" /> {peakItem?.scans || 122} scan
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
-          <span className="text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-white/70 backdrop-blur-xs border border-white/60 shadow-2xs">
+          <span className="text-[10px] sm:text-[11px] font-bold text-[#476072] uppercase tracking-wider block">
             Proporsi Masukan
           </span>
-          <div className="text-xs font-bold text-[#334257] mt-1 space-y-1">
+          <div className="text-[11px] sm:text-xs font-bold text-[#334257] mt-1 space-y-1">
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[#334257]">
                 <Globe className="w-3 h-3 text-[#548CA8]" /> URL:
@@ -141,6 +141,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
                 key={item.hour}
                 onMouseEnter={() => setHoveredIndex(idx)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => setHoveredIndex(hoveredIndex === idx ? null : idx)}
                 className="flex-1 flex flex-col items-center justify-end h-full group relative cursor-pointer"
               >
                 {/* Bar element */}

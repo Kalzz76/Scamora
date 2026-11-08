@@ -229,10 +229,10 @@ export const ModerationQueuePage: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 sm:p-8 space-y-6 w-full">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 w-full max-w-7xl mx-auto">
       
       {/* 1. TOP HEADER & MAIN CONTROLS (FROSTED GLASS PANEL) */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -688,7 +688,7 @@ export const ModerationQueuePage: React.FC = () => {
       {/* 5. POPUP DETAIL MODAL FOR COMMUNITY POST (activeDetailPost) */}
       {activeDetailPost && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel-dark rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+          <div className="glass-panel-dark rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-7 space-y-5 sm:space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-150 mx-3 sm:mx-0">
             {/* Header Modal */}
             <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
               <div className="space-y-1">
@@ -805,7 +805,7 @@ export const ModerationQueuePage: React.FC = () => {
       {/* 6. EDIT POSTINGAN MODAL (isEditModalOpen) */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel-dark rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl">
+          <div className="glass-panel-dark rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-7 space-y-5 sm:space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl mx-3 sm:mx-0">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <h3 className="text-lg font-black text-white">Edit Postingan Komunitas</h3>
@@ -943,7 +943,7 @@ export const ModerationQueuePage: React.FC = () => {
       {/* 7. CREATE NEW POST MODAL (isCreateModalOpen) */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="glass-panel-dark rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl">
+          <div className="glass-panel-dark rounded-2xl sm:rounded-3xl max-w-xl w-full p-4 sm:p-7 space-y-5 sm:space-y-6 max-h-[90vh] overflow-y-auto border border-white/20 shadow-2xl mx-3 sm:mx-0">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <h3 className="text-lg font-black text-white">Tambah Cerita Kasus Komunitas</h3>

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { AdminSidebar } from './components/layout/AdminSidebar';
 import { AdminHeader } from './components/layout/AdminHeader';
+import { AdminBottomNav } from './components/layout/AdminBottomNav';
 import { LoginPage } from './features/auth/LoginPage';
 import { adminAuth } from './services/adminAuth';
 import { DashboardOverview } from './features/dashboard/DashboardOverview';
@@ -83,6 +84,7 @@ const ProtectedRoute: React.FC<{ children?: ReactNode }> = ({ children }) => {
 
 const AdminLayout: React.FC = () => {
   const { isDark } = useTheme();
+  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
 
   return (
     <div className="min-h-screen relative flex flex-col font-sans overflow-x-hidden text-[#1A202C] dark:text-[#F8FAFC]">
@@ -106,20 +108,30 @@ const AdminLayout: React.FC = () => {
       </div>
 
       {/* Top Header - Spans 100% Full Screen Width */}
-      <AdminHeader />
+      <AdminHeader
+        reportCount={1}
+        mobileDrawerOpen={mobileDrawerOpen}
+        setMobileDrawerOpen={setMobileDrawerOpen}
+      />
 
-      {/* Workspace Body: Fixed Sidebar (Left) + Content (Right) with 64px Top Offset for Fixed Header */}
+      {/* Workspace Body: Fixed Sidebar (Left on desktop, hidden on mobile) + Content (Right) */}
       <div className="flex-1 flex min-w-0 pt-[64px] relative z-10 bg-transparent">
-        {/* Fixed Mini Sidebar (74px spacer keeps content aligned) */}
-        <div className="w-[74px] shrink-0 relative z-40">
+        {/* Fixed Mini Sidebar (74px spacer only on md+ screens) */}
+        <div className="hidden md:block w-[74px] shrink-0 relative z-40">
           <AdminSidebar reportCount={1} />
         </div>
 
-        {/* Main Content Area */}
-        <main className="flex-1 min-w-0 overflow-y-auto pb-12 bg-transparent">
+        {/* Main Content Area: pb-24 on mobile to prevent overlap with bottom dock */}
+        <main className="flex-1 min-w-0 overflow-y-auto pb-24 md:pb-12 bg-transparent">
           <Outlet />
         </main>
       </div>
+
+      {/* Floating Bottom Navigation Bar (Mobile only) */}
+      <AdminBottomNav
+        reportCount={1}
+        onOpenMenu={() => setMobileDrawerOpen(true)}
+      />
 
       <Toaster position="top-right" richColors />
     </div>

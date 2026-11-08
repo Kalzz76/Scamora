@@ -126,6 +126,7 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
                 className="transition-all duration-300 cursor-pointer"
                 onMouseEnter={() => setHoveredSegment(seg.id)}
                 onMouseLeave={() => setHoveredSegment(null)}
+                onClick={() => setHoveredSegment(hoveredSegment === seg.id ? null : seg.id)}
               />
             );
           })}
@@ -169,6 +170,7 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
             key={seg.id}
             onMouseEnter={() => setHoveredSegment(seg.id)}
             onMouseLeave={() => setHoveredSegment(null)}
+            onClick={() => setHoveredSegment(hoveredSegment === seg.id ? null : seg.id)}
             className="flex items-center gap-1.5 cursor-pointer text-[#476072] hover:text-[#1A202C] font-medium transition-colors"
           >
             <span

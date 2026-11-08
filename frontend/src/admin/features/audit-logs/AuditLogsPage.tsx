@@ -31,37 +31,37 @@ export const AuditLogsPage: React.FC = () => {
   });
 
   return (
-    <div className="p-6 sm:p-8 space-y-8 w-full">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 w-full max-w-7xl mx-auto">
       {/* HEADER (FROSTED GLASS PANEL) */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-[#1A202C] tracking-tight">Log Audit &amp; Jejak Rekam Sistem</h2>
-          <p className="text-xs text-[#476072] mt-0.5">
+          <h2 className="text-lg sm:text-xl font-black text-[#1A202C] tracking-tight">Log Audit &amp; Jejak Rekam Sistem</h2>
+          <p className="text-[11px] sm:text-xs text-[#476072] mt-0.5">
             Catatan kekal (*immutable audit trail*) seluruh aktivitas operasional, perubahan konfigurasi, dan deteksi ancaman.
           </p>
         </div>
       </div>
 
       {/* FILTER & SEARCH */}
-      <div className="glass-panel rounded-2xl p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/70 border border-[#D8E0E7]">
+      <div className="glass-panel rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-white/70 border border-[#D8E0E7] overflow-x-auto">
           <button
             onClick={() => setFilterSeverity('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${filterSeverity === 'all' ? 'bg-[#334257] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${filterSeverity === 'all' ? 'bg-[#334257] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
               }`}
           >
             Semua ({logs.length})
           </button>
           <button
             onClick={() => setFilterSeverity('info')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${filterSeverity === 'info' ? 'bg-[#334257] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${filterSeverity === 'info' ? 'bg-[#334257] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
               }`}
           >
             Info ({logs.filter((l) => l.severity === 'info').length})
           </button>
           <button
             onClick={() => setFilterSeverity('warning')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${filterSeverity === 'warning' ? 'bg-[#548CA8] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap ${filterSeverity === 'warning' ? 'bg-[#548CA8] text-white shadow-2xs' : 'text-[#476072] hover:text-[#1A202C]'
               }`}
           >
             Warning ({logs.filter((l) => l.severity === 'warning').length})
@@ -81,7 +81,7 @@ export const AuditLogsPage: React.FC = () => {
       </div>
 
       {/* LOGS TABLE */}
-      <div className="glass-panel rounded-3xl overflow-hidden p-6 sm:p-8">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl overflow-hidden p-3.5 sm:p-6 lg:p-8">
         {loading ? (
           <div className="p-12 text-center text-xs font-mono text-[#476072]">Memuat audit log...</div>
         ) : filteredLogs.length === 0 ? (

@@ -53,45 +53,45 @@ export const DashboardOverview: React.FC = () => {
   const hourlyScans = stats.hourlyScans24h || [];
 
   return (
-    <div className="p-6 sm:p-8 space-y-8 w-full">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 w-full max-w-7xl mx-auto">
       {/* ========================================================================= */}
       {/* 1. HEADLINE UTAMA: PERKEMBANGAN SCAN (FROSTED GLASS PANEL)                 */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         {/* Headline Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
                 1
               </span>
-              <h2 className="text-lg sm:text-xl font-black text-[#1A202C] tracking-tight">
+              <h2 className="text-base sm:text-xl font-black text-[#1A202C] tracking-tight">
                 Perkembangan Scan (24 Jam Terakhir)
               </h2>
-              <span className="px-2 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[9px] sm:text-[10px] font-bold uppercase">
                 Headline Utama
               </span>
             </div>
-            <p className="text-xs text-[#476072] mt-1">
+            <p className="text-[11px] sm:text-xs text-[#476072] mt-1">
               Aktivitas pemindaian masukan URL &amp; Chat per jam serta klasifikasi tingkat risiko ancaman
             </p>
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#476072]">
+          <div className="flex items-center gap-2 text-[11px] sm:text-xs font-mono font-bold text-[#476072] self-start md:self-center">
             <Activity className="w-4 h-4 text-[#548CA8]" />
             <span>Interval Waktu: 24 Jam</span>
           </div>
         </div>
 
         {/* Grid: 24h Scan Timeline Chart (Left/Top) + Donut Chart (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Timeline Area & Numerics (8 Cols) */}
           <div className="lg:col-span-8 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C]">
                 Grafik Frekuensi Pemindaian per Jam
               </h3>
-              <span className="text-[11px] text-[#476072]">Hover batang untuk data numerik</span>
+              <span className="text-[10px] sm:text-[11px] text-[#476072]">Ketuk batang untuk rincian</span>
             </div>
 
             <ScanTimelineChart
@@ -102,14 +102,14 @@ export const DashboardOverview: React.FC = () => {
             />
           </div>
 
-          {/* Donut Chart: Indikasi Bahaya / Tinjau / Aman (4 Cols - Unboxed with Left Border) */}
-          <div className="lg:col-span-4 space-y-4 lg:pl-8 lg:border-l lg:border-[#D8E0E7]">
+          {/* Donut Chart: Indikasi Bahaya / Tinjau / Aman (4 Cols - Stacked on Mobile) */}
+          <div className="lg:col-span-4 space-y-4 pt-6 lg:pt-0 border-t lg:border-t-0 lg:pl-8 lg:border-l border-[#D8E0E7]">
             <div className="border-b border-[#D8E0E7] pb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A202C]">
                 Proporsi Indikasi Risiko (Donut Chart)
               </h3>
-              <p className="text-[11px] text-[#476072]">
-                Arahkan mouse ke irisan donat untuk melihat data numerik spesifik
+              <p className="text-[10px] sm:text-[11px] text-[#476072]">
+                Ketuk irisan donat untuk melihat data numerik spesifik
               </p>
             </div>
 
@@ -129,7 +129,7 @@ export const DashboardOverview: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. KONDISI AI (FROSTED GLASS PANEL)                                       */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-3xl p-6 sm:p-8">
+      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8">
         <AiConditionCard
           telemetry={stats.aiTelemetry}
           modelName="gemini-3.5-flash-lite"
@@ -140,14 +140,14 @@ export const DashboardOverview: React.FC = () => {
       {/* ========================================================================= */}
       {/* 3 & 4. TOP PENIPUAN & JUMLAH PENGUNJUNG (FROSTED GLASS PANEL)              */}
       {/* ========================================================================= */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start glass-panel rounded-3xl p-6 sm:p-8">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8">
         {/* Poin 3: Top Penipuan (Top 5) */}
         <div>
           <TopScamsCard scamTypeBreakdown={stats.scamTypeBreakdown} />
         </div>
 
         {/* Poin 4: Jumlah Pengunjung Website 24 Jam */}
-        <div className="lg:pl-8 lg:border-l lg:border-[#D8E0E7]">
+        <div className="pt-6 lg:pt-0 border-t lg:border-t-0 lg:pl-8 lg:border-l border-[#D8E0E7]">
           <VisitorsCard stats={stats.visitorStats} />
         </div>
       </section>

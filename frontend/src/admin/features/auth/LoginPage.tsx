@@ -70,7 +70,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center p-4 sm:p-6 font-sans overflow-hidden">
+    <div className="relative min-h-screen flex flex-col justify-center items-center p-3.5 sm:p-6 font-sans overflow-hidden">
       {/* Blurred City Landscape Ambient Background specifically for Admin Login */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
         <img
@@ -91,7 +91,7 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Brand Header */}
-        <div className="text-center mb-8 space-y-2">
+        <div className="text-center mb-6 sm:mb-8 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#D8E0E7] shadow-xs">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-[#334257]">
@@ -104,21 +104,21 @@ export const LoginPage: React.FC = () => {
               <ShieldCheck className="w-6 h-6 text-[#548CA8]" />
             </div>
             <div className="text-left">
-              <h1 className="text-2xl font-black text-[#334257] tracking-tight leading-none">
+              <h1 className="text-xl sm:text-2xl font-black text-[#334257] tracking-tight leading-none">
                 Scamora <span className="text-[#548CA8]">Admin</span>
               </h1>
-              <p className="text-[11px] text-[#476072] font-mono">
+              <p className="text-[10px] sm:text-[11px] text-[#476072] font-mono">
                 Command &amp; Control Center
               </p>
             </div>
           </div>
-          <p className="text-xs text-[#5E6D7E] max-w-xs mx-auto">
+          <p className="text-[11px] sm:text-xs text-[#5E6D7E] max-w-xs mx-auto">
             Masuk dengan otentikasi petugas untuk mengelola telemetri, model AI, dan preset verifikasi penipuan.
           </p>
         </div>
 
         {/* Card Box */}
-        <div className="glass-panel rounded-3xl shadow-2xl p-6 sm:p-8 space-y-6">
+        <div className="glass-panel rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 space-y-5 sm:space-y-6">
           <div className="border-b border-[#D8E0E7] pb-4">
             <h2 className="text-base font-bold text-[#1A202C] flex items-center gap-2">
               <KeyRound className="w-4 h-4 text-[#548CA8]" />

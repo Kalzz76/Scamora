@@ -301,10 +301,10 @@ export const QuizManagerPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 sm:p-8 space-y-6 w-full">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 w-full max-w-7xl mx-auto">
       
       {/* 1. TOP HEADER & FILTER BAR (FROSTED GLASS PANEL) */}
-      <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ export const QuizManagerPage: React.FC = () => {
       {/* 5. DETAIL POPUP MODAL (Persis seperti pusat pengetahuan) */}
       {activeDetailQuestion && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-7 space-y-5 sm:space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto mx-3 sm:mx-0">
             
             {/* Modal Header Actions */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/10">
@@ -714,7 +714,7 @@ export const QuizManagerPage: React.FC = () => {
       {/* 6. MODAL: TAMBAH SOAL KUIS BARU */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto mx-3 sm:mx-0">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">
@@ -913,7 +913,7 @@ export const QuizManagerPage: React.FC = () => {
       {/* 7. MODAL: EDIT SOAL KUIS */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-3xl max-w-2xl w-full p-6 sm:p-7 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#0F172A] border border-slate-200/80 dark:border-white/15 rounded-2xl sm:rounded-3xl max-w-2xl w-full p-4 sm:p-7 space-y-4 sm:space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto mx-3 sm:mx-0">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-3">

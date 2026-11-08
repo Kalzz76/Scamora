@@ -99,11 +99,11 @@ export const AiEngineConfigPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 sm:p-8 space-y-10 w-full">
+    <div className="p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-10 w-full max-w-7xl mx-auto">
       {/* ========================================================================= */}
       {/* 1. KONDISI AI SAAT INI (GRAFIK PENGGUNAAN TOKEN & TEMPAT UJI KONEKSI)      */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-3xl p-6 sm:p-8">
+      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8">
         <AiConditionSection
           aiConfig={aiConfig}
           hourlyTokens={stats?.aiTelemetry?.hourlyTokens24h}
@@ -116,7 +116,7 @@ export const AiEngineConfigPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. SETTING LANJUTAN (COLLAPSIBLE / ACCORDION DENGAN KLIK BUKA TUTUP)      */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Clickable Header Accordion Trigger */}
         <button
           type="button"
