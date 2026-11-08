@@ -96,13 +96,12 @@ export const HomePage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
-  // Dynamic Community Directory Domains
-  const [visibleDomainCount, setVisibleDomainCount] = useState(6);
-  const [allRecentDomains, setAllRecentDomains] = useState<ScannedDomain[]>([]);
+  // Dynamic Community Directory Domains (4 kotak)
+  const [recentDomains, setRecentDomains] = useState<ScannedDomain[]>([]);
 
   useEffect(() => {
     const updateDomains = () => {
-      setAllRecentDomains(directoryService.getDomains());
+      setRecentDomains(directoryService.getDomains().slice(0, 4));
     };
     updateDomains();
     window.addEventListener('storage', updateDomains);
@@ -171,7 +170,7 @@ export const HomePage: React.FC = () => {
 
       // Record to community directory automatically
       directoryService.recordDomain(raw, res.risk_score || res.raw_score || 0, res.risk_level || 'review');
-      setAllRecentDomains(directoryService.getDomains());
+      setRecentDomains(directoryService.getDomains().slice(0, 4));
 
       // Smooth scroll to results
       setTimeout(() => {
@@ -1285,8 +1284,8 @@ export const HomePage: React.FC = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {allRecentDomains.slice(0, visibleDomainCount).map((item, idx) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          {recentDomains.map((item, idx) => {
             const isHigh = item.category === 'high' || item.riskPercent >= 60;
             const isReview = item.category === 'review' || (item.riskPercent >= 30 && item.riskPercent < 60);
 
@@ -1336,22 +1335,6 @@ export const HomePage: React.FC = () => {
             );
           })}
         </div>
-
-        {/* Tombol Muat Lebih Banyak */}
-        {allRecentDomains.length > visibleDomainCount && (
-          <div className="mt-8 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setVisibleDomainCount((prev) => Math.min(prev + 3, allRecentDomains.length))}
-              className="h-11 px-6 rounded-full border border-[#D5D0C3] bg-white hover:bg-[#14161C] hover:text-white hover:border-[#14161C] text-[#14161C] font-semibold text-xs sm:text-sm inline-flex items-center gap-2 transition-all cursor-pointer shadow-xs"
-            >
-              <span>Muat Lebih Banyak ({allRecentDomains.length - visibleDomainCount} lainnya)</span>
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 9l6 6 6-6"/>
-              </svg>
-            </button>
-          </div>
-        )}
       </section>
 
       {/* 9. SECTION: PANDUAN DARURAT */}
