@@ -129,15 +129,44 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#faf8f5] text-[#14161c] flex flex-col items-center justify-start sm:justify-center p-4 sm:p-6 pt-16 sm:pt-20 pb-12 font-['DM_Sans',sans-serif] selection:bg-[#0f9b8a]/20 overflow-y-auto">
-      {/* Subtle Ambient Background Mesh & Accents */}
-      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden z-0" aria-hidden="true">
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#d9d6d0_1px,transparent_1px)] [background-size:24px_24px] opacity-40" />
-        
-        {/* Soft elegant ambient glows */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-teal-200/25 rounded-full blur-3xl" />
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-slate-300/30 rounded-full blur-3xl" />
+    <div className="relative min-h-screen bg-[#faf8f5] text-[#14161c] flex flex-col items-center justify-start p-4 sm:p-6 pt-10 sm:pt-14 pb-12 font-['DM_Sans',sans-serif] selection:bg-[#0f9b8a]/20 overflow-y-auto">
+      {/* Background Vector Shapes: Desktop (16:9 Signature Geometric Brand Accents) */}
+      <div className="hidden lg:block absolute inset-0 pointer-events-none select-none overflow-hidden z-0" aria-hidden="true">
+        <svg viewBox="0 0 1847 852" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+          {/* Top Left Signature Brand Geometry */}
+          <path d="M0 0H420L360 110Q345 124 325 124H0Z" fill="#2b2f3a" />
+          <path d="M420 0H520L445 124H360Z" fill="#e9e8e6" />
+          <path d="M0 124H230L0 250Z" fill="#8e98ab" opacity="0.7" />
+
+          {/* Bottom Right Layered Brand Geometry */}
+          <path d="M1847 300V852H1130Q1330 760 1500 640Q1640 540 1847 300Z" fill="#e9e8e6" opacity="0.8" />
+          <path d="M1847 430V852H1450Q1460 780 1560 730Q1700 690 1750 560Q1790 470 1847 430Z" fill="#2b2f3a" />
+          <path d="M1640 740Q1760 700 1847 720V852H1590Z" fill="#8e98ab" opacity="0.7" />
+
+          {/* Dynamic Contour Stroke */}
+          <path d="M630 0Q560 120 330 175Q60 230 50 520Q47 620 0 700" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.5" />
+        </svg>
+      </div>
+
+      {/* Background Vector Shapes: Mobile & Tablet (Dedicated Portrait Framing) */}
+      <div className="lg:hidden absolute inset-0 pointer-events-none select-none overflow-hidden z-0" aria-hidden="true">
+        <svg viewBox="0 0 400 850" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full">
+          {/* Top-Right Accent */}
+          <path d="M240 0 H400 V70 L320 70 Q290 70 275 50 L240 0 Z" fill="#2b2f3a" opacity="0.95" />
+          <path d="M180 0 H240 L275 50 L255 70 H200 Z" fill="#e9e8e6" />
+          <path d="M340 70 L400 70 V130 L330 130 Z" fill="#8e98ab" opacity="0.5" />
+
+          {/* Bottom-Right Layered Curves */}
+          <path d="M400 520 V850 H190 Q260 760 330 670 Q370 600 400 520 Z" fill="#e9e8e6" opacity="0.75" />
+          <path d="M400 610 V850 H270 Q325 785 360 720 Q385 660 400 610 Z" fill="#2b2f3a" />
+          <path d="M400 735 V850 H330 Q370 805 400 735 Z" fill="#8e98ab" opacity="0.6" />
+
+          {/* Bottom-Left Accent */}
+          <path d="M0 720 L100 850 H0 Z" fill="#8e98ab" opacity="0.3" />
+
+          {/* Dynamic Contour Stroke */}
+          <path d="M260 0 Q190 160 100 290 Q30 390 45 560 Q65 680 0 760" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.45" />
+        </svg>
       </div>
 
       {/* Back to Home Button - Top Right */}
