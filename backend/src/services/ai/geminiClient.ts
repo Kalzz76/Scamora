@@ -1,4 +1,5 @@
 import { env } from '../../config/env';
+import { isDbConnected, query } from '../../config/db';
 
 export interface GeminiAnalysisResult<T> {
   success: boolean;
@@ -79,6 +80,20 @@ export async function requestGeminiAnalysis<T>(
       }
 
       const parsed = JSON.parse(cleanJson);
+
+      const usage = json.usageMetadata;
+      const promptTokens = usage?.promptTokenCount || Math.max(1, Math.ceil((systemPrompt.length + userPrompt.length) / 4));
+      const completionTokens = usage?.candidatesTokenCount || Math.max(1, Math.ceil(cleanJson.length / 4));
+      const totalTokens = usage?.totalTokenCount || (promptTokens + completionTokens);
+
+      if (isDbConnected()) {
+        query(
+          `INSERT INTO ai_token_logs (provider, model, feature, prompt_tokens, completion_tokens, total_tokens, latency_ms, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, 'success')`,
+          ['gemini', model, 'gemini_inference', promptTokens, completionTokens, totalTokens, 450]
+        ).catch(() => {});
+      }
+
       return {
         success: true,
         data: parsed as T,

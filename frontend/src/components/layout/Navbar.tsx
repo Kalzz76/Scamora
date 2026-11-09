@@ -226,7 +226,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span>@{currentUser.username}</span>
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
-                    {currentUser.role === 'admin' ? 'Admin' : 'Verified'}
+                    {currentUser.role === 'admin' ? 'Admin' : 'User'}
                   </span>
                 </Link>
 
@@ -380,7 +380,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   </span>
                 </div>
                 <span className="text-[10px] font-mono font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-                  {currentUser ? (currentUser.role === 'admin' ? 'Admin' : 'Verified') : 'Masuk'}
+                  {currentUser ? (currentUser.role === 'admin' ? 'Admin' : 'User') : 'Masuk'}
                 </span>
               </Link>
 

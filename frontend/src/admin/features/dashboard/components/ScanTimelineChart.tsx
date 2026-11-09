@@ -19,7 +19,7 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
 
   // Fallback if data is empty
   const hourlyData = data && data.length > 0 ? data : [];
-  const maxScans = Math.max(...hourlyData.map((d) => d.scans), 100);
+  const maxScans = Math.max(...hourlyData.map((d) => d.scans), 5);
 
   // Find peak hour
   const peakItem = hourlyData.reduce(
@@ -81,13 +81,13 @@ export const ScanTimelineChart: React.FC<ScanTimelineChartProps> = ({
               <span className="flex items-center gap-1 text-[#334257]">
                 <Globe className="w-3 h-3 text-[#548CA8]" /> URL:
               </span>
-              <span className="font-mono">{urlScans} ({((urlScans / totalScans) * 100).toFixed(0)}%)</span>
+              <span className="font-mono">{urlScans} ({totalScans > 0 ? ((urlScans / totalScans) * 100).toFixed(0) : 0}%)</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1 text-[#476072]">
                 <MessageSquare className="w-3 h-3 text-[#548CA8]" /> Chat:
               </span>
-              <span className="font-mono">{chatScans} ({((chatScans / totalScans) * 100).toFixed(0)}%)</span>
+              <span className="font-mono">{chatScans} ({totalScans > 0 ? ((chatScans / totalScans) * 100).toFixed(0) : 0}%)</span>
             </div>
           </div>
         </div>

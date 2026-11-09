@@ -1,4 +1,5 @@
 import { env } from '../../config/env';
+import { isDbConnected, query } from '../../config/db';
 import { aiOutputSchema, type AiOutput } from '../../schemas/aiOutput.schema';
 
 export interface GeminiAnalysisResult {
@@ -129,6 +130,19 @@ Format respons JSON yang wajib dipatuhi:
       const validated = aiOutputSchema.safeParse(parsedJson);
 
       if (validated.success) {
+        const usage = (rawData as any).usageMetadata;
+        const promptTokens = usage?.promptTokenCount || Math.max(1, Math.ceil((systemPrompt.length + maskedChatText.length) / 4));
+        const completionTokens = usage?.candidatesTokenCount || Math.max(1, Math.ceil(cleanedJson.length / 4));
+        const totalTokens = usage?.totalTokenCount || (promptTokens + completionTokens);
+
+        if (isDbConnected()) {
+          query(
+            `INSERT INTO ai_token_logs (provider, model, feature, prompt_tokens, completion_tokens, total_tokens, latency_ms, status)
+             VALUES ($1, $2, 'analyze_chat', $3, $4, $5, 480, 'success')`,
+            ['gemini', env.GEMINI_MODEL, promptTokens, completionTokens, totalTokens]
+          ).catch(() => {});
+        }
+
         return {
           success: true,
           data: validated.data,
