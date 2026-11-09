@@ -26,7 +26,15 @@ app.use(
       return callback(null, true); // Dev-friendly fallback
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'x-guest-session-id',
+      'X-Guest-Session-Id',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['x-guest-session-id', 'X-Guest-Session-Id'],
     credentials: true,
   })
 );
