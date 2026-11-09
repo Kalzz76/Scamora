@@ -48,7 +48,7 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-    CREATE TYPE report_status_enum AS ENUM ('pending', 'reviewed', 'dismissed', 'action_taken');
+    CREATE TYPE report_status_enum AS ENUM ('pending', 'reviewed', 'dismissed', 'action_taken', 'resolved');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
@@ -465,8 +465,28 @@ CREATE TABLE IF NOT EXISTS system_runtime_config (
     crawler_timeout_ms INTEGER NOT NULL DEFAULT 4000,
     crawler_max_bytes_kb INTEGER NOT NULL DEFAULT 512,
     ssrf_protection BOOLEAN NOT NULL DEFAULT TRUE,
+    user_agent VARCHAR(255) DEFAULT 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    detect_apk BOOLEAN DEFAULT TRUE,
+    detect_forms BOOLEAN DEFAULT TRUE,
+    allow_redirects BOOLEAN DEFAULT TRUE,
+    credential_code VARCHAR(100) DEFAULT 'SCAMORA-SEC-CRED-8821',
+    extra_config JSONB DEFAULT '{}'::jsonb,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+CREATE TABLE IF NOT EXISTS ai_token_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider VARCHAR(50) NOT NULL DEFAULT 'gemini',
+    model VARCHAR(100) NOT NULL,
+    feature VARCHAR(50) NOT NULL,
+    prompt_tokens INT NOT NULL DEFAULT 0,
+    completion_tokens INT NOT NULL DEFAULT 0,
+    total_tokens INT NOT NULL DEFAULT 0,
+    latency_ms INT NOT NULL DEFAULT 0,
+    status VARCHAR(20) NOT NULL DEFAULT 'success',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+CREATE INDEX IF NOT EXISTS idx_ai_token_logs_created ON ai_token_logs(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS demo_presets (
     id VARCHAR(100) PRIMARY KEY,
