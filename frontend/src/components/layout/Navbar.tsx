@@ -13,7 +13,8 @@ import {
   Shield,
   LogOut,
   ArrowRight,
-  ChevronDown
+  ChevronDown,
+  LayoutDashboard
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
@@ -249,6 +250,16 @@ export const Navbar: React.FC<NavbarProps> = () => {
                       {/* Action Items */}
                       <div className="space-y-0.5">
                         <Link
+                          to="/dashboard"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#14161c] hover:bg-[#f1ede6] hover:text-[#0f9b8a] transition cursor-pointer"
+                          role="menuitem"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-[#0f9b8a]" />
+                          <span>Dashboard Saya</span>
+                        </Link>
+
+                        <Link
                           to="/profil"
                           onClick={() => setAccountMenuOpen(false)}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#14161c] hover:bg-[#f1ede6] hover:text-[#0f9b8a] transition cursor-pointer"
@@ -337,6 +348,16 @@ export const Navbar: React.FC<NavbarProps> = () => {
                       <div className="my-1.5 border-t border-[#f0ede6]" />
 
                       <div className="space-y-0.5">
+                        <Link
+                          to="/dashboard"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-[#14161c] hover:bg-[#f1ede6] hover:text-[#0f9b8a] transition cursor-pointer"
+                          role="menuitem"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-[#0f9b8a]" />
+                          <span>Dashboard Saya</span>
+                        </Link>
+
                         <Link
                           to="/profil"
                           onClick={() => setAccountMenuOpen(false)}

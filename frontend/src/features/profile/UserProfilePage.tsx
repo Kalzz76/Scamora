@@ -153,9 +153,9 @@ export const UserProfilePage: React.FC = () => {
     <div className="w-full max-w-[1080px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 font-['DM_Sans',sans-serif]">
       {/* Navigation Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-[#64748b]">
-        <Link to="/" className="hover:text-[#14161c] transition flex items-center gap-1">
+        <Link to="/dashboard" className="hover:text-[#14161c] transition flex items-center gap-1">
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Kembali ke Beranda</span>
+          <span>Kembali ke Dashboard</span>
         </Link>
         <span>/</span>
         <span className="font-bold text-[#14161c]">Profil Pengguna</span>

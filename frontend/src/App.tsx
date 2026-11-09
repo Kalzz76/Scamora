@@ -11,6 +11,7 @@ import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
+import { UserDashboardPage } from './features/dashboard/UserDashboardPage';
 import { UserProfilePage } from './features/profile/UserProfilePage';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LoginPage } from './admin/features/auth/LoginPage';
@@ -77,10 +78,15 @@ function MainApp() {
           <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
           <Route path="/panduan" element={<PublicPageWrapper><PanduanPage /></PublicPageWrapper>} />
 
-          {/* Redirect /dashboard to Home */}
-          <Route path="/dashboard" element={<Navigate to="/" replace />} />
-
           {/* Protected Routes for Authenticated Users */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute featureName="Dashboard Pengguna">
+                <PublicPageWrapper><UserDashboardPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/profil"
             element={
