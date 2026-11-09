@@ -1,4 +1,6 @@
+import crypto from 'crypto';
 import { getSupabaseClient } from '../../config/supabase';
+import { isDbConnected, query } from '../../config/db';
 import { SEED_CATEGORIES, SEED_SCENARIOS } from '../../data/seedScenarios';
 import type {
   ChallengeCategory,
@@ -20,6 +22,38 @@ const dynamicScenarios = new Map<string, ChallengeScenario>();
 for (const s of SEED_SCENARIOS) {
   dynamicScenarios.set(s.id, s);
 }
+
+export async function syncScenariosFromDb(): Promise<void> {
+  if (!isDbConnected()) return;
+  try {
+    const res = await query('SELECT * FROM challenge_scenarios ORDER BY created_at ASC');
+    if (res && res.rows) {
+      for (const row of res.rows) {
+        dynamicScenarios.set(row.id, {
+          id: row.id,
+          categoryId: row.category_id,
+          title: row.title,
+          difficulty: row.difficulty,
+          characterName: row.character_name,
+          characterRole: row.character_role,
+          characterAvatar: row.character_avatar,
+          initialDialogue: typeof row.initial_dialogue === 'string' ? JSON.parse(row.initial_dialogue) : row.initial_dialogue,
+          decisionNodes: typeof row.decision_nodes === 'string' ? JSON.parse(row.decision_nodes) : row.decision_nodes,
+          redFlags: typeof row.red_flags === 'string' ? JSON.parse(row.red_flags) : row.red_flags,
+          learningPoints: typeof row.learning_points === 'string' ? JSON.parse(row.learning_points) : row.learning_points,
+          isAiGenerated: row.is_ai_generated || false,
+        });
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Challenge] syncScenariosFromDb error:', err.message);
+  }
+}
+
+// Auto sync when connected
+setTimeout(() => {
+  syncScenariosFromDb().catch(() => {});
+}, 1500);
 
 export function listCategories(): ChallengeCategory[] {
   return SEED_CATEGORIES.map((cat) => {
@@ -79,6 +113,33 @@ export async function generateNewScenario(
 
   dynamicScenarios.set(scenario.id, scenario);
 
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO challenge_scenarios (
+         id, category_id, title, difficulty, character_name, character_role, character_avatar, initial_dialogue, decision_nodes, red_flags, learning_points, is_ai_generated
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, true)
+       ON CONFLICT (id) DO UPDATE SET
+         title = EXCLUDED.title,
+         decision_nodes = EXCLUDED.decision_nodes,
+         red_flags = EXCLUDED.red_flags,
+         learning_points = EXCLUDED.learning_points`,
+      [
+        scenario.id,
+        scenario.categoryId,
+        scenario.title,
+        scenario.difficulty,
+        scenario.characterName,
+        scenario.characterRole,
+        scenario.characterAvatar,
+        JSON.stringify(scenario.initialDialogue),
+        JSON.stringify(scenario.decisionNodes),
+        JSON.stringify(scenario.redFlags),
+        JSON.stringify(scenario.learningPoints),
+      ]
+    ).catch(() => {});
+  }
+
   const supabase = getSupabaseClient();
   if (supabase) {
     try {
@@ -112,7 +173,7 @@ export async function createSession(
     throw new Error('Skenario tidak ditemukan.');
   }
 
-  const sessionId = `ses-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+  const sessionId = crypto.randomUUID();
   const now = new Date().toISOString();
 
   // Initial node is usually 'node_1'
@@ -133,6 +194,15 @@ export async function createSession(
   };
 
   memorySessions.set(sessionId, newSession);
+
+  if (isDbConnected()) {
+    query(
+      `INSERT INTO challenge_sessions (id, user_id, scenario_id, current_node_id, status, history, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, 'in_progress', '[]'::jsonb, NOW(), NOW())
+       ON CONFLICT (id) DO NOTHING`,
+      [sessionId, userId, scenarioId, startNodeId]
+    ).catch(() => {});
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {
@@ -274,6 +344,40 @@ export async function submitDecision(
   if (session.status === 'completed') {
     finalResult = buildChallengeResult(session, scenario);
     memoryResults.set(session.id, finalResult);
+  }
+
+  if (isDbConnected()) {
+    query(
+      `UPDATE challenge_sessions SET current_node_id = $1, status = $2, history = $3, updated_at = NOW() WHERE id = $4`,
+      [session.currentNodeId, session.status, JSON.stringify(session.history), session.id]
+    ).catch(() => {});
+
+    query(
+      `INSERT INTO challenge_decisions (id, session_id, node_id, chosen_option_id, is_safe_choice, red_flag_identified, created_at)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW())`,
+      [session.id, nodeId, optionId, option.isSafe, (option.redFlagsIdentified?.length || 0) > 0]
+    ).catch(() => {});
+
+    if (finalResult) {
+      query(
+        `INSERT INTO challenge_results (id, session_id, user_id, scenario_id, score, safety_rating, red_flags_detected_count, red_flags_total_count, feedback_summary, completed_at)
+         VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, NOW())
+         ON CONFLICT (session_id) DO UPDATE SET
+           score = EXCLUDED.score,
+           safety_rating = EXCLUDED.safety_rating,
+           feedback_summary = EXCLUDED.feedback_summary`,
+        [
+          session.id,
+          session.userId,
+          session.scenarioId,
+          finalResult.score,
+          finalResult.safetyRating,
+          finalResult.redFlagsDetected.length,
+          scenario.redFlags.length,
+          finalResult.feedbackSummary,
+        ]
+      ).catch(() => {});
+    }
   }
 
   // Persist to Supabase if available

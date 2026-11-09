@@ -184,4 +184,65 @@ describe('Admin API Contract Tests (/api/v1/admin)', () => {
     });
     expect(delAgainRes.status).toBe(404);
   });
+
+  it('Community Posts & Moderation Reports CRUD workflow with authorized token', async () => {
+    // 1. List posts
+    const postsRes = await fetch(`${baseUrl}/posts`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(postsRes.status).toBe(200);
+    const postsJson = (await postsRes.json()) as { success: boolean; data: any[] };
+    expect(postsJson.success).toBe(true);
+    expect(Array.isArray(postsJson.data)).toBe(true);
+    expect(postsJson.data.length).toBeGreaterThan(0);
+
+    // 2. Create post
+    const newPost = {
+      id: 'post-unit-test-1',
+      title: 'Post Test Keamanan Siber',
+      authorPseudonym: 'UnitTester',
+      categoryCode: 'phishing',
+      story: 'Pengalaman deteksi tautan phishing melalui Scamora.',
+      financialLossEstimate: 'Rp 0',
+      status: 'published',
+    };
+    const createRes = await fetch(`${baseUrl}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify(newPost),
+    });
+    expect(createRes.status).toBe(201);
+    const createJson = (await createRes.json()) as { success: boolean; data: { id: string } };
+    expect(createJson.data.id).toBe('post-unit-test-1');
+
+    // 3. Update status
+    const statusRes = await fetch(`${baseUrl}/posts/post-unit-test-1/status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ status: 'hidden' }),
+    });
+    expect(statusRes.status).toBe(200);
+
+    // 4. List reports
+    const reportsRes = await fetch(`${baseUrl}/reports`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(reportsRes.status).toBe(200);
+    const reportsJson = (await reportsRes.json()) as { success: boolean; data: any[] };
+    expect(reportsJson.success).toBe(true);
+    expect(Array.isArray(reportsJson.data)).toBe(true);
+
+    // 5. Delete post
+    const delRes = await fetch(`${baseUrl}/posts/post-unit-test-1`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(delRes.status).toBe(200);
+  });
 });

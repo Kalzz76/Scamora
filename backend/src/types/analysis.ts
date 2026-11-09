@@ -9,7 +9,9 @@ export type IndicatorSource =
   | 'chat_heuristic'
   | 'reputation'
   | 'web_crawler'
-  | 'content_ai';
+  | 'content_ai'
+  | 'ssl_certificate'
+  | 'live_content';
 
 export type ScamType =
   | 'phishing'

@@ -6,8 +6,12 @@ import {
   Compass, 
   Gamepad2, 
   GraduationCap, 
-  Users 
+  Users,
+  LogIn,
+  User,
+  ShieldCheck
 } from 'lucide-react';
+import { adminAuth } from '../../admin/services/adminAuth';
 
 interface NavbarProps {
   onOpenPrivacy?: () => void;
@@ -16,7 +20,13 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const isHome = location.pathname === '/';
+  const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
+  const isAuth = !!currentUser;
+  const isHome = location.pathname === '/' || (location.pathname === '/dashboard' && !scrolled);
+
+  useEffect(() => {
+    setCurrentUser(adminAuth.getUser());
+  }, [location.pathname]);
 
   // Track window scroll to create smooth responsive sticky header
   useEffect(() => {
@@ -29,33 +39,47 @@ export const Navbar: React.FC<NavbarProps> = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Desktop navigation links
-  const navLinks = [
-    { path: '/', label: 'Beranda' },
-    { path: '/laporan', label: 'Pemindaian Publik' },
-    { path: '/panduan', label: 'Panduan' },
-    { path: '/kuis', label: 'Tantangan AI' },
-    { path: '/pengetahuan', label: 'Edukasi' },
-    { path: '/komunitas', label: 'Komunitas' },
-  ];
+  // Desktop navigation links - Dynamic based on Auth state
+  const navLinks = isAuth
+    ? [
+        { path: '/dashboard', label: 'Beranda' },
+        { path: '/laporan', label: 'Pemindaian Publik' },
+        { path: '/panduan', label: 'Panduan' },
+        { path: '/kuis', label: 'Tantangan AI' },
+        { path: '/pengetahuan', label: 'Edukasi' },
+        { path: '/komunitas', label: 'Komunitas' },
+      ]
+    : [
+        { path: '/', label: 'Beranda' },
+        { path: '/laporan', label: 'Pemindaian Publik' },
+        { path: '/panduan', label: 'Panduan' },
+      ];
 
   // Mobile Bottom Navigation Links (thumb-friendly access everywhere)
-  const bottomNavLinks = [
-    { path: '/', label: 'Beranda', icon: Home },
-    { path: '/laporan', label: 'Publik', icon: Globe },
-    { path: '/panduan', label: 'Panduan', icon: Compass },
-    { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
-    { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
-    { path: '/komunitas', label: 'Komunitas', icon: Users },
-  ];
+  const bottomNavLinks = isAuth
+    ? [
+        { path: '/dashboard', label: 'Beranda', icon: Home },
+        { path: '/laporan', label: 'Publik', icon: Globe },
+        { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
+        { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
+        { path: '/komunitas', label: 'Komunitas', icon: Users },
+        { path: '/profil', label: 'Profil', icon: User },
+      ]
+    : [
+        { path: '/', label: 'Beranda', icon: Home },
+        { path: '/laporan', label: 'Publik', icon: Globe },
+        { path: '/panduan', label: 'Panduan', icon: Compass },
+        { path: '/login', label: 'Masuk', icon: LogIn },
+      ];
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
+    if (path === '/dashboard' && location.pathname === '/dashboard') return true;
+    if (path !== '/' && path !== '/dashboard' && location.pathname.startsWith(path)) return true;
     return false;
   };
 
-  const isTransparent = isHome && !scrolled;
+  const isTransparent = location.pathname === '/' && !scrolled;
 
   return (
     <>
@@ -79,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           >
             
             {/* Left: Brand Logo */}
-            <Link to="/" className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
+            <Link to={isAuth ? "/dashboard" : "/"} className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
               <span 
                 style={{
                   width: isTransparent ? 'calc(var(--u16) * 2.9)' : '2.5rem',
@@ -141,6 +165,85 @@ export const Navbar: React.FC<NavbarProps> = () => {
                 );
               })}
             </nav>
+
+            {/* Desktop User Account / Auth Status Button */}
+            <div className="hidden lg:flex items-center gap-2.5 z-10">
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/profil"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
+                    title="Profil & Pengaturan Akun"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>@{currentUser.username}</span>
+                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
+                      {currentUser.role === 'admin' ? 'Admin' : 'User'}
+                    </span>
+                  </Link>
+
+                  {currentUser.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      className="px-3 py-1.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs"
+                    >
+                      Panel Admin
+                    </Link>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      adminAuth.clearSession();
+                      window.location.href = '/#/';
+                      window.location.reload();
+                    }}
+                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                    title="Keluar dari Akun"
+                  >
+                    Keluar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login?mode=register"
+                    className="text-xs text-[#475569] hover:text-[#0f9b8a] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-stone-100/70 transition cursor-pointer"
+                  >
+                    Daftar
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Masuk</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Header: Clean auth status / quick access */}
+            <div className="flex items-center lg:hidden z-10">
+              {currentUser ? (
+                <Link
+                  to="/profil"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono"
+                  title="Profil Saya"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span className="truncate max-w-[90px]">@{currentUser.username}</span>
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0f9b8a] text-white text-xs font-bold shadow-xs"
+                >
+                  <LogIn className="w-3 h-3" />
+                  <span>Masuk</span>
+                </Link>
+              )}
+            </div>
 
           </div>
         </div>

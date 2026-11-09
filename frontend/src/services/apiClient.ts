@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { quotaService } from './quotaService';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1');
 
@@ -15,6 +16,8 @@ apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('scamora_admin_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    config.headers['x-guest-session-id'] = quotaService.getGuestSessionId();
   }
   return config;
 });

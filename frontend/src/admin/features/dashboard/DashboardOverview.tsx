@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
-import type { SystemStats } from '../../types/admin';
+import type { SystemStats, UserStats } from '../../types/admin';
 import { ScanTimelineChart } from './components/ScanTimelineChart';
 import { RiskDonutChart } from './components/RiskDonutChart';
 import { AiConditionCard } from './components/AiConditionCard';
 import { TopScamsCard } from './components/TopScamsCard';
 import { VisitorsCard } from './components/VisitorsCard';
-import { Activity, ShieldCheck, RefreshCw } from 'lucide-react';
+import { Activity, ShieldCheck, RefreshCw, Users, Globe, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const DashboardOverview: React.FC = () => {
   const [stats, setStats] = useState<SystemStats | null>(null);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalUsers: 0,
+    verifiedUsers: 0,
+    guestUsers: 0,
+    activeUsers: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -20,16 +27,29 @@ export const DashboardOverview: React.FC = () => {
 
   const loadData = async () => {
     setLoading(true);
-    const data = await adminService.getStats();
-    setStats(data);
-    setLoading(false);
+    try {
+      const [sysStats, uRes] = await Promise.all([
+        adminService.getStats(),
+        adminService.getUsers(),
+      ]);
+      setStats(sysStats);
+      setUserStats(uRes.stats);
+    } catch {
+      // Fallback
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleManualRefresh = async () => {
     setRefreshing(true);
     try {
-      const data = await adminService.getStats();
-      setStats(data);
+      const [sysStats, uRes] = await Promise.all([
+        adminService.getStats(),
+        adminService.getUsers(),
+      ]);
+      setStats(sysStats);
+      setUserStats(uRes.stats);
       toast.success('Data telemetri berhasil diperbarui!');
     } catch {
       toast.error('Gagal memperbarui telemetri.');
@@ -135,6 +155,68 @@ export const DashboardOverview: React.FC = () => {
           modelName="gemini-3.5-flash-lite"
           provider="gemini"
         />
+      </section>
+
+      {/* ========================================================================= */}
+      {/* USER MANAGEMENT OVERVIEW (VERIFIED DATABASE USERS)                        */}
+      {/* ========================================================================= */}
+      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] dark:border-slate-700 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
+              3
+            </span>
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-[#1A202C] dark:text-white tracking-tight">
+                Kontrol Pengguna Terdaftar (Verified Database)
+              </h2>
+              <p className="text-[11px] text-[#476072] dark:text-slate-400 mt-0.5">
+                Pengguna yang terdaftar dan terverifikasi secara resmi di basis data platform
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/users"
+            className="px-3.5 py-1.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+          >
+            <span>Buka Manajemen Pengguna</span>
+            <ArrowRight className="w-3.5 h-3.5 text-[#548CA8]" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-slate-850 border border-[#D8E0E7] dark:border-slate-700 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5 text-[#548CA8]" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-[#5E6D7E] dark:text-slate-400 uppercase font-bold">Total Pengguna Terdaftar</div>
+              <div className="text-xl font-black text-[#1A202C] dark:text-white">{userStats.totalUsers} Akun</div>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold">
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold">Akun Aktif</div>
+              <div className="text-xl font-black text-emerald-700 dark:text-emerald-400">{userStats.activeUsers} Akun Aktif</div>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <div className="text-[10px] font-mono text-amber-800 dark:text-amber-400 uppercase font-bold">Akun Ditangguhkan</div>
+              <div className="text-xl font-black text-amber-700 dark:text-amber-400">
+                {Math.max(0, userStats.totalUsers - userStats.activeUsers)} Ditangguhkan
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ========================================================================= */}

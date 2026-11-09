@@ -22,13 +22,16 @@ adminApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('scamora_admin_token');
-      localStorage.removeItem('scamora_admin_user');
-      if (
-        typeof window !== 'undefined' &&
-        window.location.pathname !== '/login'
-      ) {
-        window.location.href = '/login';
+      const isAuthRequest = error.config?.url?.includes('/login') || error.config?.url?.includes('/register');
+      if (!isAuthRequest) {
+        localStorage.removeItem('scamora_admin_token');
+        localStorage.removeItem('scamora_admin_user');
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login'
+        ) {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

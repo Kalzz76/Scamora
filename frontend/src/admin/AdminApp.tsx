@@ -12,6 +12,7 @@ import { KnowledgeBasePage } from './features/knowledge-base/KnowledgeBasePage';
 import { QuizManagerPage } from './features/quiz-manager/QuizManagerPage';
 import { ModerationQueuePage } from './features/moderation/ModerationQueuePage';
 import { AuditLogsPage } from './features/audit-logs/AuditLogsPage';
+import { UserManagementPage } from './features/user-management/UserManagementPage';
 import adminBgLight from './assets/admin-bg.jpg';
 import adminBgDark from './assets/admin-bg-dark.jpg';
 import { ThemeProvider, useTheme } from './services/themeContext';
@@ -73,10 +74,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 const ProtectedRoute: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const isAuth = adminAuth.isAuthenticated();
+  const user = adminAuth.getUser();
   const location = useLocation();
 
   if (!isAuth) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (user && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;
@@ -143,10 +149,11 @@ export const AdminApp: React.FC = () => {
     <ErrorBoundary>
       <ThemeProvider>
         <Routes>
-          <Route path="login" element={<LoginPage />} />
+          <Route path="login" element={<Navigate to="/login" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AdminLayout />}>
               <Route index element={<DashboardOverview />} />
+              <Route path="users" element={<UserManagementPage />} />
               <Route path="engine" element={<AiEngineConfigPage />} />
               <Route path="knowledge" element={<KnowledgeBasePage />} />
               <Route path="quiz" element={<QuizManagerPage />} />

@@ -13,11 +13,15 @@ const envSchema = z.object({
   GEMINI_MODEL: z.string().default('gemini-3.5-flash-lite'),
   AI_PROVIDER: z.enum(['auto', 'gemini', 'anthropic']).default('auto'),
   SAFE_BROWSING_API_KEY: z.string().default(''),
+  DATABASE_URL: z.string().default(''),
   SUPABASE_URL: z.string().default(''),
   SUPABASE_KEY: z.string().default(''),
   ADMIN_USERNAME: z.string().default('admin'),
   ADMIN_PASSWORD: z.string().default('admin123'),
   ADMIN_SECRET: z.string().default('scamora-super-secret-admin-key-2026'),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/google/callback'),
 });
 
 const parsed = envSchema.safeParse(process.env);

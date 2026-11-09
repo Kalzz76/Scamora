@@ -73,7 +73,7 @@ export const AiConditionSection: React.FC<AiConditionSectionProps> = ({
     timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB',
   });
 
-  const maxTokenInHour = Math.max(...hourlyTokens.map((t) => t.totalTokens), 1000);
+  const maxTokenInHour = Math.max(...hourlyTokens.map((t) => t.totalTokens), 100);
   const activeHoverItem = hoveredIndex !== null ? hourlyTokens[hoveredIndex] : null;
 
   const handleRunTest = async (e?: React.FormEvent) => {

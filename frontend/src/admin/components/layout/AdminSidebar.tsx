@@ -9,6 +9,7 @@ import {
   ClipboardList,
   ExternalLink,
   User,
+  Users,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -20,6 +21,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
 
   const navItems = [
     { to: '/admin', label: 'Dashboard Utama', icon: LayoutDashboard },
+    { to: '/admin/users', label: 'Manajemen Pengguna', icon: Users, badge: '2 Tingkat' },
     { to: '/admin/engine', label: 'AI Engine & Crawler', icon: Cpu, badge: 'Active' },
     { to: '/admin/knowledge', label: 'Pusat Pengetahuan', icon: BookOpen },
     { to: '/admin/quiz', label: 'Guardian Challenge', icon: HelpCircle },

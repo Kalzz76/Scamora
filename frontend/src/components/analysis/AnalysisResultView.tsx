@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircle2, 
   Copy, 
@@ -174,6 +175,7 @@ function ChatTranscriptView({ text, evidenceList }: { text: string; evidenceList
 }
 
 export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, onReset }) => {
+  const navigate = useNavigate();
   const [showJsonPayload, setShowJsonPayload] = useState(false);
   const [techTab, setTechTab] = useState<'summary' | 'raw'>('summary');
   const [jsonCopied, setJsonCopied] = useState(false);
@@ -317,6 +319,43 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
     setTimeout(() => setSummaryCopied(false), 2000);
   };
 
+  // Diskusikan di Komunitas Handler
+  const handleDiscussInCommunity = () => {
+    const rawTarget = result.input_sanitized || (result as any).url || '';
+    let domain = 'Mencurigakan';
+    try {
+      if (rawTarget.includes('://')) {
+        domain = new URL(rawTarget).hostname;
+      } else {
+        domain = rawTarget.split('/')[0];
+      }
+    } catch {
+      domain = rawTarget || 'Mencurigakan';
+    }
+
+    // Defang URL (contoh: hxxps://contoh[.]com)
+    const defanged = rawTarget
+      .replace(/^https?:\/\//i, (m: string) => (m.toLowerCase().startsWith('https') ? 'hxxps://' : 'hxxp://'))
+      .replace(/\./g, '[.]');
+
+    const score = result.risk_score || result.raw_score || 0;
+    const level = result.risk_level === 'high' ? 'Tinggi' : result.risk_level === 'review' ? 'Perlu Ditinjau' : 'Rendah';
+    const topReasons = result.indicators?.slice(0, 3).map((ind) => ind.name || ind.description).join(', ') || 'Terdeteksi indikasi penipuan';
+
+    const draft = {
+      title: `Waspada: Indikasi Penipuan pada Domain ${domain}`,
+      category: 'waspada-modus-baru' as const,
+      evidenceSnippet: `Target: ${defanged} | Skor Risiko: ${score}/100 (${level}) | Deteksi: ${new Date().toLocaleDateString('id-ID')}`,
+      content: `Saya menemukan indikasi penipuan melalui pemindaian Scamora:\n\n• Target (Disanitasi): ${defanged}\n• Skor Risiko: ${score}/100 (${level})\n• Indikasi Utama: ${topReasons}\n\nMohon rekan-rekan warga waspada dan jangan mengakses atau memasukkan data apapun di tautan tersebut!`,
+    };
+
+    try {
+      sessionStorage.setItem('community_prefill_draft', JSON.stringify(draft));
+    } catch {}
+
+    navigate('/komunitas', { state: { prefillDraft: draft } });
+  };
+
   return (
     <div className="w-full flex flex-col gap-5 text-[#14130F] animate-in fade-in slide-in-from-bottom-4 duration-300">
       
@@ -358,6 +397,17 @@ export const AnalysisResultView: React.FC<AnalysisResultViewProps> = ({ result, 
 
             {/* Action buttons */}
             <div className="flex items-center gap-2 flex-wrap justify-start sm:justify-end pt-1 sm:pt-0">
+              {/* Diskusikan di Komunitas Button */}
+              <button
+                type="button"
+                onClick={handleDiscussInCommunity}
+                title="Diskusikan hasil ini di Komunitas Warga"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#143826] hover:bg-[#1a4a32] text-white font-semibold text-xs border border-[#143826] transition-all cursor-pointer shadow-2xs"
+              >
+                <MessageSquare className="w-3 h-3 text-[#A6F4C5]" />
+                <span>Diskusikan di Komunitas</span>
+              </button>
+
               {/* WhatsApp Share Button */}
               <button
                 type="button"

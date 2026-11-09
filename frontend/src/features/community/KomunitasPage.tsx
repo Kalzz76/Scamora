@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocation } from 'react-router-dom';
 import { 
   MessageSquare, 
   Search, 
@@ -16,52 +17,59 @@ import {
   ShieldCheck,
   TrendingUp,
   Tag,
-  ArrowLeft
+  ArrowLeft,
+  PlusCircle,
+  Flag,
+  Bell,
+  Trash2,
+  Award,
+  Image as ImageIcon,
+  Lock,
+  ChevronRight,
+  EyeOff,
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { CommunityShieldIllustration } from '../../components/illustrations/Illustrations2D';
+import { adminAuth } from '../../admin/services/adminAuth';
+import { communityService } from '../../services/communityService';
+import type {
+  CommunityDiscussion,
+  CommunityCommentTree,
+  CommunityNotification,
+  DiscussionCategory,
+  DiscussionStatus,
+  ReportReason
+} from '../../services/communityService';
 
-// Types
-export type MessageType = 'question' | 'answer' | 'warning' | 'general';
-export type AuthorBadge = 'Warga Waspada' | 'Relawan Komunitas' | 'Korban Melapor' | 'Anonim';
-
-export interface ChatMessage {
-  id: string;
-  channelId: string;
-  author: string;
-  authorBadge: AuthorBadge;
-  avatarColor: string;
-  timestamp: string;
-  type: MessageType;
-  content: string;
-  replyTo?: {
-    id: string;
-    author: string;
-    content: string;
-  };
-  evidenceSnippet?: string;
-  helpfulCount: number;
-  userLiked?: boolean;
-  isVerifiedSolution?: boolean;
-}
-
-export interface Channel {
-  id: string;
-  name: string;
+export interface ChannelTab {
+  id: DiscussionCategory;
   title: string;
   description: string;
   icon: string;
-  activeCount: number;
 }
 
-export interface TrendingScam {
-  id: string;
-  title: string;
-  tag: string;
-  consultationCount: number;
-  severity: 'Kritis' | 'Tinggi';
-}
+const CHANNELS: ChannelTab[] = [
+  {
+    id: 'tanya-jawab-warga',
+    title: 'Tanya Jawab Warga',
+    description: 'Tanyakan kecurigaan pesan, SMS, atau telepon yang Anda terima',
+    icon: 'message-square',
+  },
+  {
+    id: 'waspada-modus-baru',
+    title: 'Waspada Modus Baru',
+    description: 'Berbagi temuan link mencurigakan & file .apk berbahaya',
+    icon: 'alert-triangle',
+  },
+  {
+    id: 'posko-solusi-lapor',
+    title: 'Posko Solusi & Bantuan',
+    description: 'Panduan blokir rekening bank penipu & lapor kepolisian',
+    icon: 'shield-check',
+  },
+];
 
 const POPULAR_TAGS = [
   { id: 'apk', label: 'APK Kurir', query: 'APK' },
@@ -71,291 +79,382 @@ const POPULAR_TAGS = [
   { id: 'rekening', label: 'Blokir Rekening', query: 'rekening' },
 ];
 
-const TRENDING_SCAMS: TrendingScam[] = [
-  {
-    id: 'tr-1',
-    title: 'Berkas .APK Berkedok Resi Kurir',
-    tag: 'APK',
-    consultationCount: 38,
-    severity: 'Kritis',
-  },
-  {
-    id: 'tr-2',
-    title: 'Lowongan Freelance Like Video (Deposit)',
-    tag: 'Telegram',
-    consultationCount: 29,
-    severity: 'Tinggi',
-  },
-  {
-    id: 'tr-3',
-    title: 'Pemberitahuan Tarif Bank Rp 150rb',
-    tag: 'BCA',
-    consultationCount: 19,
-    severity: 'Kritis',
-  },
-];
-
-const CHANNELS: Channel[] = [
-  {
-    id: 'tanya-jawab',
-    name: 'tanya-jawab-warga',
-    title: 'Tanya Jawab Warga',
-    description: 'Tanyakan kecurigaan pesan, SMS, atau telepon yang Anda terima',
-    icon: '',
-    activeCount: 94,
-  },
-  {
-    id: 'lapor-modus',
-    name: 'waspada-modus-baru',
-    title: 'Waspada Modus Baru',
-    description: 'Berbagi bukti link mencurigakan & file .apk berbahaya',
-    icon: '',
-    activeCount: 41,
-  },
-  {
-    id: 'solusi-korban',
-    name: 'posko-solusi-lapor',
-    title: 'Posko Solusi & Bantuan',
-    description: 'Panduan blokir rekening bank penipu & lapor kepolisian',
-    icon: '',
-    activeCount: 21,
-  },
-];
-
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'msg-1',
-    channelId: 'tanya-jawab',
-    author: 'Rahmat Hidayat',
-    authorBadge: 'Warga Waspada',
-    avatarColor: 'bg-emerald-700',
-    timestamp: '09:12',
-    type: 'question',
-    content: 'Pagi bapak/ibu sekalian, mau tanya. Barusan saya dapat pesan WA dari nomor kurir kirim file bernama "Resi_Paket_JNT.apk". Katanya paket saya tertahan di gudang dan wajib instal itu untuk cek resi. Padahal saya lagi tidak pesan barang apapun di olshop. Apakah ini aman untuk dibuka ya?',
-    evidenceSnippet: 'Pengirim: +62 857-****-4912 | Berkas: Resi_Paket_JNT.apk',
-    helpfulCount: 28,
-    userLiked: false,
-  },
-  {
-    id: 'msg-2',
-    channelId: 'tanya-jawab',
-    author: 'Budi Prasetyo',
-    authorBadge: 'Relawan Komunitas',
-    avatarColor: 'bg-[#143826]',
-    timestamp: '09:15',
-    type: 'answer',
-    replyTo: {
-      id: 'msg-1',
-      author: 'Rahmat Hidayat',
-      content: 'Barusan saya dapat pesan WA dari nomor kurir kirim file bernama "Resi_Paket_JNT.apk"...',
-    },
-    content: 'JANGAN DIINSTAL PAK RAHMAT! Itu 100% trojan perbankan pencuri SMS OTP m-banking. Kurir resmi tidak pernah kirim file instalasi via WhatsApp. Segera hapus berkasnya dan blokir nomor pengirimnya!',
-    helpfulCount: 52,
-    userLiked: true,
-    isVerifiedSolution: true,
-  },
-  {
-    id: 'msg-3',
-    channelId: 'tanya-jawab',
-    author: 'Siti Rahma',
-    authorBadge: 'Warga Waspada',
-    avatarColor: 'bg-[#E86A33]',
-    timestamp: '09:18',
-    type: 'answer',
-    replyTo: {
-      id: 'msg-1',
-      author: 'Rahmat Hidayat',
-      content: 'Barusan saya dapat pesan WA dari nomor kurir kirim file bernama "Resi_Paket_JNT.apk"...',
-    },
-    content: 'Betul kata Pak Budi. Tetangga saya bulan lalu kena modus serupa sampai saldo tabungannya ludes. Cek nomor resi resmi ekspedisi hanya lewat web atau aplikasi resmi Google Play Store.',
-    helpfulCount: 21,
-    userLiked: false,
-  },
-  {
-    id: 'msg-4',
-    channelId: 'tanya-jawab',
-    author: 'Rahmat Hidayat',
-    authorBadge: 'Warga Waspada',
-    avatarColor: 'bg-emerald-700',
-    timestamp: '09:21',
-    type: 'general',
-    replyTo: {
-      id: 'msg-2',
-      author: 'Budi Prasetyo',
-      content: 'JANGAN DIINSTAL PAK RAHMAT! Itu 100% trojan perbankan...',
-    },
-    content: 'Alhamdulillah terima kasih banyak Pak Budi & Bu Siti atas respon cepatnya! Untung sempat tanya di sini dulu. Filenya sudah langsung saya hapus permanen dan nomornya saya blokir.',
-    helpfulCount: 15,
-    userLiked: false,
-  },
-  {
-    id: 'msg-5',
-    channelId: 'tanya-jawab',
-    author: 'Anonim (Disamarkan)',
-    authorBadge: 'Anonim',
-    avatarColor: 'bg-gray-600',
-    timestamp: '09:34',
-    type: 'question',
-    content: 'Halo semua, mau konsultasi penting. Tiga hari lalu saya dimasukkan ke grup Telegram kerja sampingan freelancer online. Tugasnya cuma like video YouTube dan follow akun medsos, tugas pertama beneran ditransfer 50rb. Tapi hari ini adminnya bilang ada "Misi Pesanan Mall", saya wajib deposit Rp 2.000.000 ke rekening mereka dulu untuk cairkan komisi 1.2jt. Kalau ga deposit uang saya sebelumnya hangus. Apakah ini scam? Saya bingung dan takut uang hilang.',
-    evidenceSnippet: 'Rekening Tujuan: Bank Permata 8921-****-3319 a.n. CV Berkah Digital Makmur',
-    helpfulCount: 37,
-    userLiked: false,
-  },
-  {
-    id: 'msg-6',
-    channelId: 'tanya-jawab',
-    author: 'Dian Permata',
-    authorBadge: 'Relawan Komunitas',
-    avatarColor: 'bg-[#143826]',
-    timestamp: '09:37',
-    type: 'answer',
-    replyTo: {
-      id: 'msg-5',
-      author: 'Anonim (Disamarkan)',
-      content: 'Misi Pesanan Mall, saya wajib deposit Rp 2.000.000 ke rekening bendahara...',
-    },
-    content: 'STOP JANGAN TRANSFER SEPESER PUN! Ini skema penipuan klasik "Job Task Scam". Uang 50rb di awal itu murni umpan psikologis agar Anda percaya. Uang deposit 2 juta itu TIDAK AKAN PERNAH KEMBALI. Begitu ditransfer, mereka akan beralasan tugas salah dan menuntut deposit 5jt sampai 20jt lagi. Segera keluar dari grup itu dan blokir semua kontaknya!',
-    helpfulCount: 64,
-    userLiked: false,
-    isVerifiedSolution: true,
-  },
-  {
-    id: 'msg-7',
-    channelId: 'lapor-modus',
-    author: 'Andi Nugroho',
-    authorBadge: 'Korban Melapor',
-    avatarColor: 'bg-amber-600',
-    timestamp: '08:40',
-    type: 'warning',
-    content: 'WASPADA SEMUA! Sedang marak beredar pesan WhatsApp mengatasnamakan Bank BCA terkait "Surat Edaran Kenaikan Biaya Transaksi Jadi Rp 500.000/Bulan". Di dalam surat disisipkan tautan tiruan internet banking untuk mencuri PIN dan OTP nasabah.',
-    evidenceSnippet: 'Domain Phishing: http://bca-tarif-update.info-nasabah-bank.xyz',
-    helpfulCount: 45,
-    userLiked: false,
-  },
-  {
-    id: 'msg-8',
-    channelId: 'solusi-korban',
-    author: 'Bambang Setyawan',
-    authorBadge: 'Relawan Komunitas',
-    avatarColor: 'bg-[#143826]',
-    timestamp: '07:50',
-    type: 'answer',
-    content: 'LANGKAH DARURAT JIKA SUDAH TERLANJUR TRANSFER: 1) Segera hubungi call center bank Anda dan bank penipu untuk minta pembekuan darurat rekening penampung (dalam 1x24 jam), 2) Datangi Polsek/Polres terdekat untuk membuat STPL (Surat Tanda Penerimaan Laporan), 3) Laporkan nomor rekening penipu di portal cekrekening.id agar di-blacklist perbankan nasional.',
-    helpfulCount: 92,
-    userLiked: true,
-    isVerifiedSolution: true,
-  },
-];
-
 export const KomunitasPage: React.FC = () => {
-  const [activeChannelId, setActiveChannelId] = useState<string>('tanya-jawab');
-  const [messages, setMessages] = useState<ChatMessage[]>(INITIAL_MESSAGES);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const location = useLocation();
+  const currentUser = adminAuth.getUser();
+
+  // State Data Komunitas
+  const [activeCategory, setActiveCategory] = useState<DiscussionCategory>('tanya-jawab-warga');
+  const [statusFilter, setStatusFilter] = useState<'all' | DiscussionStatus>('all');
+  const [sortOrder, setSortOrder] = useState<'terbaru' | 'paling_membantu' | 'terpopuler'>('terbaru');
+  const [searchQuery, setSearchQuery] = useState('');
   
-  // Chat input state
-  const [inputText, setInputText] = useState<string>('');
-  const [messageType, setMessageType] = useState<MessageType>('question');
-  const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
-  const [replyTarget, setReplyTarget] = useState<ChatMessage | null>(null);
-  
-  // Filter inside room
-  const [activeFilter, setActiveFilter] = useState<'all' | 'question' | 'answer'>('all');
+  const [discussions, setDiscussions] = useState<CommunityDiscussion[]>([]);
+  const [pagination, setPagination] = useState({ total: 0, page: 1, limit: 10, totalPages: 1 });
+  const [loading, setLoading] = useState(true);
 
-  // Thread Detail Modal State (Inspired by community_post_detail.html)
-  const [focusedThread, setFocusedThread] = useState<ChatMessage | null>(null);
-  const [threadReplyInput, setThreadReplyInput] = useState<string>('');
+  // Stats & Trending
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({
+    'tanya-jawab-warga': 0,
+    'waspada-modus-baru': 0,
+    'posko-solusi-lapor': 0,
+  });
+  const [trendingScams, setTrendingScams] = useState<any[]>([]);
 
-  // Lock background scroll when thread modal is open (Mobile touch proof)
-  useEffect(() => {
-    if (focusedThread) {
-      const scrollY = window.scrollY;
-      const originalPosition = document.body.style.position;
-      const originalTop = document.body.style.top;
-      const originalWidth = document.body.style.width;
-      const originalOverflow = document.body.style.overflow;
+  // Modals & Panels State
+  const [isNewPostModalOpen, setIsNewPostModalOpen] = useState(false);
+  const [focusedDiscussion, setFocusedDiscussion] = useState<CommunityDiscussion | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+  // Reporting State
+  const [reportModalData, setReportModalData] = useState<{
+    isOpen: boolean;
+    targetType: 'post' | 'comment';
+    targetId: string;
+    title: string;
+  }>({
+    isOpen: false,
+    targetType: 'post',
+    targetId: '',
+    title: '',
+  });
+  const [reportReason, setReportReason] = useState<ReportReason>('penipuan');
+  const [reportNotes, setReportNotes] = useState('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
 
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') setFocusedThread(null);
-      };
-      window.addEventListener('keydown', handleKeyDown);
+  // Notifications State
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<CommunityNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-      return () => {
-        document.body.style.position = originalPosition;
-        document.body.style.top = originalTop;
-        document.body.style.width = originalWidth;
-        document.body.style.overflow = originalOverflow;
-        window.scrollTo(0, scrollY);
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [focusedThread]);
+  // Form Buat Postingan Baru
+  const [newPostTitle, setNewPostTitle] = useState('');
+  const [newPostCategory, setNewPostCategory] = useState<DiscussionCategory>('tanya-jawab-warga');
+  const [newPostContent, setNewPostContent] = useState('');
+  const [newPostEvidenceSnippet, setNewPostEvidenceSnippet] = useState('');
+  const [newPostEvidenceImage, setNewPostEvidenceImage] = useState<string | null>(null);
+  const [newPostIsAnonymous, setNewPostIsAnonymous] = useState(false);
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
 
-  const getRepliesCount = (msgId: string) => {
-    return messages.filter(m => m.replyTo?.id === msgId).length;
-  };
-
-  const getThreadReplies = (rootMsg: ChatMessage) => {
-    return messages.filter(m => m.replyTo?.id === rootMsg.id || (m.replyTo && m.replyTo.author === rootMsg.author));
-  };
-
-  const handleSendThreadReply = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!threadReplyInput.trim() || !focusedThread) return;
-
-    const now = new Date();
-    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-    const newReply: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      channelId: focusedThread.channelId,
-      author: 'Anda (Warga Waspada)',
-      authorBadge: 'Warga Waspada',
-      avatarColor: 'bg-[#143826]',
-      timestamp: timeString,
-      type: 'answer',
-      content: threadReplyInput.trim(),
-      replyTo: {
-        id: focusedThread.id,
-        author: focusedThread.author,
-        content: focusedThread.content.slice(0, 65) + (focusedThread.content.length > 65 ? '...' : '')
-      },
-      helpfulCount: 1,
-      userLiked: true,
-    };
-
-    setMessages(prev => [...prev, newReply]);
-    setThreadReplyInput('');
-    toast.success('Balasan Anda berhasil dikirim ke utas ini!');
-  };
+  // Form Balas / Komentar
+  const [commentInput, setCommentInput] = useState('');
+  const [commentReplyTo, setCommentReplyTo] = useState<{ id: string; author: string; content: string } | null>(null);
+  const [commentIsAnonymous, setCommentIsAnonymous] = useState(false);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
   // Copy helper
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
-  // Internal chat scroll container ref (scrolls only inside the chat box, never the whole window)
-  const chatScrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const currentChannel = CHANNELS.find(c => c.id === activeChannelId) || CHANNELS[0];
-
-  // Scroll internal chat container to bottom when messages change or channel changes
+  // 1. Inisialisasi: Periksa apakah ada prefill draft dari URL Scanner
   useEffect(() => {
-    if (chatScrollContainerRef.current) {
-      chatScrollContainerRef.current.scrollTop = chatScrollContainerRef.current.scrollHeight;
+    let draft = (location.state as any)?.prefillDraft;
+    if (!draft) {
+      try {
+        const stored = sessionStorage.getItem('community_prefill_draft');
+        if (stored) {
+          draft = JSON.parse(stored);
+          sessionStorage.removeItem('community_prefill_draft');
+        }
+      } catch {}
     }
-  }, [messages, activeChannelId]);
 
-  // Ensure browser window starts at the top when opening or switching to this page
+    if (draft) {
+      setNewPostTitle(draft.title || '');
+      setNewPostCategory(draft.category || 'waspada-modus-baru');
+      setNewPostContent(draft.content || '');
+      setNewPostEvidenceSnippet(draft.evidenceSnippet || '');
+      setActiveCategory(draft.category || 'waspada-modus-baru');
+      setIsNewPostModalOpen(true);
+      toast.info('Draf hasil pemindaian URL telah dimuat otomatis untuk didiskusikan!');
+    }
+  }, [location.state]);
+
+  // 2. Muat Statistik Komunitas
+  const fetchStats = async () => {
+    try {
+      const stats = await communityService.getStats();
+      if (stats) {
+        setCategoryCounts(stats.categoryCounts);
+        setTrendingScams(stats.trendingScams);
+      }
+    } catch {}
+  };
+
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    }, 50);
-    return () => clearTimeout(timer);
+    fetchStats();
   }, []);
+
+  // 3. Muat Notifikasi jika Terautentikasi
+  const fetchNotifications = async () => {
+    if (!adminAuth.isAuthenticated()) return;
+    try {
+      const res = await communityService.getNotifications();
+      setNotifications(res.notifications);
+      setUnreadCount(res.unreadCount);
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // 4. Muat Daftar Diskusi berdasarkan filter
+  const fetchDiscussions = async (page = 1) => {
+    setLoading(true);
+    try {
+      const res = await communityService.getDiscussions({
+        category: activeCategory,
+        status: statusFilter,
+        search: searchQuery,
+        sort: sortOrder,
+        page,
+        limit: 10,
+      });
+      setDiscussions(res.discussions);
+      setPagination(res.pagination);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal memuat diskusi.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDiscussions(1);
+  }, [activeCategory, statusFilter, sortOrder]);
+
+  // Debounced Search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDiscussions(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // 5. Muat Detail Diskusi saat dipilih
+  const handleOpenDiscussionDetail = async (discId: string) => {
+    setLoadingDetail(true);
+    try {
+      const detail = await communityService.getDiscussionDetail(discId);
+      setFocusedDiscussion(detail);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal membuka detail diskusi.');
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
+  // 6. Handle Upload Gambar dengan Validasi Magic Bytes & Sensor PII
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Ukuran berkas melebihi batas maksimal 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const val = await communityService.validateEvidence(base64);
+        if (val.valid) {
+          setNewPostEvidenceImage(base64);
+          toast.success(`Gambar bukti terverifikasi (${val.mimeType}). Jangan lupa pastikan data sensitif sudah disensor.`);
+        }
+      } catch (err: any) {
+        toast.error(err.message || 'Format gambar bukti ditolak oleh sistem keamanan.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // 7. Submit Buat Postingan Baru
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostTitle.trim() || newPostTitle.trim().length < 5) {
+      toast.error('Judul diskusi wajib diisi minimal 5 karakter.');
+      return;
+    }
+    if (!newPostContent.trim() || newPostContent.trim().length < 10) {
+      toast.error('Isi cerita / pertanyaan wajib diisi minimal 10 karakter.');
+      return;
+    }
+
+    setIsSubmittingPost(true);
+    try {
+      const created = await communityService.createDiscussion({
+        category: newPostCategory,
+        title: newPostTitle.trim(),
+        content: newPostContent.trim(),
+        evidenceSnippet: newPostEvidenceSnippet.trim() || undefined,
+        evidenceImageUrl: newPostEvidenceImage || undefined,
+        isAnonymous: newPostIsAnonymous,
+      });
+
+      toast.success('Postingan Anda berhasil dipublikasikan!');
+      setIsNewPostModalOpen(false);
+      setNewPostTitle('');
+      setNewPostContent('');
+      setNewPostEvidenceSnippet('');
+      setNewPostEvidenceImage(null);
+      setNewPostIsAnonymous(false);
+
+      // Pindahkan aktif ke kategori tersebut dan refresh
+      setActiveCategory(created.category);
+      fetchDiscussions(1);
+      fetchStats();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mempublikasikan postingan.');
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  };
+
+  // 8. Submit Komentar / Threaded Reply
+  const handleSendComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!focusedDiscussion) return;
+    if (!commentInput.trim() || commentInput.trim().length < 3) {
+      toast.error('Komentar harus minimal 3 karakter.');
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    try {
+      await communityService.addComment(focusedDiscussion.id, {
+        content: commentInput.trim(),
+        parentId: commentReplyTo?.id || null,
+        isAnonymous: commentIsAnonymous,
+      });
+
+      toast.success('Tanggapan Anda berhasil dikirim!');
+      setCommentInput('');
+      setCommentReplyTo(null);
+
+      // Refresh detail diskusi
+      const updated = await communityService.getDiscussionDetail(focusedDiscussion.id);
+      setFocusedDiscussion(updated);
+      fetchDiscussions(pagination.page);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengirim komentar.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // 9. Tandai / Batalkan Solusi Terbaik (Best Solution)
+  const handleToggleBestSolution = async (commentId: string) => {
+    if (!focusedDiscussion) return;
+    try {
+      const res = await communityService.toggleBestSolution(focusedDiscussion.id, commentId);
+      toast.success(
+        res.isBestSolution
+          ? 'Jawaban berhasil dijadikan Solusi Terbaik! Status diskusi kini TERJAWAB.'
+          : 'Tanda Solusi Terbaik dibatalkan. Status diskusi kembali TERBUKA.'
+      );
+
+      const updated = await communityService.getDiscussionDetail(focusedDiscussion.id);
+      setFocusedDiscussion(updated);
+      fetchDiscussions(pagination.page);
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengubah Solusi Terbaik.');
+    }
+  };
+
+  // 10. Toggle Vote Membantu (Helpful)
+  const handleToggleHelpful = async (targetType: 'post' | 'comment', targetId: string) => {
+    try {
+      const res = await communityService.toggleHelpfulVote(targetType, targetId);
+      toast.success(res.voted ? 'Dukungan Membantu diberikan!' : 'Dukungan Membantu dibatalkan.');
+
+      if (targetType === 'post') {
+        setDiscussions(prev =>
+          prev.map(d => (d.id === targetId ? { ...d, helpfulCount: res.helpfulCount, userVoted: res.voted } : d))
+        );
+        if (focusedDiscussion && focusedDiscussion.id === targetId) {
+          setFocusedDiscussion({ ...focusedDiscussion, helpfulCount: res.helpfulCount, userVoted: res.voted });
+        }
+      } else if (focusedDiscussion) {
+        // Refresh detail for updated comment vote
+        const updated = await communityService.getDiscussionDetail(focusedDiscussion.id);
+        setFocusedDiscussion(updated);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal memproses vote.');
+    }
+  };
+
+  // 11. Hapus Postingan Sendiri
+  const handleDeletePost = async (discId: string) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus postingan diskusi ini?')) return;
+    try {
+      await communityService.deleteDiscussion(discId);
+      toast.success('Postingan berhasil dihapus.');
+      if (focusedDiscussion?.id === discId) {
+        setFocusedDiscussion(null);
+      }
+      fetchDiscussions(1);
+      fetchStats();
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menghapus postingan.');
+    }
+  };
+
+  // 12. Hapus Komentar Sendiri
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm('Hapus komentar ini?')) return;
+    try {
+      await communityService.deleteComment(commentId);
+      toast.success('Komentar berhasil dihapus.');
+      if (focusedDiscussion) {
+        const updated = await communityService.getDiscussionDetail(focusedDiscussion.id);
+        setFocusedDiscussion(updated);
+        fetchDiscussions(pagination.page);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menghapus komentar.');
+    }
+  };
+
+  // 13. Laporkan Konten
+  const handleSubmitReport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reportReason === 'lainnya' && (!reportNotes.trim() || reportNotes.trim().length < 5)) {
+      toast.error('Keterangan laporan wajib diisi minimal 5 karakter untuk opsi "Lainnya".');
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    try {
+      await communityService.reportContent({
+        targetType: reportModalData.targetType,
+        targetId: reportModalData.targetId,
+        reason: reportReason,
+        notes: reportNotes.trim() || undefined,
+      });
+
+      toast.success('Laporan berhasil dikirim ke tim moderasi Scamora. Terima kasih atas kepedulian Anda!');
+      setReportModalData({ isOpen: false, targetType: 'post', targetId: '', title: '' });
+      setReportReason('penipuan');
+      setReportNotes('');
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengirim laporan.');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
+  // 14. Tandai Notifikasi Terbaca
+  const handleMarkAllNotifications = async () => {
+    try {
+      await communityService.markAllNotificationsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+      toast.success('Seluruh notifikasi ditandai telah dibaca.');
+    } catch {}
+  };
 
   const handleCopy = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -364,163 +463,98 @@ export const KomunitasPage: React.FC = () => {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
-  const handleLike = (msgId: string) => {
-    setMessages(prev => prev.map(m => {
-      if (m.id !== msgId) return m;
-      const isLiked = !!m.userLiked;
-      return {
-        ...m,
-        helpfulCount: isLiked ? m.helpfulCount - 1 : m.helpfulCount + 1,
-        userLiked: !isLiked
-      };
-    }));
-  };
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim()) {
-      toast.error('Ketikkan pertanyaan atau tanggapan Anda terlebih dahulu.');
-      return;
-    }
-
-    const now = new Date();
-    const timeString = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-    const newMsg: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      channelId: activeChannelId,
-      author: isAnonymous ? 'Anonim (Disamarkan)' : 'Anda (Warga Waspada)',
-      authorBadge: isAnonymous ? 'Anonim' : 'Warga Waspada',
-      avatarColor: isAnonymous ? 'bg-gray-600' : 'bg-[#143826]',
-      timestamp: timeString,
-      type: messageType,
-      content: inputText.trim(),
-      replyTo: replyTarget ? {
-        id: replyTarget.id,
-        author: replyTarget.author,
-        content: replyTarget.content.slice(0, 65) + (replyTarget.content.length > 65 ? '...' : '')
-      } : undefined,
-      helpfulCount: 1,
-      userLiked: true,
-    };
-
-    setMessages(prev => [...prev, newMsg]);
-    setInputText('');
-    setReplyTarget(null);
-    toast.success('Pesan Anda berhasil dikirim ke ruang diskusi!');
-
-    // Simulated community volunteer reply if user asked a question
-    if (messageType === 'question') {
-      setTimeout(() => {
-        const autoReply: ChatMessage = {
-          id: `msg-reply-${Date.now()}`,
-          channelId: activeChannelId,
-          author: 'Relawan Komunitas Scamora',
-          authorBadge: 'Relawan Komunitas',
-          avatarColor: 'bg-[#143826]',
-          timestamp: 'Baru saja',
-          type: 'answer',
-          replyTo: {
-            id: newMsg.id,
-            author: newMsg.author,
-            content: newMsg.content.slice(0, 50) + '...'
-          },
-          content: 'Halo! Pertanyaan Anda sudah kami terima di forum warga. Sedang ditelaah polanya oleh relawan siber kami. Mohon jangan klik link atau transfer uang apapun sebelum ada verifikasi lengkap ya!',
-          helpfulCount: 4,
-          userLiked: false,
-          isVerifiedSolution: false,
-        };
-        setMessages(prev => [...prev, autoReply]);
-      }, 1500);
-    }
-  };
-
-  const handleShareMessage = (msg: ChatMessage) => {
-    const text = `*FORUM TANYA JAWAB WARGA - SCAMORA*\n\n` +
-      `Dari: ${msg.author} (${msg.authorBadge})\n` +
-      `Isi: "${msg.content}"\n\n` +
-      `Mari saling jaga dari penipuan digital di Scamora!`;
-    navigator.clipboard.writeText(text);
-    toast.success('Pesan diskusi berhasil disalin!');
-  };
-
-  // Filter messages
-  const filteredMessages = messages.filter(msg => {
-    if (msg.channelId !== activeChannelId) return false;
-    if (activeFilter !== 'all' && msg.type !== activeFilter) return false;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      return msg.content.toLowerCase().includes(q) || msg.author.toLowerCase().includes(q);
-    }
-    return true;
-  });
-
   return (
-    <div className="flex flex-col w-full min-h-screen bg-transparent text-[#0F172A]">
+    <div className="flex flex-col w-full min-h-[calc(100vh-80px)] bg-[#FAF8F5] text-[#14161C] relative">
       
-      {/* 1. CLEAN EDITORIAL HEADER WITH 2D COMMUNITY VISUAL */}
-      <section className="w-full pt-8 pb-6 relative overflow-hidden border-b border-slate-200/80 bg-white/60">
-        <div 
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[350px] pointer-events-none opacity-50"
-          style={{
-            background: 'radial-gradient(circle at 50% 15%, rgba(13, 148, 136, 0.12) 0%, rgba(241, 245, 249, 0) 70%)',
-          }}
-        />
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+      {/* 1. HEADER HERO BANNER DOCK */}
+      <section className="w-full bg-white border-b border-gray-200/80 pt-6 pb-6 sm:pb-8 shadow-2xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             
-            <div className="space-y-2 text-center md:text-left max-w-xl">
-              <h1 className="text-2xl sm:text-3xl font-black text-[#143826] tracking-tight">
-                Tanya Jawab &amp; <span className="text-[#E86A33]">Diskusi Waspada.</span>
+            <div className="space-y-3 text-center md:text-left max-w-xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EAF2ED] text-[#143826] text-xs font-mono font-bold border border-[#143826]/10">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>FORUM KEAMANAN DIGITAL MASYARAKAT</span>
+              </div>
+
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-[#143826] tracking-tight leading-tight">
+                Tanya &amp; Waspada Bersama <span className="text-[#E86A33]">Komunitas Warga.</span>
               </h1>
 
-              <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed">
-                Ruang terbuka sesama masyarakat untuk saling bertanya, menjawab, dan membedah kecurigaan penipuan tanpa campur tangan bot AI.
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-medium">
+                Dapatkan konfirmasi langsung dari sesama warga dan relawan siber Scamora sebelum Anda mengeklik tautan atau mentransfer uang.
               </p>
 
-              <div className="pt-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>156 Warga Sedang Aktif Membantu</span>
-                </div>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-1">
+                {/* Tombol Buat Postingan Baru */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!adminAuth.isAuthenticated()) {
+                      toast.error('Silakan masuk ke akun Scamora Anda terlebih dahulu.');
+                      return;
+                    }
+                    setIsNewPostModalOpen(true);
+                  }}
+                  className="btn-animate inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#143826] hover:bg-[#1a4a32] text-white text-xs sm:text-sm font-bold shadow-md shadow-[#143826]/20 transition cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4 text-[#A6F4C5]" />
+                  <span>Mulai Diskusi Baru</span>
+                </button>
+
+                {/* Notifikasi Lonceng */}
+                {adminAuth.isAuthenticated() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsNotificationsOpen(!isNotificationsOpen);
+                      fetchNotifications();
+                    }}
+                    className="relative inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold transition cursor-pointer"
+                  >
+                    <Bell className="w-4 h-4 text-[#143826]" />
+                    <span>Notifikasi</span>
+                    {unreadCount > 0 && (
+                      <span className="px-1.5 py-0.2 bg-[#E86A33] text-white text-[10px] font-bold rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* 2D Cartoon Illustration on the right */}
-            <div className="shrink-0 flex justify-center">
-              <CommunityShieldIllustration className="w-52 h-40 sm:w-60 sm:h-44" />
+            {/* 2D Illustration */}
+            <div className="shrink-0 hidden sm:flex justify-center">
+              <CommunityShieldIllustration className="w-48 h-36 sm:w-56 sm:h-40 drop-shadow-sm" />
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* 2. SIMPLE & SPACIOUS TWO-PANEL LAYOUT */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6 w-full flex-1 space-y-6">
-        
+      {/* 2. MAIN TWO-PANEL WORKSPACE */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full flex-1">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-6 items-start">
           
-          {/* TOPIC SWITCHER (Left Column on Desktop, Top on Mobile) */}
+          {/* LEFT SIDEBAR: TOPIC SWITCHER & STATS (4 COLS) */}
           <div className="w-full lg:col-span-4 space-y-4">
             
             {/* Topic Switcher Card */}
-            <div className="apple-card p-4 sm:p-5 border border-gray-200 bg-white shadow-2xs space-y-3">
+            <div className="p-4 sm:p-5 rounded-3xl border border-gray-200 bg-white shadow-2xs space-y-3">
               <div className="text-xs font-bold text-gray-500 uppercase font-mono tracking-wider px-1">
-                Pilih Ruang Diskusi
+                Kategori Ruang Diskusi
               </div>
 
               <div className="flex lg:flex-col gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {CHANNELS.map(channel => {
-                  const isActive = activeChannelId === channel.id;
+                  const isActive = activeCategory === channel.id;
+                  const count = categoryCounts[channel.id] || 0;
                   return (
                     <button
                       key={channel.id}
-                      onClick={() => {
-                        setActiveChannelId(channel.id);
-                        setReplyTarget(null);
-                      }}
-                      className={`shrink-0 min-w-[200px] lg:min-w-0 lg:w-full text-left p-3 sm:p-3.5 rounded-2xl transition-all cursor-pointer flex items-center gap-3 sm:gap-3.5 border ${
+                      onClick={() => setActiveCategory(channel.id)}
+                      className={`shrink-0 min-w-[220px] lg:min-w-0 lg:w-full text-left p-3.5 rounded-2xl transition-all cursor-pointer flex items-center gap-3 border ${
                         isActive
                           ? 'bg-[#143826] text-white border-[#143826] shadow-sm'
                           : 'bg-white hover:bg-gray-50 text-gray-800 border-gray-100'
@@ -529,17 +563,19 @@ export const KomunitasPage: React.FC = () => {
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                         isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'
                       }`}>
-                        {channel.id === 'tanya-jawab' && <MessageSquare className="w-4 h-4" />}
-                        {channel.id === 'lapor-modus' && <AlertTriangle className="w-4 h-4 text-amber-500" />}
-                        {channel.id === 'solusi-korban' && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
+                        {channel.id === 'tanya-jawab-warga' && <MessageSquare className="w-4 h-4" />}
+                        {channel.id === 'waspada-modus-baru' && <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                        {channel.id === 'posko-solusi-lapor' && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className={`font-bold text-xs sm:text-sm ${isActive ? 'text-white' : 'text-gray-900'}`}>
                             {channel.title}
                           </span>
-                          <span className={`text-[10px] font-mono ${isActive ? 'text-emerald-300' : 'text-gray-400'}`}>
-                            {channel.activeCount} online
+                          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
+                            isActive ? 'bg-white/20 text-emerald-200 font-bold' : 'bg-gray-100 text-gray-600 font-semibold'
+                          }`}>
+                            {count} Topik
                           </span>
                         </div>
                         <p className={`text-[11px] truncate mt-0.5 ${isActive ? 'text-gray-200' : 'text-gray-500'}`}>
@@ -552,26 +588,26 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Only: Tren Modus Minggu Ini (On mobile, rendered under chat for chat-first UX) */}
-            <div className="hidden lg:block apple-card p-4 sm:p-5 border border-gray-200 bg-white shadow-2xs space-y-3 text-left">
+            {/* Tren Modus Minggu Ini */}
+            <div className="p-4 sm:p-5 rounded-3xl border border-gray-200 bg-white shadow-2xs space-y-3 text-left">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
                   <TrendingUp className="w-3.5 h-3.5 text-[#E86A33]" />
                   <span>Tren Modus Minggu Ini</span>
                 </div>
                 <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold">
-                  Update
+                  Aktif
                 </span>
               </div>
 
               <div className="space-y-2">
-                {TRENDING_SCAMS.map((item) => (
+                {trendingScams.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => {
                       setSearchQuery(item.tag);
-                      toast.info(`Menyaring obrolan terkait "${item.title}"`);
+                      toast.info(`Menyaring kasus terkait "${item.title}"`);
                     }}
                     className="w-full text-left p-2.5 rounded-xl bg-gray-50/80 hover:bg-[#FAF9F6] border border-gray-200/80 hover:border-gray-300 transition-all flex items-start justify-between gap-2 group cursor-pointer"
                   >
@@ -579,12 +615,12 @@ export const KomunitasPage: React.FC = () => {
                       <span className="font-bold text-xs text-gray-900 group-hover:text-[#143826] transition-colors block truncate">
                         {item.title}
                       </span>
-                      <span className="text-[10px] text-gray-500 font-mono mt-0.5 block">
-                        {item.consultationCount} warga berkonsultasi
+                      <span className="text-[10px] font-mono text-gray-500">
+                        Konsultasi #{item.tag} • {item.consultationCount} laporan
                       </span>
                     </div>
-                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                      item.severity === 'Kritis' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded font-bold shrink-0 ${
+                      item.severity === 'Kritis' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                     }`}>
                       {item.severity}
                     </span>
@@ -593,22 +629,20 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Only: Helpline Fast Access Card */}
-            <div className="hidden lg:block apple-card p-4 sm:p-5 border border-gray-200 bg-white shadow-2xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
-                <PhoneCall className="w-3.5 h-3.5 text-[#E86A33]" />
+            {/* Saluran Darurat Penipuan */}
+            <div className="p-4 sm:p-5 rounded-3xl border border-gray-200 bg-white shadow-2xs space-y-3 text-left">
+              <div className="flex items-center gap-2 text-xs font-bold font-mono uppercase tracking-wider text-[#143826]">
+                <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Saluran Darurat Penipuan</span>
               </div>
               <p className="text-[11px] text-gray-500 leading-relaxed">
-                Salin kontak aduan resmi jika sudah terlanjur transfer dana:
+                Jika sudah terlanjur mentransfer uang atau membagikan OTP:
               </p>
-              
-              <div className="space-y-2">
+              <div className="space-y-1.5 pt-1">
                 {[
-                  { name: 'OJK (Investasi & Pinjol)', contact: '157' },
-                  { name: 'Cek Rekening Bank Penipu', contact: 'cekrekening.id' },
-                  { name: 'Aduan Konten Kominfo', contact: 'aduankonten.id' },
-                  { name: 'Patroli Siber Polri', contact: 'patrolisiber.id' },
+                  { name: 'Call Center Polri', contact: '110' },
+                  { name: 'Satgas Waspada Investasi OJK', contact: '157' },
+                  { name: 'Aduan Rekening Kominfo', contact: 'cekrekening.id' },
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100 text-xs">
                     <span className="text-[11px] font-semibold text-gray-700">{item.name}</span>
@@ -626,75 +660,76 @@ export const KomunitasPage: React.FC = () => {
 
           </div>
 
-          {/* MAIN CHAT FORUM WINDOW */}
-          <div className="w-full lg:col-span-8 flex flex-col h-[560px] sm:h-[660px] lg:h-[720px] bg-white rounded-3xl border border-gray-200 shadow-lg overflow-hidden">
+          {/* RIGHT PANEL: DISCUSSIONS STREAM & FILTERS (8 COLS) */}
+          <div className="w-full lg:col-span-8 space-y-4">
             
-            {/* Chat Header Bar */}
-            <div className="p-3.5 px-4 sm:p-4 sm:px-6 border-b border-gray-100 bg-white flex flex-wrap items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200 text-[#143826] flex items-center justify-center shrink-0">
-                  {currentChannel.id === 'tanya-jawab' && <MessageSquare className="w-4 h-4 text-[#143826]" />}
-                  {currentChannel.id === 'lapor-modus' && <AlertTriangle className="w-4 h-4 text-amber-600" />}
-                  {currentChannel.id === 'solusi-korban' && <ShieldCheck className="w-4 h-4 text-emerald-600" />}
-                </div>
-                <div>
-                  <h2 className="font-extrabold text-sm sm:text-base text-gray-900 leading-none">
-                    #{currentChannel.name}
-                  </h2>
-                  <p className="text-[11px] text-gray-500 mt-1">
-                    {currentChannel.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Simple Filter Pills */}
-              <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl">
-                {[
-                  { id: 'all', label: 'Semua' },
-                  { id: 'question', label: 'Tanya' },
-                  { id: 'answer', label: 'Jawab' },
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveFilter(tab.id as any)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                      activeFilter === tab.id
-                        ? 'bg-white text-gray-900 shadow-2xs'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Search & Popular Scam Topic Tags Strip (Inspired by community_search.html) */}
-            <div className="p-3 sm:p-4 bg-gray-50/90 border-b border-gray-100 space-y-2.5 shrink-0">
-              {/* Search input */}
-              <div className="relative bg-white rounded-2xl p-2.5 px-3.5 flex items-center gap-2 border border-gray-200 focus-within:ring-2 focus-within:ring-[#143826]/20 focus-within:border-[#143826] transition-all shadow-2xs">
+            {/* Filter & Search Bar Card */}
+            <div className="p-4 sm:p-5 rounded-3xl border border-gray-200 bg-white shadow-2xs space-y-4">
+              
+              {/* Search Box */}
+              <div className="relative bg-gray-50 rounded-2xl p-2.5 px-3.5 flex items-center gap-2 border border-gray-200 focus-within:bg-white focus-within:ring-2 focus-within:ring-[#143826]/20 focus-within:border-[#143826] transition-all">
                 <Search className="w-4 h-4 text-gray-400 shrink-0" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari kata kunci kasus (misal: APK, J&T, Telegram, BCA, rekening)..."
+                  placeholder="Cari topik diskusi (misal: APK Kurir, BCA Phishing, Loker Telegram)..."
                   className="w-full bg-transparent text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none font-medium"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition cursor-pointer"
-                    title="Hapus pencarian"
+                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-200 transition cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>
 
-              {/* Popular Scam Topic Tags (Pencarian Populer) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+              {/* Status Filter & Sort Controls */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-gray-100">
+                
+                {/* Status Tabs */}
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                  {[
+                    { id: 'all', label: 'Semua Status' },
+                    { id: 'TERBUKA', label: 'Terbuka' },
+                    { id: 'TERJAWAB', label: 'Terjawab' },
+                    { id: 'DITUTUP', label: 'Ditutup' },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setStatusFilter(tab.id as any)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                        statusFilter === tab.id
+                          ? 'bg-white text-gray-900 shadow-2xs'
+                          : 'text-gray-500 hover:text-gray-900'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sort Order Selector */}
+                <div className="flex items-center gap-1.5 text-xs">
+                  <span className="text-gray-400 font-mono text-[11px]">Urutkan:</span>
+                  <select
+                    value={sortOrder}
+                    onChange={(e) => setSortOrder(e.target.value as any)}
+                    className="bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1 text-xs font-bold text-gray-700 focus:outline-none cursor-pointer"
+                  >
+                    <option value="terbaru">Terbaru</option>
+                    <option value="paling_membantu">Paling Membantu</option>
+                    <option value="terpopuler">Terbanyak Komentar</option>
+                  </select>
+                </div>
+
+              </div>
+
+              {/* Popular Tags Strip */}
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 text-xs">
                 <span className="text-[10px] font-mono font-bold text-gray-400 uppercase shrink-0 mr-1 flex items-center gap-1">
                   <Tag className="w-3 h-3 text-[#E86A33]" />
                   <span>Topik Populer:</span>
@@ -705,13 +740,7 @@ export const KomunitasPage: React.FC = () => {
                     <button
                       key={tag.id}
                       type="button"
-                      onClick={() => {
-                        if (isSelected) {
-                          setSearchQuery('');
-                        } else {
-                          setSearchQuery(tag.query);
-                        }
-                      }}
+                      onClick={() => setSearchQuery(isSelected ? '' : tag.query)}
                       className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer border ${
                         isSelected
                           ? 'bg-[#143826] text-white border-[#143826] shadow-2xs'
@@ -723,507 +752,889 @@ export const KomunitasPage: React.FC = () => {
                   );
                 })}
               </div>
+
             </div>
 
-            {/* CHAT MESSAGES BODY */}
-            <div ref={chatScrollContainerRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-[#FAF9F6]">
-              {filteredMessages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 text-gray-400 space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-2xs">
-                    <Search className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <div className="space-y-1 max-w-sm">
-                    <p className="text-xs sm:text-sm font-bold text-gray-700">
-                      Tidak ada obrolan untuk "{searchQuery}"
-                    </p>
-                    <p className="text-[11px] text-gray-500 leading-relaxed">
-                      Belum ada warga yang menanyakan kata kunci ini. Anda dapat menjadi yang pertama berkonsultasi tentang kasus ini.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setInputText(`Apakah ada yang tahu tentang modus "${searchQuery}"? Mohon bantuan informasinya...`);
-                      setMessageType('question');
-                      setSearchQuery('');
-                    }}
-                    className="btn-animate inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#143826] text-white text-xs font-bold hover:bg-[#1D4E36] transition shadow-xs cursor-pointer"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Tanyakan Kasus Ini Sekarang</span>
-                  </button>
-                </div>
-              ) : (
-                filteredMessages.map(msg => {
-                  const isQuestion = msg.type === 'question';
-                  const isAnswer = msg.type === 'answer';
-                  const repliesCount = getRepliesCount(msg.id);
-
-                  return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-4 sm:p-5 rounded-2xl border transition-all space-y-2.5 ${
-                        isQuestion
-                          ? 'bg-amber-50/60 border-amber-200/90 shadow-2xs'
-                          : isAnswer
-                          ? 'bg-white border-gray-200 shadow-2xs'
-                          : 'bg-white border-gray-200 shadow-2xs'
-                      }`}
-                    >
-                      {/* Replying quote */}
-                      {msg.replyTo && (
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500 bg-gray-100/80 px-3 py-1.5 rounded-lg border-l-2 border-[#143826]">
-                          <CornerDownRight className="w-3 h-3 text-[#143826] shrink-0" />
-                          <span className="font-bold text-gray-700">Membalas @{msg.replyTo.author}:</span>
-                          <span className="truncate italic">"{msg.replyTo.content}"</span>
-                        </div>
-                      )}
-
-                      {/* Header row: Author + Tag */}
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-7 h-7 rounded-full ${msg.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs`}>
-                            {msg.author.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-xs sm:text-sm text-gray-900">{msg.author}</span>
-                              <span className={`text-[10px] font-mono px-2 py-0.2 rounded-md font-bold ${
-                                msg.authorBadge === 'Relawan Komunitas'
-                                  ? 'bg-[#EAF2ED] text-[#143826]'
-                                  : msg.authorBadge === 'Anonim'
-                                  ? 'bg-gray-200 text-gray-700'
-                                  : 'bg-orange-50 text-[#E86A33]'
-                              }`}>
-                                {msg.authorBadge}
-                              </span>
-                            </div>
-                            <span className="text-[10px] text-gray-400 font-mono">{msg.timestamp}</span>
-                          </div>
-                        </div>
-
-                        {/* Question / Answer Pill */}
-                        {isQuestion && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold font-mono">
-                            PERTANYAAN
-                          </span>
-                        )}
-                        {isAnswer && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            <span>JAWABAN</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Message content */}
-                      <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal whitespace-pre-line">
-                        {msg.content}
-                      </p>
-
-                      {/* Evidence snippet */}
-                      {msg.evidenceSnippet && (
-                        <div className="p-2.5 rounded-xl bg-gray-100 border border-gray-200 text-xs font-mono text-[#143826]">
-                          <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">
-                            Bukti Terkait:
-                          </span>
-                          "{msg.evidenceSnippet}"
-                        </div>
-                      )}
-
-                      {/* Verified solution badge */}
-                      {msg.isVerifiedSolution && (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 font-mono">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Solusi Paling Membantu Menurut Warga</span>
-                        </div>
-                      )}
-
-                      {/* Action buttons */}
-                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-xs flex-wrap gap-2">
-                        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                          <button
-                            onClick={() => {
-                              setReplyTarget(msg);
-                              setMessageType(isQuestion ? 'answer' : 'general');
-                            }}
-                            className="inline-flex items-center gap-1.5 font-bold text-[#143826] hover:text-[#E86A33] transition cursor-pointer"
-                          >
-                            <CornerDownRight className="w-3.5 h-3.5" />
-                            <span>Balas / Jawab</span>
-                          </button>
-
-                          <button
-                            onClick={() => setFocusedThread(msg)}
-                            className="inline-flex items-center gap-1.5 font-bold text-xs text-gray-600 hover:text-[#143826] transition cursor-pointer bg-gray-100/90 hover:bg-gray-200/80 px-2.5 py-1 rounded-lg"
-                            title="Buka seluruh utas obrolan untuk topik ini"
-                          >
-                            <MessageSquare className="w-3 h-3 text-gray-500" />
-                            <span>
-                              {repliesCount > 0 
-                                ? `Utas (${repliesCount} balasan)` 
-                                : 'Buka Utas'}
-                            </span>
-                          </button>
-
-                          <button
-                            onClick={() => handleLike(msg.id)}
-                            className={`inline-flex items-center gap-1 font-bold transition cursor-pointer ${
-                              msg.userLiked ? 'text-[#E86A33]' : 'text-gray-400 hover:text-gray-700'
-                            }`}
-                          >
-                            <ThumbsUp className="w-3.5 h-3.5" />
-                            <span>Membantu ({msg.helpfulCount})</span>
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => handleShareMessage(msg)}
-                          className="text-gray-400 hover:text-gray-600 transition cursor-pointer p-1 rounded hover:bg-gray-100"
-                          title="Bagikan obrolan"
-                        >
-                          <Share2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                    </motion.div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* CHAT INPUT BAR (CLEAN & FAMILIAR) */}
-            <form onSubmit={handleSendMessage} className="p-3 sm:p-4 bg-white border-t border-gray-200 space-y-2 shrink-0">
-              
-              {/* Replying target preview */}
-              <AnimatePresence>
-                {replyTarget && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center justify-between p-2 px-3 rounded-xl bg-[#EAF2ED] border border-[#143826]/20 text-xs text-[#143826]"
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <CornerDownRight className="w-3.5 h-3.5 text-[#143826] shrink-0" />
-                      <span className="font-bold">Membalas @{replyTarget.author}:</span>
-                      <span className="truncate italic">"{replyTarget.content.slice(0, 50)}..."</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setReplyTarget(null)}
-                      className="text-gray-500 hover:text-red-600 transition shrink-0 ml-2 cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Tag Selector & Anonim Toggle */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs px-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-gray-500 font-semibold text-[11px]">Kirim sebagai:</span>
-                  <div className="flex items-center gap-1">
-                    {[
-                      { id: 'question', label: 'Pertanyaan' },
-                      { id: 'answer', label: 'Jawaban' }
-                    ].map(t => (
-                      <button
-                        key={t.id}
-                        type="button"
-                        onClick={() => setMessageType(t.id as any)}
-                        className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition cursor-pointer border ${
-                          messageType === t.id
-                            ? 'bg-[#143826] text-white border-[#143826]'
-                            : 'bg-white hover:bg-gray-100 text-gray-600 border-gray-200'
-                        }`}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                    className="w-3.5 h-3.5 rounded text-[#143826] focus:ring-0"
-                  />
-                  <span>Kirim Anonim</span>
-                </label>
+            {/* Discussions List */}
+            {loading ? (
+              <div className="p-12 text-center bg-white rounded-3xl border border-gray-200 space-y-2">
+                <div className="w-8 h-8 rounded-full border-2 border-[#143826] border-t-transparent animate-spin mx-auto" />
+                <p className="text-xs text-gray-500 font-medium">Memuat diskusi dari basis data Scamora...</p>
               </div>
-
-              {/* Text Input Row */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  placeholder={
-                    replyTarget
-                      ? `Tulis balasan Anda untuk @${replyTarget.author}...`
-                      : messageType === 'question'
-                      ? 'Tuliskan pertanyaan kecurigaan Anda di sini...'
-                      : 'Tuliskan jawaban atau saran Anda untuk warga...'
-                  }
-                  className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 bg-gray-50 text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition"
-                />
-
+            ) : discussions.length === 0 ? (
+              <div className="p-10 text-center bg-white rounded-3xl border border-gray-200 space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-400 mx-auto">
+                  <Search className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold text-gray-900">Belum ada diskusi untuk kriteria ini</h4>
+                  <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                    Jadilah yang pertama membuka konsultasi atau berbagi temuan modus penipuan baru.
+                  </p>
+                </div>
                 <button
-                  type="submit"
-                  className="btn-animate inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#E86A33] hover:bg-[#D75922] text-white text-xs sm:text-sm font-bold shadow-md shadow-orange-500/20 cursor-pointer shrink-0 transition"
+                  type="button"
+                  onClick={() => setIsNewPostModalOpen(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#143826] text-white text-xs font-bold shadow-xs cursor-pointer"
                 >
-                  <span>Kirim</span>
-                  <Send className="w-4 h-4" />
+                  <PlusCircle className="w-3.5 h-3.5 text-[#A6F4C5]" />
+                  <span>Buka Diskusi Sekarang</span>
                 </button>
               </div>
-
-            </form>
-
-          </div>
-
-          {/* Mobile Only: Supporting Panels (Tren Modus + Helpline placed beneath chat for fast chatting UX) */}
-          <div className="w-full lg:hidden space-y-4">
-            
-            {/* Tren Modus Minggu Ini (Mobile) */}
-            <div className="apple-card p-4 border border-gray-200 bg-white shadow-2xs space-y-3 text-left">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
-                  <TrendingUp className="w-3.5 h-3.5 text-[#E86A33]" />
-                  <span>Tren Modus Minggu Ini</span>
-                </div>
-                <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded font-semibold">
-                  Update
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {TRENDING_SCAMS.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery(item.tag);
-                      toast.info(`Menyaring obrolan terkait "${item.title}"`);
-                    }}
-                    className="w-full text-left p-2.5 rounded-xl bg-gray-50/80 hover:bg-[#FAF9F6] border border-gray-200/80 hover:border-gray-300 transition-all flex items-start justify-between gap-2 group cursor-pointer"
-                  >
-                    <div className="min-w-0">
-                      <span className="font-bold text-xs text-gray-900 group-hover:text-[#143826] transition-colors block truncate">
-                        {item.title}
-                      </span>
-                      <span className="text-[10px] text-gray-500 font-mono mt-0.5 block">
-                        {item.consultationCount} warga berkonsultasi
-                      </span>
-                    </div>
-                    <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                      item.severity === 'Kritis' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}>
-                      {item.severity}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Helpline Fast Access Card */}
-            <div className="apple-card p-4 border border-gray-200 bg-white shadow-2xs space-y-3">
-              <div className="flex items-center gap-2 text-xs font-bold text-gray-700 font-mono uppercase tracking-wider">
-                <PhoneCall className="w-3.5 h-3.5 text-[#E86A33]" />
-                <span>Saluran Darurat Penipuan</span>
-              </div>
-              <p className="text-[11px] text-gray-500 leading-relaxed">
-                Salin kontak aduan resmi jika sudah terlanjur transfer dana:
-              </p>
-              
-              <div className="space-y-2">
-                {[
-                  { name: 'OJK (Investasi & Pinjol)', contact: '157' },
-                  { name: 'Cek Rekening Bank Penipu', contact: 'cekrekening.id' },
-                  { name: 'Aduan Konten Kominfo', contact: 'aduankonten.id' },
-                  { name: 'Patroli Siber Polri', contact: 'patrolisiber.id' },
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100 text-xs">
-                    <span className="text-[11px] font-semibold text-gray-700">{item.name}</span>
-                    <button
-                      onClick={() => handleCopy(item.contact, item.name)}
-                      className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 text-[10px] font-mono font-bold hover:bg-gray-100 transition flex items-center gap-1 cursor-pointer"
+            ) : (
+              <div className="space-y-3.5">
+                {discussions.map((disc) => {
+                  const isAuthor = Boolean(
+                    currentUser && (
+                      disc.userId === currentUser.id ||
+                      disc.userId === `usr-${currentUser.username}` ||
+                      disc.userId === currentUser.username ||
+                      currentUser.role === 'admin' ||
+                      currentUser.role === 'moderator' ||
+                      currentUser.role === 'superadmin'
+                    )
+                  );
+                  return (
+                    <div
+                      key={disc.id}
+                      className="p-5 rounded-3xl bg-white border border-gray-200/90 shadow-2xs hover:shadow-md hover:border-gray-300 transition-all space-y-3 text-left"
                     >
-                      {copiedText === item.contact ? <Check className="w-3 h-3 text-[#143826]" /> : <Copy className="w-3 h-3" />}
-                      <span>{item.contact}</span>
+                      {/* Top Header Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className="w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
+                            style={{ backgroundColor: disc.avatarColor || '#143826' }}
+                          >
+                            {disc.authorName.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-bold text-xs sm:text-sm text-gray-900">{disc.authorName}</span>
+                              <span className={`text-[10px] font-mono px-2 py-0.2 rounded-full font-bold ${
+                                disc.authorBadge === 'Relawan Komunitas'
+                                  ? 'bg-[#EAF2ED] text-[#143826] border border-[#143826]/20'
+                                  : disc.authorBadge === 'Kontributor Aktif'
+                                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                  : disc.authorBadge === 'Anonim'
+                                  ? 'bg-gray-100 text-gray-600'
+                                  : 'bg-emerald-50 text-emerald-800'
+                              }`}>
+                                {disc.authorBadge}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-gray-400 font-mono">
+                              {new Date(disc.createdAt).toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Status Badge */}
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-mono px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+                            disc.status === 'TERJAWAB'
+                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                              : disc.status === 'DITUTUP'
+                              ? 'bg-gray-100 text-gray-600 border border-gray-200'
+                              : 'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}>
+                            {disc.status === 'TERJAWAB' && '✓ '}
+                            {disc.status}
+                          </span>
+
+                          {/* Delete if author */}
+                          {isAuthor && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePost(disc.id)}
+                              className="p-1 text-gray-300 hover:text-red-600 transition cursor-pointer"
+                              title="Hapus postingan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Title & Preview */}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDiscussionDetail(disc.id)}
+                        className="w-full text-left space-y-1.5 cursor-pointer group"
+                      >
+                        <h3 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-[#143826] transition-colors leading-snug">
+                          {disc.title}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                          {disc.content}
+                        </p>
+                      </button>
+
+                      {/* Evidence Snippet if present */}
+                      {disc.evidenceSnippet && (
+                        <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs font-mono text-[#143826]">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase block">Bukti Kasus Terdeteksi:</span>
+                          "{disc.evidenceSnippet}"
+                        </div>
+                      )}
+
+                      {/* Action Row */}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
+                        <div className="flex items-center gap-2">
+                          {/* Helpful Vote Button */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleHelpful('post', disc.id)}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                              disc.userVoted
+                                ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                                : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-600'
+                            }`}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${disc.userVoted ? 'fill-emerald-600 text-emerald-600' : ''}`} />
+                            <span>Membantu ({disc.helpfulCount})</span>
+                          </button>
+
+                          {/* Comment count trigger */}
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDiscussionDetail(disc.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-600 transition cursor-pointer"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-[#143826]" />
+                            <span>{disc.commentCount} Tanggapan</span>
+                          </button>
+                        </div>
+
+                        {/* Report button */}
+                        <button
+                          type="button"
+                          onClick={() => setReportModalData({
+                            isOpen: true,
+                            targetType: 'post',
+                            targetId: disc.id,
+                            title: disc.title,
+                          })}
+                          className="text-gray-400 hover:text-red-600 p-1 rounded-md transition cursor-pointer"
+                          title="Laporkan konten pelanggaran"
+                        >
+                          <Flag className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Pagination Controls */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-200 text-xs font-bold">
+                    <button
+                      type="button"
+                      disabled={pagination.page <= 1}
+                      onClick={() => fetchDiscussions(pagination.page - 1)}
+                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition cursor-pointer"
+                    >
+                      &larr; Halaman Sebelumnya
+                    </button>
+
+                    <span className="text-gray-500 font-mono">
+                      Halaman {pagination.page} dari {pagination.totalPages}
+                    </span>
+
+                    <button
+                      type="button"
+                      disabled={pagination.page >= pagination.totalPages}
+                      onClick={() => fetchDiscussions(pagination.page + 1)}
+                      className="px-3.5 py-1.5 rounded-xl border border-gray-200 text-gray-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50 transition cursor-pointer"
+                    >
+                      Halaman Selanjutnya &rarr;
                     </button>
                   </div>
-                ))}
+                )}
               </div>
-            </div>
+            )}
 
           </div>
 
         </div>
-
       </div>
 
-      {/* THREAD DETAIL MODAL (Inspired by community_post_detail.html) */}
-      {focusedThread && typeof document !== 'undefined' && createPortal(
-        <div 
-          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain touch-none animate-in fade-in duration-150"
+      {/* ========================================================================= */}
+      {/* 3. MODAL BUAT POSTINGAN BARU */}
+      {/* ========================================================================= */}
+      {isNewPostModalOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain animate-in fade-in duration-150"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setFocusedThread(null);
-          }}
-          onTouchMove={(e) => {
-            if (e.target === e.currentTarget) e.preventDefault();
+            if (e.target === e.currentTarget) setIsNewPostModalOpen(false);
           }}
         >
-          <div 
-            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-2xl w-full p-5 sm:p-6 relative my-auto max-h-[90vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left overscroll-contain touch-auto"
+          <div
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-xl w-full p-5 sm:p-6 relative my-auto max-h-[92vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
               <div className="flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setFocusedThread(null)}
-                  className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition cursor-pointer"
-                  aria-label="Tutup utas"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
+                <div className="w-8 h-8 rounded-xl bg-[#EAF2ED] text-[#143826] flex items-center justify-center font-bold">
+                  <PlusCircle className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E86A33]">
-                    Utas Pembahasan Kasus
-                  </span>
-                  <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-tight">
-                    Diskusi @{focusedThread.author}
-                  </h3>
+                  <h3 className="text-base font-bold text-gray-900 leading-tight">Buka Topik Diskusi Warga</h3>
+                  <p className="text-[11px] text-gray-400 font-mono">Konsultasikan kecurigaan atau laporkan modus</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setFocusedThread(null)}
+                onClick={() => setIsNewPostModalOpen(false)}
                 className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Content Scroll Area */}
+            {/* PII REMINDER BANNER */}
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 space-y-1 shrink-0">
+              <div className="flex items-center gap-2 font-bold text-amber-900">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>PENTING: Lindungi Data Pribadi Anda!</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                Mohon sensor nomor rekening bank, nomor WhatsApp, nomor telepon, alamat rumah, atau nomor identitas (KTP/KK) sebelum menulis atau melampirkan gambar.
+              </p>
+            </div>
+
+            {/* Form Fields */}
+            <form onSubmit={handleCreatePost} className="space-y-4 text-xs">
+              
+              {/* Kategori */}
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">Kategori Ruang Diskusi *</label>
+                <select
+                  value={newPostCategory}
+                  onChange={(e) => setNewPostCategory(e.target.value as DiscussionCategory)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 font-semibold focus:bg-white focus:outline-none focus:border-[#143826] transition"
+                >
+                  <option value="tanya-jawab-warga">Tanya Jawab Warga (Pertanyaan &amp; Konsultasi Kasus)</option>
+                  <option value="waspada-modus-baru">Waspada Modus Baru (Temuan Link &amp; File APK Bahaya)</option>
+                  <option value="posko-solusi-lapor">Posko Solusi &amp; Bantuan (Langkah Blokir &amp; Laporan Polisi)</option>
+                </select>
+              </div>
+
+              {/* Judul */}
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">Judul Postingan (Singkat &amp; Jelas) *</label>
+                <input
+                  type="text"
+                  value={newPostTitle}
+                  onChange={(e) => setNewPostTitle(e.target.value)}
+                  placeholder="Contoh: Pesan WA File Resi_Paket_JNT.apk Padahal Tidak Belanja..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition font-medium"
+                />
+              </div>
+
+              {/* Isi Cerita / Pertanyaan */}
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">Kronologi / Pertanyaan Lengkap *</label>
+                <textarea
+                  rows={4}
+                  value={newPostContent}
+                  onChange={(e) => setNewPostContent(e.target.value)}
+                  placeholder="Ceritakan detail kecurigaan Anda: nomor pengirim, nama aplikasi, atau penawaran yang diberikan..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition leading-relaxed font-normal"
+                />
+              </div>
+
+              {/* Bukti Teks (Defanged URL / Info) */}
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">Cuplikan Bukti Teks (Opsional)</label>
+                <input
+                  type="text"
+                  value={newPostEvidenceSnippet}
+                  onChange={(e) => setNewPostEvidenceSnippet(e.target.value)}
+                  placeholder="Contoh: Pengirim: +62 812-****-3312 | Berkas: Resi_JNE.apk"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 font-mono text-[11px] text-gray-800 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition"
+                />
+              </div>
+
+              {/* Lampirkan Screenshot (JPG, PNG, WEBP) */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-gray-700 flex items-center justify-between">
+                  <span>Lampirkan Screenshot Bukti (Maks. 5MB)</span>
+                  <span className="text-[10px] text-gray-400 font-mono">JPG / PNG / WEBP Asli</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <label className="px-3.5 py-2 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold text-xs inline-flex items-center gap-2 cursor-pointer transition">
+                    <ImageIcon className="w-4 h-4 text-[#143826]" />
+                    <span>Pilih Berkas Screenshot</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                  {newPostEvidenceImage && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Gambar Siap</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setNewPostEvidenceImage(null)}
+                        className="text-red-500 hover:text-red-700 text-[11px] underline cursor-pointer"
+                      >
+                        Hapus
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Checkbox Anonim */}
+              <div className="pt-1 flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  id="anonymousCheck"
+                  checked={newPostIsAnonymous}
+                  onChange={(e) => setNewPostIsAnonymous(e.target.checked)}
+                  className="w-4 h-4 rounded text-[#143826] focus:ring-0 cursor-pointer"
+                />
+                <label htmlFor="anonymousCheck" className="cursor-pointer select-none text-gray-700 font-medium">
+                  Posting sebagai Anonim (Nama &amp; Akun Disamarkan di Forum Publik)
+                </label>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setIsNewPostModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingPost}
+                  className="btn-animate px-5 py-2 rounded-xl bg-[#143826] hover:bg-[#1a4a32] text-white font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingPost ? 'Memublikasikan...' : 'Publikasikan Postingan'}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ========================================================================= */}
+      {/* 4. MODAL THREAD DETAIL & THREADED COMMENTS */}
+      {/* ========================================================================= */}
+      {focusedDiscussion && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[999] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto overscroll-contain animate-in fade-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFocusedDiscussion(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-2xl w-full p-5 sm:p-6 relative my-auto max-h-[92vh] flex flex-col space-y-4 animate-in zoom-in-95 duration-200 text-left overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setFocusedDiscussion(null)}
+                  className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition cursor-pointer"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#E86A33]">
+                    Utas Diskusi Kasus
+                  </span>
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-tight">
+                    {focusedDiscussion.title}
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFocusedDiscussion(null)}
+                className="p-1.5 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Scroll Content */}
             <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-              {/* Root Question Card */}
-              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 space-y-2">
+              
+              {/* Root Post Card */}
+              <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full ${focusedThread.avatarColor} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs`}>
-                      {focusedThread.author.slice(0, 2).toUpperCase()}
+                    <div
+                      className="w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs"
+                      style={{ backgroundColor: focusedDiscussion.avatarColor || '#143826' }}
+                    >
+                      {focusedDiscussion.authorName.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <span className="font-bold text-xs sm:text-sm text-gray-900">{focusedThread.author}</span>
-                      <span className="text-[10px] text-gray-400 font-mono ml-2">{focusedThread.timestamp}</span>
+                      <span className="font-bold text-xs sm:text-sm text-gray-900">{focusedDiscussion.authorName}</span>
+                      <span className={`text-[10px] font-mono ml-2 px-2 py-0.2 rounded-full font-bold bg-amber-100 text-amber-800`}>
+                        {focusedDiscussion.authorBadge}
+                      </span>
                     </div>
                   </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-800">
-                    KASUS UTAMA
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold ${
+                    focusedDiscussion.status === 'TERJAWAB' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {focusedDiscussion.status}
                   </span>
                 </div>
+
                 <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-medium whitespace-pre-line">
-                  {focusedThread.content}
+                  {focusedDiscussion.content}
                 </p>
-                {focusedThread.evidenceSnippet && (
+
+                {focusedDiscussion.evidenceSnippet && (
                   <div className="p-2.5 rounded-xl bg-white border border-amber-200/80 text-xs font-mono text-[#143826]">
-                    <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Bukti Terkait:</span>
-                    "{focusedThread.evidenceSnippet}"
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block mb-0.5">Bukti Kasus Terdeteksi:</span>
+                    "{focusedDiscussion.evidenceSnippet}"
+                  </div>
+                )}
+
+                {focusedDiscussion.evidenceImageUrl && (
+                  <div className="pt-1">
+                    <span className="text-[10px] font-mono text-gray-500 block mb-1">Lampiran Tangkapan Layar:</span>
+                    <img
+                      src={focusedDiscussion.evidenceImageUrl}
+                      alt="Bukti Screenshot"
+                      className="max-h-48 rounded-xl border border-amber-200 object-contain bg-white"
+                    />
                   </div>
                 )}
               </div>
 
-              {/* Replies Chain Header */}
-              <div className="pt-2">
-                <div className="flex items-center justify-between px-1 mb-2">
+              {/* Threaded Comments Chain */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between px-1">
                   <span className="text-[11px] font-mono font-bold text-gray-500 uppercase tracking-wider">
-                    Semua Balasan &amp; Rekomendasi Warga ({getThreadReplies(focusedThread).length})
+                    Tanggapan &amp; Solusi Mitigasi ({focusedDiscussion.comments?.length || 0})
                   </span>
                 </div>
 
-                {getThreadReplies(focusedThread).length === 0 ? (
+                {(!focusedDiscussion.comments || focusedDiscussion.comments.length === 0) ? (
                   <div className="p-6 rounded-2xl bg-gray-50 border border-dashed border-gray-200 text-center text-xs text-gray-500 space-y-1">
-                    <p className="font-semibold text-gray-700">Belum ada tanggapan untuk pertanyaan ini.</p>
-                    <p className="text-[11px] text-gray-400">Jadilah yang pertama memberikan saran mitigasi di bawah.</p>
+                    <p className="font-semibold text-gray-700">Belum ada tanggapan pada diskusi ini.</p>
+                    <p className="text-[11px] text-gray-400">Jadilah yang pertama memberikan saran atau rekomendasi mitigasi di bawah.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {getThreadReplies(focusedThread).map((reply) => (
-                      <div 
-                        key={reply.id}
-                        className={`p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm space-y-2 ${
-                          reply.isVerifiedSolution
-                            ? 'bg-emerald-50/70 border-emerald-200 shadow-2xs'
-                            : 'bg-gray-50/70 border-gray-200'
+                  focusedDiscussion.comments.map((comment) => {
+                    const isQuestionAuthor = currentUser && (
+                      focusedDiscussion.userId === currentUser.id ||
+                      focusedDiscussion.userId === `usr-${currentUser.username}`
+                    );
+                    const isCommentAuthor = Boolean(
+                      currentUser && (
+                        comment.userId === currentUser.id ||
+                        comment.userId === `usr-${currentUser.username}` ||
+                        comment.userId === currentUser.username ||
+                        currentUser.role === 'admin' ||
+                        currentUser.role === 'moderator' ||
+                        currentUser.role === 'superadmin'
+                      )
+                    );
+
+                    return (
+                      <div
+                        key={comment.id}
+                        className={`p-3.5 sm:p-4 rounded-2xl border text-xs sm:text-sm space-y-2.5 ${
+                          comment.isBestSolution
+                            ? 'bg-gradient-to-br from-emerald-50 to-[#EAF2ED] border-emerald-300 shadow-sm ring-1 ring-emerald-300'
+                            : 'bg-gray-50/80 border-gray-200'
                         }`}
                       >
+                        {/* Header */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <div className={`w-6 h-6 rounded-full ${reply.avatarColor} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}>
-                              {reply.author.slice(0, 2).toUpperCase()}
+                            <div
+                              className="w-6 h-6 rounded-full text-white flex items-center justify-center font-bold text-[10px] shrink-0"
+                              style={{ backgroundColor: comment.avatarColor || '#0f9b8a' }}
+                            >
+                              {comment.authorName.slice(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-bold text-xs text-gray-900">{reply.author}</span>
+                            <span className="font-bold text-xs text-gray-900">{comment.authorName}</span>
                             <span className={`text-[9.5px] font-mono px-1.5 py-0.2 rounded font-bold ${
-                              reply.authorBadge === 'Relawan Komunitas'
+                              comment.authorBadge === 'Relawan Komunitas'
                                 ? 'bg-[#EAF2ED] text-[#143826]'
                                 : 'bg-gray-200 text-gray-700'
                             }`}>
-                              {reply.authorBadge}
+                              {comment.authorBadge}
                             </span>
                           </div>
-                          <span className="text-[10px] text-gray-400 font-mono">{reply.timestamp}</span>
+
+                          <span className="text-[10px] text-gray-400 font-mono">
+                            {new Date(comment.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
 
-                        {reply.isVerifiedSolution && (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>Solusi Mitigasi Terverifikasi</span>
+                        {/* SOLUSI TERBAIK BANNER */}
+                        {comment.isBestSolution && (
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 text-[10px] font-bold font-mono border border-emerald-300">
+                            <Award className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>SOLUSI TERVERIFIKASI OLEH PENANYA</span>
                           </div>
                         )}
 
                         <p className="text-xs sm:text-sm text-gray-800 leading-relaxed font-normal whitespace-pre-line">
-                          {reply.content}
+                          {comment.content}
                         </p>
+
+                        {/* Actions for Comment */}
+                        <div className="flex items-center justify-between pt-1 text-xs">
+                          <div className="flex items-center gap-2">
+                            {/* Tombol Membantu */}
+                            <button
+                              type="button"
+                              onClick={() => handleToggleHelpful('comment', comment.id)}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#143826] cursor-pointer"
+                            >
+                              <ThumbsUp className="w-3 h-3" />
+                              <span>Membantu ({comment.helpfulCount})</span>
+                            </button>
+
+                            {/* Tombol Balas */}
+                            <button
+                              type="button"
+                              onClick={() => setCommentReplyTo({
+                                id: comment.id,
+                                author: comment.authorName,
+                                content: comment.content.slice(0, 50),
+                              })}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-[#143826] cursor-pointer ml-1"
+                            >
+                              <CornerDownRight className="w-3 h-3" />
+                              <span>Balas</span>
+                            </button>
+
+                            {/* Tandai / Batalkan Solusi Terbaik (Hanya Pemilik Pertanyaan) */}
+                            {isQuestionAuthor && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleBestSolution(comment.id)}
+                                className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md cursor-pointer ml-1 transition ${
+                                  comment.isBestSolution
+                                    ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                                    : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                }`}
+                              >
+                                <Award className="w-3 h-3" />
+                                <span>{comment.isBestSolution ? 'Batalkan Solusi Terbaik' : 'Jadikan Solusi Terbaik'}</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            {isCommentAuthor && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="text-gray-300 hover:text-red-600 p-1 cursor-pointer"
+                                title="Hapus komentar"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setReportModalData({
+                                isOpen: true,
+                                targetType: 'comment',
+                                targetId: comment.id,
+                                title: `Komentar oleh ${comment.authorName}`,
+                              })}
+                              className="text-gray-300 hover:text-red-600 p-1 cursor-pointer"
+                              title="Laporkan komentar"
+                            >
+                              <Flag className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* REPLIES BERSARANG (THREADED SUB-REPLIES) */}
+                        {comment.replies && comment.replies.length > 0 && (
+                          <div className="pl-4 sm:pl-6 border-l-2 border-gray-200 space-y-2 pt-2">
+                            {comment.replies.map((reply) => {
+                              const isReplyAuthor = Boolean(
+                                currentUser && (
+                                  reply.userId === currentUser.id ||
+                                  reply.userId === `usr-${currentUser.username}` ||
+                                  reply.userId === currentUser.username ||
+                                  currentUser.role === 'admin' ||
+                                  currentUser.role === 'moderator' ||
+                                  currentUser.role === 'superadmin'
+                                )
+                              );
+                              return (
+                                <div key={reply.id} className="p-3 rounded-xl bg-white border border-gray-200 space-y-1.5 text-xs">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="font-bold text-gray-900">{reply.authorName}</span>
+                                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-gray-100 text-gray-600">
+                                        {reply.authorBadge}
+                                      </span>
+                                    </div>
+                                    <span className="text-[10px] text-gray-400 font-mono">
+                                      {new Date(reply.createdAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  </div>
+                                  <p className="text-gray-700 leading-relaxed">{reply.content}</p>
+                                  <div className="flex items-center justify-between pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleHelpful('comment', reply.id)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 hover:text-[#143826] cursor-pointer"
+                                    >
+                                      <ThumbsUp className="w-3 h-3" />
+                                      <span>Membantu ({reply.helpfulCount})</span>
+                                    </button>
+                                    {isReplyAuthor && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteComment(reply.id)}
+                                        className="text-gray-300 hover:text-red-600 p-0.5 cursor-pointer"
+                                        title="Hapus balasan"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })
                 )}
               </div>
+
             </div>
 
-            {/* Fast Reply Box Inside Modal */}
-            <form onSubmit={handleSendThreadReply} className="pt-2 border-t border-gray-100 space-y-2 shrink-0">
-              <span className="text-[11px] font-bold text-gray-600 block">
-                Tulis Balasan / Solusi Mitigasi:
-              </span>
+            {/* Bottom Comment Input */}
+            <form onSubmit={handleSendComment} className="pt-2 border-t border-gray-100 space-y-2 shrink-0">
+              {commentReplyTo && (
+                <div className="flex items-center justify-between p-2 px-3 rounded-xl bg-[#EAF2ED] border border-[#143826]/20 text-xs text-[#143826]">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <CornerDownRight className="w-3.5 h-3.5 shrink-0" />
+                    <span>Membalas <strong>@{commentReplyTo.author}</strong>: "{commentReplyTo.content}..."</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCommentReplyTo(null)}
+                    className="p-1 text-gray-500 hover:text-gray-900 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={threadReplyInput}
-                  onChange={(e) => setThreadReplyInput(e.target.value)}
-                  placeholder={`Bantu @${focusedThread.author} dengan tanggapan Anda...`}
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  placeholder={commentReplyTo ? `Balas @${commentReplyTo.author}...` : "Berikan tanggapan atau solusi mitigasi Anda..."}
                   className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs text-gray-900 placeholder-gray-400 focus:bg-white focus:outline-none focus:border-[#143826] transition"
                 />
                 <button
                   type="submit"
-                  className="btn-animate inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                  disabled={isSubmittingComment}
+                  className="btn-animate inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#143826] hover:bg-[#1D4E36] text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
                 >
-                  <span>Kirim</span>
+                  <span>{isSubmittingComment ? 'Mengirim...' : 'Kirim'}</span>
                   <Send className="w-3.5 h-3.5" />
                 </button>
               </div>
+
+              <div className="flex items-center gap-2 pt-0.5 text-[11px] text-gray-500">
+                <input
+                  type="checkbox"
+                  id="commentAnonCheck"
+                  checked={commentIsAnonymous}
+                  onChange={(e) => setCommentIsAnonymous(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded text-[#143826] cursor-pointer"
+                />
+                <label htmlFor="commentAnonCheck" className="cursor-pointer select-none">
+                  Kirim tanggapan sebagai Anonim
+                </label>
+              </div>
             </form>
+
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. MODAL LAPORKAN KONTEN PELANGGARAN */}
+      {/* ========================================================================= */}
+      {reportModalData.isOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[1000] bg-[#14161c]/65 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setReportModalData({ isOpen: false, targetType: 'post', targetId: '', title: '' })}
+        >
+          <div
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-md w-full p-5 sm:p-6 text-left space-y-4 animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+              <div className="flex items-center gap-2 text-red-600 font-bold text-sm">
+                <Flag className="w-4 h-4" />
+                <span>Laporkan Konten Pelanggaran</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReportModalData({ isOpen: false, targetType: 'post', targetId: '', title: '' })}
+                className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-600">
+              Melaporkan: <strong>"{reportModalData.title.slice(0, 50)}..."</strong>
+            </p>
+
+            <form onSubmit={handleSubmitReport} className="space-y-3.5 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">Alasan Pelaporan *</label>
+                <select
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value as ReportReason)}
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 font-semibold focus:outline-none focus:border-[#143826]"
+                >
+                  <option value="penipuan">Penipuan / Modus Berbahaya</option>
+                  <option value="spam">Spam / Iklan Bodong</option>
+                  <option value="misinformasi">Informasi Menyesatkan</option>
+                  <option value="bocor_pii">Kebocoran Data Pribadi (PII Leak)</option>
+                  <option value="ujaran_kebencian">Ujaran Kebencian / Pelecehan</option>
+                  <option value="lainnya">Alasan Lainnya</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-gray-700 block">
+                  Keterangan Tambahan {reportReason === 'lainnya' && <span className="text-red-500">*</span>}
+                </label>
+                <textarea
+                  rows={3}
+                  value={reportNotes}
+                  onChange={(e) => setReportNotes(e.target.value)}
+                  placeholder="Jelaskan alasan mengapa konten ini melanggar pedoman komunitas..."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:border-[#143826]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setReportModalData({ isOpen: false, targetType: 'post', targetId: '', title: '' })}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReport}
+                  className="btn-animate px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingReport ? 'Mengirim...' : 'Kirim Laporan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. MODAL NOTIFIKASI KOMUNITAS */}
+      {/* ========================================================================= */}
+      {isNotificationsOpen && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed inset-0 z-[1000] bg-[#14161c]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setIsNotificationsOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl border border-gray-200 shadow-2xl max-w-md w-full p-5 text-left space-y-3.5 animate-in zoom-in-95 duration-200 max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-gray-100 shrink-0">
+              <div className="flex items-center gap-2 text-[#143826] font-bold text-sm">
+                <Bell className="w-4 h-4" />
+                <span>Pusat Notifikasi Komunitas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllNotifications}
+                    className="text-[11px] font-bold text-emerald-700 hover:underline cursor-pointer"
+                  >
+                    Tandai Semua Terbaca
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationsOpen(false)}
+                  className="p-1 text-gray-400 hover:text-gray-700 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center text-xs text-gray-400">
+                  Belum ada notifikasi baru untuk Anda.
+                </div>
+              ) : (
+                notifications.map((n) => (
+                  <div
+                    key={n.id}
+                    className={`p-3 rounded-2xl border text-xs space-y-1 transition ${
+                      n.isRead ? 'bg-white border-gray-100 text-gray-600' : 'bg-emerald-50/70 border-emerald-200 font-medium text-gray-900'
+                    }`}
+                  >
+                    <p className="leading-snug">{n.message}</p>
+                    <span className="text-[10px] text-gray-400 font-mono block">
+                      {new Date(n.createdAt).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>,
         document.body

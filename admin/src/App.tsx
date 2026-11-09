@@ -11,6 +11,7 @@ import { KnowledgeBasePage } from './features/knowledge-base/KnowledgeBasePage';
 import { QuizManagerPage } from './features/quiz-manager/QuizManagerPage';
 import { ModerationQueuePage } from './features/moderation/ModerationQueuePage';
 import { AuditLogsPage } from './features/audit-logs/AuditLogsPage';
+import { UserManagementPage } from './features/user-management/UserManagementPage';
 import adminBgLight from './assets/admin-bg.jpg';
 import adminBgDark from './assets/admin-bg-dark.jpg';
 import { ThemeProvider, useTheme } from './services/themeContext';
@@ -119,6 +120,7 @@ const AdminLayout: React.FC = () => {
         <main className="flex-1 min-w-0 overflow-y-auto pb-12 bg-transparent">
           <Routes>
             <Route path="/" element={<DashboardOverview />} />
+            <Route path="/users" element={<UserManagementPage />} />
             <Route path="/engine" element={<AiEngineConfigPage />} />
             <Route path="/knowledge" element={<KnowledgeBasePage />} />
             <Route path="/quiz" element={<QuizManagerPage />} />

@@ -11,6 +11,10 @@ import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
+import { UserDashboardPage } from './features/dashboard/UserDashboardPage';
+import { UserProfilePage } from './features/profile/UserProfilePage';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { LoginPage } from './admin/features/auth/LoginPage';
 import { AdminApp } from './admin/AdminApp';
 
 function ScrollToTop() {
@@ -52,6 +56,7 @@ function PublicPageWrapper({ children }: { children: React.ReactNode }) {
 function MainApp() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isLogin = location.pathname === '/login';
   const isHome = location.pathname === '/';
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
@@ -59,11 +64,11 @@ function MainApp() {
     <div className={`min-h-screen flex flex-col ${isAdmin ? '' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
       <ScrollToTop />
 
-      {/* Navigation Bar (Only for public website) */}
-      {!isAdmin && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
+      {/* Navigation Bar (Only for public website, excluded on /admin and standalone /login) */}
+      {!isAdmin && !isLogin && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
 
       {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col ${isAdmin || isHome ? '' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
+      <main className={`flex-1 flex flex-col ${isAdmin || isHome || isLogin ? '' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
         <Routes>
           {/* Public Routes with Page Transitions */}
           <Route path="/" element={<PublicPageWrapper><HomePage /></PublicPageWrapper>} />
@@ -72,9 +77,52 @@ function MainApp() {
           <Route path="/laporan" element={<PublicPageWrapper><ReportPage /></PublicPageWrapper>} />
           <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
           <Route path="/panduan" element={<PublicPageWrapper><PanduanPage /></PublicPageWrapper>} />
-          <Route path="/kuis" element={<PublicPageWrapper><QuizPage /></PublicPageWrapper>} />
-          <Route path="/pengetahuan" element={<PublicPageWrapper><KnowledgePage /></PublicPageWrapper>} />
-          <Route path="/komunitas" element={<PublicPageWrapper><KomunitasPage /></PublicPageWrapper>} />
+
+          {/* Protected Routes for Authenticated Users */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute featureName="User Dashboard">
+                <PublicPageWrapper><UserDashboardPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profil"
+            element={
+              <ProtectedRoute featureName="Profil Pengguna">
+                <PublicPageWrapper><UserProfilePage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kuis"
+            element={
+              <ProtectedRoute featureName="Tantangan AI">
+                <PublicPageWrapper><QuizPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pengetahuan"
+            element={
+              <ProtectedRoute featureName="Pusat Edukasi">
+                <PublicPageWrapper><KnowledgePage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/komunitas"
+            element={
+              <ProtectedRoute featureName="Komunitas Warga">
+                <PublicPageWrapper><KomunitasPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Unified Public Login Route */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
           {/* Admin Nested Routes: /admin/* handled by AdminApp */}
           <Route path="/admin/*" element={<AdminApp />} />
@@ -85,7 +133,7 @@ function MainApp() {
       </main>
 
       {/* Universal Footer & Privacy Modal (Only for public website) */}
-      {!isAdmin && (
+      {!isAdmin && !isLogin && (
         <>
           <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
           <PrivacyModal

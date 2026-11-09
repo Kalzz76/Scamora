@@ -20,6 +20,9 @@ import { analysisService } from '../../services/analysisService';
 import { Stepper } from '../../components/common/Stepper';
 import { UrlDetectiveIllustration } from '../../components/illustrations/Illustrations2D';
 import type { AnalysisResult } from '../../types/analysis';
+import { adminAuth } from '../../admin/services/adminAuth';
+import { quotaService } from '../../services/quotaService';
+import { GuestQuotaModal } from '../../components/common/GuestQuotaModal';
 
 interface UrlCheckerPageProps {
   initialPresetId?: string | null;
@@ -37,6 +40,7 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
   const navigate = useNavigate();
 
   const urlPresets = DEMO_PRESETS.filter((p) => p.type === 'url');
@@ -74,6 +78,11 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    if (!adminAuth.isAuthenticated() && !quotaService.hasGuestQuota()) {
+      setShowQuotaModal(true);
+      return;
+    }
+
     const trimmed = url.trim();
     if (!trimmed) {
       setErrorMessage('Silakan masukkan alamat URL lengkap terlebih dahulu.');
@@ -99,10 +108,19 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
         url: trimmed,
         privacy_consent: privacyAgreed,
       });
+
+      if (!adminAuth.isAuthenticated()) {
+        quotaService.recordGuestScan();
+      }
+
       onAnalysisComplete(result);
       navigate('/laporan');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Gagal memproses pemeriksaan URL.');
+      if (err.code === 'GUEST_LIMIT_REACHED' || err.status === 403) {
+        setShowQuotaModal(true);
+      } else {
+        setErrorMessage(err.message || 'Gagal memproses pemeriksaan URL.');
+      }
     } finally {
       setLoading(false);
     }
@@ -402,6 +420,11 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
 
         </div>
       </div>
+
+      <GuestQuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+      />
 
     </div>
   );
