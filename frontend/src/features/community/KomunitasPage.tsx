@@ -784,7 +784,16 @@ export const KomunitasPage: React.FC = () => {
             ) : (
               <div className="space-y-3.5">
                 {discussions.map((disc) => {
-                  const isAuthor = currentUser && (disc.userId === currentUser.id || disc.userId === `usr-${currentUser.username}`);
+                  const isAuthor = Boolean(
+                    currentUser && (
+                      disc.userId === currentUser.id ||
+                      disc.userId === `usr-${currentUser.username}` ||
+                      disc.userId === currentUser.username ||
+                      currentUser.role === 'admin' ||
+                      currentUser.role === 'moderator' ||
+                      currentUser.role === 'superadmin'
+                    )
+                  );
                   return (
                     <div
                       key={disc.id}
@@ -1237,9 +1246,15 @@ export const KomunitasPage: React.FC = () => {
                       focusedDiscussion.userId === currentUser.id ||
                       focusedDiscussion.userId === `usr-${currentUser.username}`
                     );
-                    const isCommentAuthor = currentUser && (
-                      comment.userId === currentUser.id ||
-                      comment.userId === `usr-${currentUser.username}`
+                    const isCommentAuthor = Boolean(
+                      currentUser && (
+                        comment.userId === currentUser.id ||
+                        comment.userId === `usr-${currentUser.username}` ||
+                        comment.userId === currentUser.username ||
+                        currentUser.role === 'admin' ||
+                        currentUser.role === 'moderator' ||
+                        currentUser.role === 'superadmin'
+                      )
                     );
 
                     return (
@@ -1362,9 +1377,15 @@ export const KomunitasPage: React.FC = () => {
                         {comment.replies && comment.replies.length > 0 && (
                           <div className="pl-4 sm:pl-6 border-l-2 border-gray-200 space-y-2 pt-2">
                             {comment.replies.map((reply) => {
-                              const isReplyAuthor = currentUser && (
-                                reply.userId === currentUser.id ||
-                                reply.userId === `usr-${currentUser.username}`
+                              const isReplyAuthor = Boolean(
+                                currentUser && (
+                                  reply.userId === currentUser.id ||
+                                  reply.userId === `usr-${currentUser.username}` ||
+                                  reply.userId === currentUser.username ||
+                                  currentUser.role === 'admin' ||
+                                  currentUser.role === 'moderator' ||
+                                  currentUser.role === 'superadmin'
+                                )
                               );
                               return (
                                 <div key={reply.id} className="p-3 rounded-xl bg-white border border-gray-200 space-y-1.5 text-xs">

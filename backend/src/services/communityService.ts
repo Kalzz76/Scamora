@@ -920,11 +920,14 @@ export const communityService = {
       throw new Error('Diskusi tidak ditemukan.');
     }
 
-    const isAuthor = disc.userId === user.id;
+    const isAuthor =
+      disc.userId === user.id ||
+      disc.userId === user.username ||
+      disc.userId === `usr-${user.username}`;
     const isStaff = user.role === 'admin' || user.role === 'moderator' || user.role === 'superadmin';
 
     if (!isAuthor && !isStaff) {
-      throw new Error('Akses ditolak. Anda hanya dapat menyunting postingan milik Anda sendiri.');
+      throw new Error('Akses ditolak. Sesama pengguna tidak diizinkan menyunting postingan milik pengguna lain.');
     }
 
     const cleanTitle = data.title !== undefined ? data.title.trim() : disc.title;
@@ -976,16 +979,27 @@ export const communityService = {
       throw new Error('Diskusi tidak ditemukan.');
     }
 
-    const isAuthor = disc.userId === user.id;
+    const isAuthor =
+      disc.userId === user.id ||
+      disc.userId === user.username ||
+      disc.userId === `usr-${user.username}`;
     const isStaff = user.role === 'admin' || user.role === 'moderator' || user.role === 'superadmin';
 
     if (!isAuthor && !isStaff) {
-      throw new Error('Akses ditolak. Anda hanya dapat menghapus postingan milik Anda sendiri.');
+      throw new Error('Akses ditolak. Sesama pengguna tidak diizinkan menghapus postingan milik pengguna lain.');
     }
 
     if (isDbConnected()) {
       try {
-        await query('DELETE FROM community_discussions WHERE id = $1', [id]);
+        if (isStaff) {
+          await query('DELETE FROM community_discussions WHERE id = $1', [id]);
+        } else {
+          await query('DELETE FROM community_discussions WHERE id = $1 AND (user_id = $2 OR user_id = $3)', [
+            id,
+            user.id,
+            `usr-${user.username}`,
+          ]);
+        }
       } catch (e: any) {
         console.warn('[CommunityService] DB deleteDiscussion failed:', e.message);
       }
@@ -1136,16 +1150,27 @@ export const communityService = {
     const comm = inMemoryComments.find((c) => c.id === commentId);
     if (!comm) throw new Error('Komentar tidak ditemukan.');
 
-    const isAuthor = comm.userId === user.id;
+    const isAuthor =
+      comm.userId === user.id ||
+      comm.userId === user.username ||
+      comm.userId === `usr-${user.username}`;
     const isStaff = user.role === 'admin' || user.role === 'moderator' || user.role === 'superadmin';
 
     if (!isAuthor && !isStaff) {
-      throw new Error('Akses ditolak. Anda hanya dapat menghapus komentar milik Anda sendiri.');
+      throw new Error('Akses ditolak. Sesama pengguna tidak diizinkan menghapus komentar milik pengguna lain.');
     }
 
     if (isDbConnected()) {
       try {
-        await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
+        if (isStaff) {
+          await query('DELETE FROM community_comments WHERE id = $1', [commentId]);
+        } else {
+          await query('DELETE FROM community_comments WHERE id = $1 AND (user_id = $2 OR user_id = $3)', [
+            commentId,
+            user.id,
+            `usr-${user.username}`,
+          ]);
+        }
         await query('UPDATE community_discussions SET comment_count = GREATEST(0, comment_count - 1) WHERE id = $1', [comm.discussionId]);
       } catch (e: any) {
         console.warn('[CommunityService] DB deleteComment failed:', e.message);
@@ -1516,3 +1541,4 @@ export const communityService = {
     return true;
   },
 };
+

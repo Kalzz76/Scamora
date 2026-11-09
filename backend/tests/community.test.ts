@@ -460,4 +460,111 @@ describe('Community Forum & Citizen Interaction Tests (/api/v1/community)', { ti
       expect(data.success).toBe(true);
     });
   });
+
+  describe('9. Proteksi Otorisasi Hapus Postingan & Komentar Antar Pengguna', () => {
+    let postUser1Id: string;
+    let commentUser1Id: string;
+
+    beforeAll(async () => {
+      // User 1 membuat postingan
+      const postRes = await fetch(`${baseUrl}/community/discussions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user1Token}`,
+        },
+        body: JSON.stringify({
+          category: 'tanya-jawab-warga',
+          title: 'Postingan Eksklusif Milik User 1 untuk Uji Hak Akses Hapus',
+          content: 'Hanya pemilik asli atau admin yang berhak menghapus postingan ini.',
+        }),
+      });
+      const p = await postRes.json();
+      postUser1Id = p.data.id;
+
+      // User 1 menambahkan komentar
+      const commRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user1Token}`,
+        },
+        body: JSON.stringify({
+          content: 'Komentar eksklusif milik User 1.',
+        }),
+      });
+      const c = await commRes.json();
+      commentUser1Id = c.data.id;
+    });
+
+    it('menolak keras saat sesama user (User 2) mencoba menghapus postingan milik User 1 (403 FORBIDDEN)', async () => {
+      const deleteRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user2Token}`, // User 2 bukan pembuat postingan
+        },
+      });
+
+      expect(deleteRes.status).toBe(403);
+      const data = await deleteRes.json();
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe('FORBIDDEN');
+      expect(data.error.message).toContain('pengguna lain');
+
+      // Verifikasi postingan masih utuh dan tidak terhapus
+      const checkRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}`);
+      expect(checkRes.status).toBe(200);
+    });
+
+    it('menolak keras saat sesama user (User 2) mencoba menyunting postingan milik User 1 (403 FORBIDDEN)', async () => {
+      const editRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user2Token}`,
+        },
+        body: JSON.stringify({
+          title: 'Mencoba membajak judul postingan orang lain',
+          content: 'Konten bajakan yang seharusnya ditolak server.',
+        }),
+      });
+
+      expect(editRes.status).toBe(403);
+      const data = await editRes.json();
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe('FORBIDDEN');
+    });
+
+    it('menolak keras saat sesama user (User 2) mencoba menghapus komentar milik User 1 (403 FORBIDDEN)', async () => {
+      const delCommRes = await fetch(`${baseUrl}/community/comments/${commentUser1Id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user2Token}`, // User 2 mencoba hapus komentar User 1
+        },
+      });
+
+      expect(delCommRes.status).toBe(403);
+      const data = await delCommRes.json();
+      expect(data.success).toBe(false);
+      expect(data.error.code).toBe('FORBIDDEN');
+      expect(data.error.message).toContain('pengguna lain');
+    });
+
+    it('mengizinkan pemilik sah (User 1) menghapus postingannya sendiri (200 OK)', async () => {
+      const deleteRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${user1Token}`, // User 1 menghapus miliknya sendiri
+        },
+      });
+
+      expect(deleteRes.status).toBe(200);
+      const data = await deleteRes.json();
+      expect(data.success).toBe(true);
+
+      // Verifikasi sudah tidak ada di server
+      const checkRes = await fetch(`${baseUrl}/community/discussions/${postUser1Id}`);
+      expect(checkRes.status).toBe(404);
+    });
+  });
 });

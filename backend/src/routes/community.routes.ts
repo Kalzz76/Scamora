@@ -51,3 +51,4 @@ router.put('/notifications/:id/read', requireUserAuth, handleMarkNotificationRea
 router.put('/notifications/read-all', requireUserAuth, handleMarkAllNotificationsRead);
 
 export default router;
+

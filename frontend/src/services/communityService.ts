@@ -281,3 +281,4 @@ export const communityService = {
     await apiClient.put('/community/notifications/read-all');
   },
 };
+
