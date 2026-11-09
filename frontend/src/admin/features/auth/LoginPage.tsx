@@ -137,20 +137,48 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#faf8f5] text-[#14161c] flex flex-col justify-center items-center p-4 sm:p-6 font-['DM_Sans',sans-serif] selection:bg-[#0f9b8a]/20">
-      {/* Soft Ambient Radial Background Glow khas Scamora */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 10%, rgba(15, 155, 138, 0.08) 0%, transparent 65%)',
-        }}
-      />
+    <div className="relative min-h-screen bg-[#faf8f5] text-[#14161c] flex flex-col justify-center items-center p-4 sm:p-6 font-['DM_Sans',sans-serif] selection:bg-[#0f9b8a]/20 overflow-hidden">
+      {/* Background Vector Shapes: Desktop (16:9 Full Page - Elemen Pojok Kiri Atas & Pojok Kanan Bawah seperti Beranda) */}
+      <div className="hidden lg:block absolute inset-0 pointer-events-none select-none overflow-hidden z-0" aria-hidden="true">
+        <svg viewBox="0 0 1847 852" preserveAspectRatio="none" className="absolute inset-0 w-full h-full">
+          {/* Pojok Kiri Atas Shapes */}
+          <path d="M0 0H440L380 120Q365 134 345 134H0Z" fill="#2b2f3a" />
+          <path d="M440 0H545L470 134H380Z" fill="#e9e8e6" />
+          <path d="M0 134H250L0 270Z" fill="#8e98ab" opacity="0.7" />
+          
+          {/* Pojok Kanan Bawah Shapes */}
+          <path d="M1847 300V852H1130Q1330 760 1500 640Q1640 540 1847 300Z" fill="#e9e8e6" opacity="0.8" />
+          <path d="M1847 430V852H1450Q1460 780 1560 730Q1700 690 1750 560Q1790 470 1847 430Z" fill="#2b2f3a" />
+          <path d="M1640 740Q1760 700 1847 720V852H1590Z" fill="#8e98ab" opacity="0.7" />
+          
+          {/* Ambient Contour Stroke */}
+          <path d="M630 0Q560 120 330 175Q60 230 50 520Q47 620 0 700" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.6" />
+        </svg>
+      </div>
+
+      {/* Background Vector Shapes: Mobile & Tablet (Pojok Kiri Atas & Pojok Kanan Bawah) */}
+      <div className="lg:hidden absolute inset-0 pointer-events-none select-none overflow-hidden z-0" aria-hidden="true">
+        <svg viewBox="0 0 400 850" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 w-full h-full">
+          {/* Pojok Kiri Atas Mobile */}
+          <path d="M0 0 H180 L140 70 Q125 80 105 80 H0 Z" fill="#2b2f3a" opacity="0.95" />
+          <path d="M180 0 H235 L195 80 H140 Z" fill="#e9e8e6" />
+          <path d="M0 80 H80 L0 150 Z" fill="#8e98ab" opacity="0.5" />
+
+          {/* Pojok Kanan Bawah Mobile */}
+          <path d="M400 520 V850 H190 Q260 760 330 670 Q370 600 400 520 Z" fill="#e9e8e6" opacity="0.75" />
+          <path d="M400 610 V850 H270 Q325 785 360 720 Q385 660 400 610 Z" fill="#2b2f3a" />
+          <path d="M400 735 V850 H330 Q370 805 400 735 Z" fill="#8e98ab" opacity="0.6" />
+
+          {/* Dynamic Contour Stroke */}
+          <path d="M260 0 Q190 160 100 290 Q30 390 45 560 Q65 680 0 760" fill="none" stroke="#8e98ab" strokeWidth="1" vectorEffect="non-scaling-stroke" opacity="0.45" />
+        </svg>
+      </div>
 
       {/* Back to Home Button - Pojok Kiri Atas Layar */}
       <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/95 hover:bg-white text-[#14161c] hover:text-[#0f9b8a] border border-[#d9d6d0] hover:border-[#0f9b8a] text-xs font-bold shadow-xs hover:shadow-sm transition-all hover:-translate-x-0.5 group"
+          className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-white/95 hover:bg-white text-[#14161c] hover:text-[#0f9b8a] border border-[#d9d6d0] hover:border-[#0f9b8a] text-xs font-bold shadow-md hover:shadow-lg transition-all hover:-translate-x-0.5 group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
           <span>Kembali ke Beranda</span>
