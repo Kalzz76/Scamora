@@ -24,6 +24,7 @@ import {
   handleDeleteQuestion,
   handleGetCommunityPosts,
   handleCreateCommunityPost,
+  handleUpdateCommunityPost,
   handleUpdatePostStatus,
   handleDeletePost,
   handleGetReports,
@@ -93,6 +94,7 @@ router.delete('/questions/:id', handleDeleteQuestion);
 // 9. Community Moderation
 router.get('/posts', handleGetCommunityPosts);
 router.post('/posts', handleCreateCommunityPost);
+router.put('/posts/:id', handleUpdateCommunityPost);
 router.put('/posts/:id/status', handleUpdatePostStatus);
 router.delete('/posts/:id', handleDeletePost);
 

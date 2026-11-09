@@ -433,6 +433,9 @@ export const adminService = {
     const idx = list.findIndex((p) => p.id === updated.id);
     if (idx === -1) return false;
     list[idx] = updated;
+    try {
+      await adminApiClient.put(`/posts/${updated.id}`, updated);
+    } catch {}
     setStored(STORAGE_KEYS.POSTS, list);
     await this.logAction('UPDATE_COMMUNITY_POST', updated.title, `Postingan komunitas diperbarui oleh admin`);
     return true;

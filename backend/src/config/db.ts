@@ -366,6 +366,138 @@ async function initDatabaseTables(): Promise<void> {
         ON CONFLICT (id) DO NOTHING;
       `);
     }
+
+    // Inisialisasi postingan komunitas dan laporan ke community_posts jika masih kosong
+    try {
+      await pool.query(`ALTER TYPE report_status_enum ADD VALUE IF NOT EXISTS 'resolved';`);
+    } catch {}
+
+    const postCount = await pool.query('SELECT COUNT(*) FROM community_posts');
+    if (postCount && parseInt(postCount.rows[0].count, 10) === 0) {
+      console.log('[DB] Menginisialisasi postingan komunitas asli ke tabel community_posts...');
+      await pool.query(`
+        INSERT INTO community_posts (
+          id, author_name, author_badge, category, title, chronology, red_flags, lessons_learned, loss_amount_est, incident_date, status, likes_count, is_pinned, created_at, updated_at
+        ) VALUES
+        (
+          'post-101',
+          'Rian_Bandung99',
+          'Korban Melapor',
+          'job_scam',
+          'Nyaris Hilang 3 Juta di Grup Tugas Like Shopee Telegram',
+          'Awalnya saya dihubungi via WhatsApp oleh nomor bisnis tawaran freelance online. Tugasnya hanya like video dan review toko merchant. Pada tugas awal saya benar-benar menerima komisi Rp 25.000 ke rekening BCA. Namun di grup Telegram VIP, admin mewajibkan deposit dana talangan mulai Rp 500.000 hingga Rp 2.500.000 dengan dalih akun terkunci. Begitu saya sadar ini jebakan Ponzi, saya langsung berhenti dan memblokir kontak.',
+          'Pekerjaan mudah bergaji fantastis, dipindahkan ke grup Telegram anonim, dan diwajibkan menyetor uang jaminan.',
+          'Tidak ada lowongan kerja legal yang meminta transfer uang atau deposit dari pelamar. Waspadai komisi pancingan di awal.',
+          'Rp 500.000',
+          '02 November 2026',
+          'published',
+          28,
+          true,
+          NOW() - INTERVAL '3 days',
+          NOW() - INTERVAL '3 days'
+        ),
+        (
+          'post-102',
+          'IbuSiti_Sby',
+          'Warga Waspada',
+          'apk_malware',
+          'Waspada APK Surat Undangan Pernikahan Mengatasnamakan Saudara Jauh',
+          'Pagi hari saya menerima pesan WhatsApp dari nomor asing: "Assalamu alaikum Ibu Siti, kami sekeluarga mengundang ke pernikahan putri kami. Berkas undangan terlampir Surat_Undangan_Digital.apk". Karena saya sering membaca edukasi Scamora tentang bahaya berkas .APK pencuri OTP m-banking, saya tidak membuka berkas dan langsung menelpon saudara terkait. Ternyata nomor tersebut hasil bajakan.',
+          'Format berkas berupa .apk bukan dokumen PDF atau foto resmi, dikirim dari nomor tak dikenal yang mendesak untuk diinstal.',
+          'Jangan pernah memasang berkas aplikasi (.apk) yang dikirimkan melalui pesan singkat apapun alasannya.',
+          'Rp 0 (Terselamatkan)',
+          '04 November 2026',
+          'published',
+          45,
+          false,
+          NOW() - INTERVAL '2 days',
+          NOW() - INTERVAL '2 days'
+        ),
+        (
+          'post-103',
+          'Budi_Fintech',
+          'Warga Waspada',
+          'phishing',
+          'Trik Licik Subdomain Phishing Bank Mandiri Livin via SMS Masking',
+          'Menerima SMS dari pengirim "BANK-NOTICE" menyatakan ada transaksi kartu debit mencurigakan Rp 4.750.000 dan diminta membatalkan lewat tautan: mandiri.livin-batal-transaksi.xyz. Setelah saya cek di Scamora, domain root aslinya adalah livin-batal-transaksi.xyz. Form web palsu tersebut meminta nomor 16 digit kartu ATM, masa berlaku, CVV, dan PIN SMS nasabah.',
+          'Domain root .xyz berkedok subdomain bank resmi, form meminta data rahasia CVV kartu dan kode OTP sekaligus.',
+          'Bank tidak pernah meminta nasabah mengisi tautan formulir untuk membatalkan transaksi yang mencurigakan.',
+          'Rp 0 (Terselamatkan)',
+          '06 November 2026',
+          'published',
+          39,
+          false,
+          NOW() - INTERVAL '1 day',
+          NOW() - INTERVAL '1 day'
+        ),
+        (
+          'post-104',
+          'Dimas_Kusuma',
+          'Korban Melapor',
+          'banking_fraud',
+          'Telepon Customer Service Palsu Mengaku Perubahan Tarif Bank Rp 150rb/Bulan',
+          'Pelaku menelpon lewat panggilan WhatsApp berlogo bank resmi. Memberitahu ada penyesuaian tarif transaksi otomatis dari Rp 6.500 jadi Rp 150.000 per bulan. Jika tidak setuju, diminta klik tautan surat pembatalan. Saat panik hampir saja saya bacakan kode OTP yang masuk, tapi saya teringat aturan bahwa bank tidak pernah meminta OTP.',
+          'Panggilan resmi bank melalui voice WhatsApp, menciptakan ancaman kepanikan saldo terpotong, meminta OTP untuk verifikasi pembatalan.',
+          'Segera matikan telepon bila mengaku dari bank dan meminta kode rahasia atau OTP.',
+          'Rp 0 (Terselamatkan)',
+          '07 November 2026',
+          'under_review',
+          12,
+          false,
+          NOW() - INTERVAL '12 hours',
+          NOW() - INTERVAL '12 hours'
+        ),
+        (
+          'post-105',
+          'Anonim_Jakarta',
+          'Anonim',
+          'investment_scam',
+          'Titip Modal Robot Trading Forex di Telegram dengan Janji Profit 25% Mingguan',
+          'Diundang ke channel Telegram "Smart Trader VIP". Anggota di grup sangat aktif pamer bukti penarikan puluhan juta. Tergiur janji return 25% per minggu, saya transfer modal awal Rp 1.000.000. Di dashboard fiktif terlihat saldo naik jadi Rp 3.000.000, tapi saat mau withdraw diminta bayar pajak pencairan Rp 500.000. Begitu saya bayar, saya langsung dikick dari grup dan akun Telegram admin dihapus.',
+          'Janji profit pasti tanpa risiko rugi, bukti transfer testimoni palsu, meminta biaya tambahan untuk mencairkan saldo.',
+          'Seluruh skema titip dana trading dengan jaminan pasti untung adalah modus penipuan skema ponzi.',
+          'Rp 1.500.000',
+          '08 November 2026',
+          'published',
+          19,
+          false,
+          NOW() - INTERVAL '4 hours',
+          NOW() - INTERVAL '4 hours'
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `);
+    }
+
+    const reportCount = await pool.query('SELECT COUNT(*) FROM post_reports');
+    if (reportCount && parseInt(reportCount.rows[0].count, 10) === 0) {
+      console.log('[DB] Menginisialisasi laporan moderasi asli ke tabel post_reports...');
+      await pool.query(`
+        INSERT INTO post_reports (
+          id, post_id, reporter_name, report_reason, details, status, reviewed_at, created_at
+        ) VALUES
+        (
+          'rep-01',
+          'post-104',
+          'WargaCermat',
+          'Klaim Perlu Verifikasi Lanjutan',
+          'Pengunggah perlu menyertakan tangkapan layar nomor pengirim agar warga lain bisa memblokir nomornya.',
+          'pending',
+          NULL,
+          NOW() - INTERVAL '2 hours'
+        ),
+        (
+          'rep-02',
+          'post-101',
+          'CyberGuard_ID',
+          'Indikasi Informasi Sensitif (PII)',
+          'Terdapat sensor nomor telepon yang sudah disamarkan dengan baik oleh sistem, laporan aman dan layak tayang.',
+          'reviewed',
+          NOW() - INTERVAL '1 day',
+          NOW() - INTERVAL '2 days'
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `);
+    }
   } catch (err: any) {
     console.warn('[DB] Schema init warning:', err.message);
   }

@@ -1458,25 +1458,39 @@ export async function handleDeleteQuestion(req: Request, res: Response): Promise
 export async function handleGetCommunityPosts(_req: Request, res: Response): Promise<void> {
   if (isDbConnected()) {
     try {
-      const dbRes = await query('SELECT * FROM community_posts ORDER BY created_at DESC');
-      if (dbRes) {
-        const mapped = dbRes.rows.map((r: any) => ({
-          id: r.id,
-          authorPseudonym: r.author_name || 'Warga Waspada',
-          categoryCode: r.category || 'phishing',
-          title: r.title,
-          story: r.chronology,
-          financialLossEstimate: r.loss_amount_est || 'Rp 0',
-          piiScrubbed: true,
-          status: r.status,
-          likesCount: r.likes_count || 0,
-          reportedCount: 0,
-          createdAt: r.created_at,
-        }));
-        res.status(200).json({ success: true, data: mapped });
+      const dbRes = await query(`
+        SELECT 
+          cp.id,
+          cp.author_name as "authorPseudonym",
+          cp.author_badge as "authorBadge",
+          cp.category as "categoryCode",
+          cp.title,
+          cp.chronology as story,
+          cp.red_flags as "redFlags",
+          cp.lessons_learned as "lessonsLearned",
+          cp.loss_amount_est as "financialLossEstimate",
+          cp.incident_date as "incidentDate",
+          cp.status,
+          cp.likes_count as "likesCount",
+          cp.is_pinned as "isPinned",
+          COUNT(pr.id)::int as "reportCount",
+          COUNT(pr.id)::int as "reportedCount",
+          true as "piiScrubbed",
+          cp.created_at as "createdAt",
+          cp.updated_at as "updatedAt"
+        FROM community_posts cp
+        LEFT JOIN post_reports pr ON pr.post_id = cp.id
+        GROUP BY cp.id
+        ORDER BY cp.created_at DESC
+      `);
+      if (dbRes && dbRes.rows) {
+        postsStore = dbRes.rows;
+        res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch {}
+    } catch (err: any) {
+      console.warn('[Admin] Failed to get community posts from DB:', err.message);
+    }
   }
 
   res.status(200).json({ success: true, data: postsStore });
@@ -1484,25 +1498,95 @@ export async function handleGetCommunityPosts(_req: Request, res: Response): Pro
 
 export async function handleCreateCommunityPost(req: Request, res: Response): Promise<void> {
   const body = req.body;
+  const id = body.id || `post-${Date.now()}`;
+  const authorName = body.authorPseudonym || body.author_name || 'Warga Waspada';
+  const category = body.categoryCode || body.category || 'job_scam';
+  const title = body.title || 'Laporan Dugaan Penipuan';
+  const story = body.story || body.chronology || '';
+  const loss = body.financialLossEstimate || body.loss_amount_est || 'Rp 0';
+  const status = body.status || 'published';
+  const incidentDate = body.incidentDate || body.incident_date || new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+  const redFlags = body.redFlags || 'Teridentifikasi';
+  const lessonsLearned = body.lessonsLearned || 'Tetap waspada';
+
   const newPost = {
-    ...body,
-    id: body.id || `post-${Date.now()}`,
-    likesCount: 0,
+    id,
+    authorPseudonym: authorName,
+    categoryCode: category,
+    title,
+    story,
+    financialLossEstimate: loss,
+    piiScrubbed: true,
+    status,
+    reportCount: 0,
     reportedCount: 0,
+    likesCount: 0,
     createdAt: new Date().toISOString(),
   };
 
   postsStore.unshift(newPost);
 
   if (isDbConnected()) {
-    query(
-      `INSERT INTO community_posts (id, author_name, title, chronology, red_flags, lessons_learned, loss_amount_est, status, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-      [newPost.id, newPost.authorPseudonym || 'Warga Waspada', newPost.title, newPost.story, 'Teridentifikasi', 'Tetap waspada', newPost.financialLossEstimate || 'Rp 0', newPost.status || 'published']
-    ).catch(() => {});
+    try {
+      await query(
+        `INSERT INTO community_posts (
+           id, author_name, category, title, chronology, red_flags, lessons_learned, loss_amount_est, incident_date, status, likes_count, is_pinned, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 0, false, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           title = EXCLUDED.title,
+           chronology = EXCLUDED.chronology,
+           category = EXCLUDED.category,
+           loss_amount_est = EXCLUDED.loss_amount_est,
+           status = EXCLUDED.status,
+           updated_at = NOW()`,
+        [id, authorName, category, title, story, redFlags, lessonsLearned, loss, incidentDate, status]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleCreateCommunityPost:', err.message);
+    }
   }
 
   res.status(201).json({ success: true, data: newPost });
+}
+
+export async function handleUpdateCommunityPost(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const body = req.body;
+
+  const idx = postsStore.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    postsStore[idx] = { ...postsStore[idx], ...body };
+  }
+
+  if (isDbConnected()) {
+    try {
+      await query(
+        `UPDATE community_posts SET
+           author_name = COALESCE($1, author_name),
+           title = COALESCE($2, title),
+           chronology = COALESCE($3, chronology),
+           category = COALESCE($4, category),
+           status = COALESCE($5, status),
+           loss_amount_est = COALESCE($6, loss_amount_est),
+           updated_at = NOW()
+         WHERE id = $7`,
+        [
+          body.authorPseudonym || body.author_name || null,
+          body.title || null,
+          body.story || body.chronology || null,
+          body.categoryCode || body.category || null,
+          body.status || null,
+          body.financialLossEstimate || body.loss_amount_est || null,
+          id,
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleUpdateCommunityPost:', err.message);
+    }
+  }
+
+  res.status(200).json({ success: true, data: postsStore[idx] || { id, ...body } });
 }
 
 export async function handleUpdatePostStatus(req: Request, res: Response): Promise<void> {
@@ -1513,7 +1597,11 @@ export async function handleUpdatePostStatus(req: Request, res: Response): Promi
   if (post) post.status = status;
 
   if (isDbConnected()) {
-    query('UPDATE community_posts SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]).catch(() => {});
+    try {
+      await query('UPDATE community_posts SET status = $1, updated_at = NOW() WHERE id = $2', [status, id]);
+    } catch (err: any) {
+      console.warn('[DB Error] handleUpdatePostStatus:', err.message);
+    }
   }
 
   res.status(200).json({ success: true, data: { id, status } });
@@ -1524,25 +1612,76 @@ export async function handleDeletePost(req: Request, res: Response): Promise<voi
   postsStore = postsStore.filter((p) => p.id !== id);
 
   if (isDbConnected()) {
-    query('DELETE FROM community_posts WHERE id = $1', [id]).catch(() => {});
+    try {
+      await query('DELETE FROM community_posts WHERE id = $1', [id]);
+    } catch (err: any) {
+      console.warn('[DB Error] handleDeletePost:', err.message);
+    }
   }
 
   res.status(200).json({ success: true, data: { message: `Post '${id}' dihapus.` } });
 }
 
 export async function handleGetReports(_req: Request, res: Response): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const dbRes = await query(`
+        SELECT 
+          pr.id,
+          pr.post_id as "postId",
+          COALESCE(cp.title, 'Postingan Telah Dihapus') as "postTitle",
+          pr.reporter_name as "reporterPseudonym",
+          pr.report_reason as reason,
+          pr.details as notes,
+          CASE 
+            WHEN pr.status::text = 'reviewed' THEN 'resolved'
+            WHEN pr.status::text = 'action_taken' THEN 'resolved'
+            ELSE pr.status::text
+          END as status,
+          pr.reviewed_at as "reviewedAt",
+          pr.created_at as "createdAt",
+          pr.created_at as timestamp
+        FROM post_reports pr
+        LEFT JOIN community_posts cp ON cp.id = pr.post_id
+        ORDER BY pr.created_at DESC
+      `);
+      if (dbRes && dbRes.rows) {
+        reportsStore = dbRes.rows;
+        res.status(200).json({ success: true, data: dbRes.rows });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Failed to get reports from DB:', err.message);
+    }
+  }
+
   res.status(200).json({ success: true, data: reportsStore });
 }
 
 export async function handleResolveReport(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
   const { action } = req.body; // 'resolve' | 'dismiss'
+  const targetStatus = action === 'dismiss' ? 'dismissed' : 'reviewed';
+
   const rep = reportsStore.find((r) => r.id === id);
   if (rep) {
     rep.status = action === 'resolve' ? 'resolved' : 'dismissed';
   }
 
-  res.status(200).json({ success: true, data: { id, status: rep?.status || 'resolved' } });
+  if (isDbConnected()) {
+    try {
+      await query(
+        `UPDATE post_reports 
+         SET status = $1, reviewed_at = NOW() 
+         WHERE id = $2`,
+        [targetStatus, id]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleResolveReport:', err.message);
+    }
+  }
+
+  res.status(200).json({ success: true, data: { id, status: rep?.status || (action === 'dismiss' ? 'dismissed' : 'resolved') } });
 }
 
 // =========================================================================
