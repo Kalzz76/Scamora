@@ -62,22 +62,7 @@ export const adminAuth = {
     const trimmedUser = username.trim();
     const trimmedPass = password.trim();
 
-    // 1. Prioritaskan instant demo/evaluation credential agar 100% lancar di Vercel maupun offline
-    if (
-      (trimmedUser === 'admin' && trimmedPass === 'admin123') ||
-      (trimmedUser === 'superadmin' && trimmedPass === 'admin123')
-    ) {
-      const demoUser: AdminUser = {
-        username: trimmedUser,
-        role: 'admin',
-        name: 'Super Administrator',
-      };
-      const demoToken = `scamora-admin-token-${Date.now()}`;
-      this.setSession(demoToken, demoUser);
-      return { success: true, user: demoUser };
-    }
-
-    // 2. Jika kredensial lain, coba request ke backend API jika tersedia
+    // 1. Coba request ke backend API untuk autentikasi dan mendapatkan token resmi
     try {
       const res = await adminApiClient.post('/login', {
         username: trimmedUser,
@@ -100,7 +85,30 @@ export const adminAuth = {
         error: res.data?.error?.message || 'Nama pengguna atau kata sandi tidak valid. Gunakan admin / admin123.',
       };
     } catch (err: any) {
-      const msg = err.response?.data?.error?.message || 'Kredensial tidak cocok atau akun tidak ditemukan.';
+      // Jika backend merespons dengan pesan error spesifik (misal status 400/401/403)
+      if (err.response?.data?.error?.message) {
+        return {
+          success: false,
+          error: err.response.data.error.message,
+        };
+      }
+
+      // 2. Fallback offline jika server backend tidak dapat dihubungi (mode preview offline)
+      if (
+        (trimmedUser === 'admin' && trimmedPass === 'admin123') ||
+        (trimmedUser === 'superadmin' && trimmedPass === 'admin123')
+      ) {
+        const demoUser: AdminUser = {
+          username: trimmedUser,
+          role: 'admin',
+          name: 'Super Administrator',
+        };
+        const demoToken = `scamora-admin-token-${Date.now()}`;
+        this.setSession(demoToken, demoUser);
+        return { success: true, user: demoUser };
+      }
+
+      const msg = 'Kredensial tidak cocok atau akun tidak ditemukan.';
       return {
         success: false,
         error: msg,

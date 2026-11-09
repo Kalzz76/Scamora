@@ -74,10 +74,15 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 const ProtectedRoute: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const isAuth = adminAuth.isAuthenticated();
+  const user = adminAuth.getUser();
   const location = useLocation();
 
   if (!isAuth) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (user && user.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;
