@@ -21,6 +21,7 @@ build/
 .env.*.local
 frontend/.env
 frontend/.env.local
+frontend/.env.production
 admin/.env
 admin/.env.local
 backend/.env
