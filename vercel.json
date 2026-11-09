@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "https://test1-lg4k.vercel.app/api/$1"
     },
     {
       "source": "/(.*)",
