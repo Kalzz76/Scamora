@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
+import crypto from 'crypto';
 import { env } from '../config/env';
 import { query, isDbConnected } from '../config/db';
+import { getSupabaseClient } from '../config/supabase';
 import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
 import {
@@ -454,7 +456,7 @@ export async function handleUserRegister(req: Request, res: Response): Promise<v
   }
 
   const passHash = await hashPasswordBcrypt(password);
-  const newUserId = `usr-${Date.now()}`;
+  const newUserId = crypto.randomUUID();
 
   if (isDbConnected()) {
     try {
@@ -485,6 +487,27 @@ export async function handleUserRegister(req: Request, res: Response): Promise<v
       console.error('[DB] Gagal registrasi user:', err);
       res.status(500).json({ success: false, error: { message: 'Gagal mendaftarkan akun di basis data.' } });
       return;
+    }
+  }
+
+  // Simpan ke Supabase via Supabase client jika ada
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('app_users').insert({
+        id: newUserId,
+        username: cleanUsername,
+        email: cleanEmail,
+        password_hash: passHash,
+        full_name: cleanName,
+        tier: 'verified',
+        role: 'user',
+        status: 'active',
+        scan_count: 0,
+        report_count: 0,
+      });
+    } catch (err: any) {
+      console.warn('[AdminController] Supabase insert user warning:', err.message);
     }
   }
 

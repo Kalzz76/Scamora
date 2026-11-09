@@ -54,7 +54,7 @@ app.use((req, _res, next) => {
 });
 
 // Root welcome / health check for browser inspection
-app.get('/', (_req, res) => {
+app.get(['/', '/api', '/api/index', '/api/index.ts'], (_req, res) => {
   res.status(200).json({
     status: 'ok',
     service: 'scamora-backend-api',

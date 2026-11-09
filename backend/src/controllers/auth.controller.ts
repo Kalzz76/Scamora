@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { env } from '../config/env';
 import { isDbConnected, query } from '../config/db';
+import { getSupabaseClient } from '../config/supabase';
 import {
   createAdminToken,
   validateAdminCredentials,
@@ -106,7 +107,7 @@ async function resolveOrCreateGoogleUser(profile: GoogleUserProfile): Promise<Us
         finalUsername = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
       }
 
-      const newId = `usr-g-${Date.now()}`;
+      const newId = crypto.randomUUID();
       await query(
         `INSERT INTO app_users (id, username, email, password_hash, full_name, google_id, avatar_url, auth_provider, tier, role, status, scan_count, report_count, created_at, updated_at)
          VALUES ($1, $2, $3, NULL, $4, $5, $6, 'google', 'verified', 'user', 'active', 0, 0, NOW(), NOW())`,
@@ -293,6 +294,54 @@ export async function handleLogin(req: Request, res: Response, next: NextFunctio
       } catch (err) {
         console.warn('[Auth] Gagal memeriksa login DB, fallback ke memori:', err);
       }
+    } else {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data: supaUsers } = await supabase
+            .from('app_users')
+            .select('id, username, email, password_hash, full_name, role, tier, status, google_id, avatar_url, auth_provider')
+            .or(`username.ilike.${cleanIdentifier},email.ilike.${cleanIdentifier}`)
+            .limit(1);
+
+          if (supaUsers && supaUsers.length > 0) {
+            const u = supaUsers[0];
+
+            if (u.status === 'suspended') {
+              res.status(403).json({
+                success: false,
+                error: { code: 'ACCOUNT_SUSPENDED', message: 'Akun Anda sedang ditangguhkan.' },
+              });
+              return;
+            }
+
+            const isPasswordValid = await verifyUserPassword(cleanPassword, u.password_hash);
+            if (isPasswordValid) {
+              const token = createAdminToken(u.username, u.role || 'user', u.tier || 'verified');
+              res.status(200).json({
+                success: true,
+                data: {
+                  token,
+                  user: {
+                    id: u.id,
+                    username: u.username,
+                    email: u.email,
+                    name: u.full_name || u.username,
+                    role: u.role || 'user',
+                    tier: u.tier || 'verified',
+                    avatarUrl: u.avatar_url,
+                    authProvider: u.auth_provider || 'local',
+                  },
+                  expiresIn: rememberMe ? 604800 : 86400,
+                },
+              });
+              return;
+            }
+          }
+        } catch (err: any) {
+          console.warn('[Auth] Supabase REST login lookup error:', err.message);
+        }
+      }
     }
 
     // 3. Verifikasi In-Memory Toko Pengguna
@@ -444,6 +493,30 @@ export async function handleRegister(req: Request, res: Response, next: NextFunc
       } catch (err) {
         console.warn('[Auth] Gagal memeriksa duplikasi DB, fallback:', err);
       }
+    } else {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data: dupUser } = await supabase.from('app_users').select('username').eq('username', cleanUsername).limit(1);
+          if (dupUser && dupUser.length > 0) {
+            res.status(409).json({
+              success: false,
+              error: { code: 'USERNAME_TAKEN', message: 'Username sudah digunakan oleh pengguna lain.' },
+            });
+            return;
+          }
+          const { data: dupEmail } = await supabase.from('app_users').select('email').eq('email', cleanEmail).limit(1);
+          if (dupEmail && dupEmail.length > 0) {
+            res.status(409).json({
+              success: false,
+              error: { code: 'EMAIL_REGISTERED', message: 'Email sudah terdaftar. Silakan masuk menggunakan akun tersebut.' },
+            });
+            return;
+          }
+        } catch (err: any) {
+          console.warn('[Auth] Gagal memeriksa duplikasi Supabase:', err.message);
+        }
+      }
     }
 
     // 2. Cek duplikasi di in-memory usersStore
@@ -465,10 +538,10 @@ export async function handleRegister(req: Request, res: Response, next: NextFunc
 
     // Hash password menggunakan algoritma Bcrypt yang aman
     const bcryptHash = await hashPasswordBcrypt(password);
-    const newUserId = `usr-${Date.now()}`;
+    const newUserId = crypto.randomUUID();
     const cleanFullName = fullName.trim();
 
-    // Simpan ke DB
+    // Simpan ke DB PostgreSQL jika terhubung
     if (isDbConnected()) {
       try {
         await query(
@@ -478,6 +551,33 @@ export async function handleRegister(req: Request, res: Response, next: NextFunc
         );
       } catch (err) {
         console.error('[Auth] Gagal menyimpan user baru ke PostgreSQL:', err);
+      }
+    }
+
+    // Simpan ke Supabase via REST Client jika terkonfigurasi
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { error: supaErr } = await supabase.from('app_users').insert({
+          id: newUserId,
+          username: cleanUsername,
+          email: cleanEmail,
+          password_hash: bcryptHash,
+          full_name: cleanFullName,
+          tier: 'verified',
+          role: 'user',
+          status: 'active',
+          auth_provider: 'local',
+          scan_count: 0,
+          report_count: 0,
+        });
+        if (supaErr) {
+          console.warn('[Auth] Supabase REST insert warning:', supaErr.message);
+        } else {
+          console.log(`[Auth] User baru '${cleanUsername}' berhasil disimpan ke Supabase Cloud.`);
+        }
+      } catch (err: any) {
+        console.warn('[Auth] Gagal menyimpan user ke Supabase client:', err.message);
       }
     }
 
