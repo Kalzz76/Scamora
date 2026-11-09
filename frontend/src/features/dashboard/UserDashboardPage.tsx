@@ -25,10 +25,14 @@ import {
   ArrowLeft,
   ChevronDown,
   AlertTriangle,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
 import { userService, type UserStatistics, type UserScanHistoryItem } from '../../services/userService';
+import { challengeService } from '../../services/challengeService';
+import type { UserChallengeStatistics, ChallengeScenario } from '../../types/challenge';
 
 interface UserReportItem {
   id: string;
@@ -47,6 +51,8 @@ export const UserDashboardPage: React.FC = () => {
 
   const [stats, setStats] = useState<UserStatistics | null>(null);
   const [history, setHistory] = useState<UserScanHistoryItem[]>([]);
+  const [challengeStats, setChallengeStats] = useState<UserChallengeStatistics | null>(null);
+  const [activeScenario, setActiveScenario] = useState<ChallengeScenario | null>(null);
   const [loading, setLoading] = useState(true);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'url' | 'chat'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,12 +83,18 @@ export const UserDashboardPage: React.FC = () => {
 
     async function loadDashboardData() {
       try {
-        const [statsData, historyData] = await Promise.all([
+        const [statsData, historyData, cStats, scenarios] = await Promise.all([
           userService.getStats(),
           userService.getHistory(),
+          challengeService.getUserStatistics(),
+          challengeService.getScenarios(),
         ]);
         setStats(statsData);
         setHistory(historyData);
+        setChallengeStats(cStats);
+        if (scenarios && scenarios.length > 0) {
+          setActiveScenario(scenarios[0]);
+        }
       } catch (err) {
         console.warn('Gagal memuat data dashboard user:', err);
       } finally {
@@ -193,60 +205,49 @@ export const UserDashboardPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#F4F6F8] text-[#1A202C] font-sans flex flex-col">
       {/* ========================================================================= */}
-      {/* 1. DEDICATED USER DASHBOARD TOP HEADER (ALIGNED WITH ADMIN HEADER STYLE)   */}
+      {/* 1. DEDICATED USER DASHBOARD TOP HEADER                                    */}
       {/* ========================================================================= */}
       <header className="h-[64px] bg-[#334257] border-b border-[#476072] fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 flex items-center justify-between select-none shadow-md">
-        {/* Left: Brand + Breadcrumb/Workspace Identifier */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        {/* Left: Brand only (without "Dashboard Warga") */}
+        <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center shadow-xs">
               <img src="/Logo.png" alt="Scamora" className="w-full h-full object-contain" />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-black text-base sm:text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
-                Scamora
-              </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#548CA8] text-white font-mono uppercase tracking-wider shadow-xs">
-                Dashboard Warga
-              </span>
-            </div>
+            <span className="font-black text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+              Scamora
+            </span>
           </Link>
         </div>
 
-        {/* Right: Quick Portal Navigation + User Profile Capsule */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Back to Public Home */}
+        {/* Right: Proportionate Buttons (Exact same h-9 height, padding, & alignment) */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Back to Public Home Button */}
           <Link
             to="/"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition"
+            className="h-9 inline-flex items-center gap-2 px-3.5 rounded-xl border border-white/10 hover:border-white/25 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Beranda</span>
+            <span className="hidden xs:inline">Kembali ke Beranda</span>
+            <span className="xs:hidden">Beranda</span>
           </Link>
 
-          {/* User Account Capsule with Dropdown */}
+          {/* User Account Capsule - Matching exact h-9 height & sleek single-row alignment */}
           <div className="relative" ref={userMenuRef}>
             <button
               type="button"
               onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-              className="flex items-center gap-2 p-1 sm:pr-3 rounded-xl border border-white/10 hover:border-[#548CA8] bg-white/10 hover:bg-white/20 transition cursor-pointer"
+              className="h-9 inline-flex items-center gap-2 px-2.5 sm:px-3 rounded-xl border border-white/10 hover:border-white/25 bg-white/10 hover:bg-white/20 transition cursor-pointer"
             >
-              <div className="w-7 h-7 rounded-lg bg-[#476072] text-white flex items-center justify-center font-bold text-xs font-mono shadow-xs border border-white/20">
+              <div className="w-6 h-6 rounded-lg bg-[#476072] text-white flex items-center justify-center font-bold text-xs font-mono border border-white/20">
                 {(currentUser?.name || currentUser?.username || 'U')[0].toUpperCase()}
               </div>
-              <div className="text-left hidden md:block">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-white leading-none">
-                    {currentUser?.name || currentUser?.username}
-                  </span>
-                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-emerald-400 text-slate-900 font-bold uppercase">
-                    User
-                  </span>
-                </div>
-                <span className="text-[10px] text-slate-300 font-mono leading-none">
-                  @{currentUser?.username}
-                </span>
-              </div>
+              <span className="text-xs font-bold text-white font-mono">
+                @{currentUser?.username}
+              </span>
+              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-emerald-400 text-slate-900 font-bold uppercase">
+                {currentUser?.role === 'admin' ? 'Admin' : 'User'}
+              </span>
               <ChevronDown
                 className={`w-3.5 h-3.5 text-slate-300 transition-transform duration-200 ${
                   userDropdownOpen ? 'rotate-180' : ''
@@ -327,7 +328,7 @@ export const UserDashboardPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4 text-left">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-[#1A202C] tracking-tight">
-              Dashboard Keamanan Warga
+              Dashboard Keamanan
             </h1>
             <p className="text-xs sm:text-sm text-[#476072] mt-0.5">
               Pantau aktivitas pemindaian masukan, status laporan penipuan, dan progres kesiapan siber Anda.
@@ -352,7 +353,7 @@ export const UserDashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 4 TELEMETRY METRIC CARDS (ADMIN DASHBOARD STYLE) */}
+        {/* 4 TELEMETRY METRIC CARDS */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
           {/* Card 1: Total Scans */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
@@ -408,7 +409,7 @@ export const UserDashboardPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 4: Cyber Literacy */}
+          {/* Card 4: Cyber Literacy (from actual challengeStats) */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
             <div className="flex items-center justify-between text-[#476072]">
               <span className="text-xs font-semibold">Skor Kesiapan Siber</span>
@@ -418,18 +419,84 @@ export const UserDashboardPage: React.FC = () => {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-[#1A202C]">
-                {stats?.highestScore || 90}
+                {challengeStats?.highestScore || stats?.highestScore || 85}
                 <span className="text-sm font-normal text-[#94a3b8]">/100</span>
               </div>
               <p className="text-[11px] text-[#334257] font-semibold font-mono mt-0.5">
-                Tantangan Simulasi AI
+                {challengeStats?.guardianBadge || 'Novice Defender'}
               </p>
             </div>
           </div>
         </div>
 
         {/* ========================================================================= */}
-        {/* SECTION 1: PERKEMBANGAN & RIWAYAT PEMINDAIAN (CARD 1 HEADLINE)            */}
+        {/* KEUNTUNGAN & HAK AKSES AKUN TERVERIFIKASI                                 */}
+        {/* ========================================================================= */}
+        <section className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#D8E0E7] shadow-xs space-y-4 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D8E0E7] pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
+                  ★
+                </span>
+                <h2 className="text-base font-black text-[#1A202C] tracking-tight">
+                  Fasilitas &amp; Keuntungan Akun Aktif
+                </h2>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold uppercase">
+                  Akses Penuh
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-[#476072] mt-0.5">
+                Hak akses dan kapabilitas perlindungan tambahan yang aktif pada sesi akun Anda
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+              <div className="flex items-center gap-2 text-[#334257] font-bold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Riwayat Analisis 30 Hari</span>
+              </div>
+              <p className="text-[11px] text-[#476072] leading-relaxed">
+                Seluruh riwayat pemeriksaan URL dan pesan chat tersimpan otomatis dan dapat ditinjau kapan saja.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+              <div className="flex items-center gap-2 text-[#334257] font-bold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Pelaporan Penipuan Publik</span>
+              </div>
+              <p className="text-[11px] text-[#476072] leading-relaxed">
+                Hak mengirimkan laporan nomor rekening dan kontak penipu langsung ke direktori publik Scamora.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+              <div className="flex items-center gap-2 text-[#334257] font-bold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Tantangan Simulasi AI</span>
+              </div>
+              <p className="text-[11px] text-[#476072] leading-relaxed">
+                Akses penuh memainkan seluruh skenario kuis social engineering tanpa limitasi sesi tamu.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+              <div className="flex items-center gap-2 text-[#334257] font-bold text-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Prioritas Mesin Analisis</span>
+              </div>
+              <p className="text-[11px] text-[#476072] leading-relaxed">
+                Pemrosesan deteksi AI Gemini berlatensi rendah tanpa jeda pembatasan kuota harian.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ========================================================================= */}
+        {/* SECTION 1: PERKEMBANGAN & RIWAYAT PEMINDAIAN                              */}
         {/* ========================================================================= */}
         <section className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 border border-[#D8E0E7] shadow-xs space-y-5 text-left">
           {/* Header Title with Numbered Badge */}
@@ -636,7 +703,7 @@ export const UserDashboardPage: React.FC = () => {
             </Link>
           </section>
 
-          {/* KOLOM KANAN (5 COLS): TANTANGAN AI & SIMULASI MODUS */}
+          {/* KOLOM KANAN (5 COLS): TANTANGAN AI & SIMULASI MODUS (POWERED BY REAL DATA) */}
           <section className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#D8E0E7] shadow-xs space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-[#D8E0E7]">
               <div>
@@ -659,20 +726,27 @@ export const UserDashboardPage: React.FC = () => {
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#548CA8] text-white font-bold uppercase tracking-wider">
                   Modul Aktif
                 </span>
-                <span className="text-xs font-mono text-slate-300">Skor: {stats?.highestScore || 90}</span>
+                <span className="text-xs font-mono text-slate-300">
+                  Skor: {challengeStats?.highestScore || stats?.highestScore || 85}
+                </span>
               </div>
               <div>
                 <div className="font-bold text-sm text-white">
-                  Tantangan: Kenali Modus Kurir Paket APK
+                  {activeScenario?.title || 'Tantangan: Kenali Modus Kurir Paket APK'}
                 </div>
                 <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
-                  Latih kemampuan membedakan resi pengiriman asli vs file malware pencuri SMS OTP perbankan.
+                  {activeScenario?.initialDialogue?.[0]?.text?.slice(0, 115) ||
+                    activeScenario?.characterRole ||
+                    'Latih kemampuan membedakan resi pengiriman asli vs file malware pencuri SMS OTP perbankan.'}
                 </p>
               </div>
 
               <div className="pt-2 flex items-center justify-between border-t border-white/10">
                 <span className="text-[11px] text-emerald-400 font-semibold font-mono flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Akurasi: 95%
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>
+                    {challengeStats?.strongestArea ? `Keahlian: ${challengeStats.strongestArea}` : 'Akurasi Deteksi: 85%'}
+                  </span>
                 </span>
                 <Link
                   to="/kuis"
@@ -690,8 +764,12 @@ export const UserDashboardPage: React.FC = () => {
                   🏆
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-[#1A202C]">Lencana Kesiapan Siber</div>
-                  <div className="text-[10px] text-[#476072]">Tersertifikasi Waspada Phishing</div>
+                  <div className="text-xs font-bold text-[#1A202C]">
+                    {challengeStats?.guardianBadge || 'Novice Defender'}
+                  </div>
+                  <div className="text-[10px] text-[#476072]">
+                    Total Percobaan: {challengeStats?.totalAttempts || stats?.challengeAttempts || 1} sesi
+                  </div>
                 </div>
               </div>
               <Link to="/kuis" className="text-xs text-[#334257] hover:underline font-bold flex items-center gap-0.5">
