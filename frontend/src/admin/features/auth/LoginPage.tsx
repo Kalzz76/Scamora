@@ -63,9 +63,35 @@ export const LoginPage: React.FC = () => {
     }
   }, [navigate, redirectQuery, googleTokenQuery]);
 
+  const isRegisterRoute = location.pathname === '/register' || location.pathname === '/daftar' || modeQuery === 'register';
+
   const [authMode, setAuthMode] = useState<'login' | 'register'>(
-    modeQuery === 'register' ? 'register' : 'login'
+    isRegisterRoute ? 'register' : 'login'
   );
+
+  // Sync authMode whenever route or query param changes
+  useEffect(() => {
+    const isReg = location.pathname === '/register' || location.pathname === '/daftar' || modeQuery === 'register';
+    setAuthMode(isReg ? 'register' : 'login');
+  }, [location.pathname, modeQuery]);
+
+  const switchToLogin = () => {
+    setErrorMessage(null);
+    setAuthMode('login');
+    const params = new URLSearchParams(location.search);
+    params.delete('mode');
+    const searchStr = params.toString() ? `?${params.toString()}` : '';
+    navigate(`/login${searchStr}`, { replace: true });
+  };
+
+  const switchToRegister = () => {
+    setErrorMessage(null);
+    setAuthMode('register');
+    const params = new URLSearchParams(location.search);
+    params.delete('mode');
+    const searchStr = params.toString() ? `?${params.toString()}` : '';
+    navigate(`/register${searchStr}`, { replace: true });
+  };
 
   // Login fields
   const [username, setUsername] = useState('');
@@ -320,10 +346,7 @@ export const LoginPage: React.FC = () => {
           <div className="flex p-1 rounded-2xl bg-[#f1ede6] border border-[#e2ded7]">
             <button
               type="button"
-              onClick={() => {
-                setAuthMode('login');
-                setErrorMessage(null);
-              }}
+              onClick={switchToLogin}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 authMode === 'login'
                   ? 'bg-white text-[#0f9b8a] shadow-xs'
@@ -335,10 +358,7 @@ export const LoginPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setAuthMode('register');
-                setErrorMessage(null);
-              }}
+              onClick={switchToRegister}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMode === 'register'
                   ? 'bg-white text-[#0f9b8a] shadow-xs'
@@ -525,10 +545,7 @@ export const LoginPage: React.FC = () => {
                 <span className="text-xs text-[#64748b]">Belum memiliki akun? </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMode('register');
-                    setErrorMessage(null);
-                  }}
+                  onClick={switchToRegister}
                   className="text-xs text-[#0f9b8a] hover:underline font-bold cursor-pointer"
                 >
                   Daftar Sekarang
@@ -695,10 +712,7 @@ export const LoginPage: React.FC = () => {
                 <span className="text-xs text-[#64748b]">Sudah punya akun? </span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMode('login');
-                    setErrorMessage(null);
-                  }}
+                  onClick={switchToLogin}
                   className="text-xs text-[#0f9b8a] hover:underline font-bold cursor-pointer"
                 >
                   Masuk di sini

@@ -144,6 +144,9 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/masuk" element={<Navigate to="/login" replace />} />
+            <Route path="/register" element={<LoginPage />} />
+            <Route path="/daftar" element={<Navigate to="/register" replace />} />
             <Route
               path="/*"
               element={

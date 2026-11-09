@@ -207,7 +207,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
               ) : (
                 <div className="flex items-center gap-2">
                   <Link
-                    to="/login?mode=register"
+                    to="/register"
                     className="text-xs text-[#475569] hover:text-[#0f9b8a] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-stone-100/70 transition cursor-pointer"
                   >
                     Daftar

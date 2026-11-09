@@ -56,7 +56,7 @@ function PublicPageWrapper({ children }: { children: React.ReactNode }) {
 function MainApp() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
-  const isLogin = location.pathname === '/login';
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/masuk' || location.pathname === '/daftar';
   const isHome = location.pathname === '/';
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
@@ -64,11 +64,11 @@ function MainApp() {
     <div className={`min-h-screen flex flex-col ${isAdmin ? '' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
       <ScrollToTop />
 
-      {/* Navigation Bar (Only for public website, excluded on /admin and standalone /login) */}
-      {!isAdmin && !isLogin && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
+      {/* Navigation Bar (Only for public website, excluded on /admin and auth pages) */}
+      {!isAdmin && !isAuthRoute && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
 
       {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col ${isAdmin || isHome || isLogin ? '' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
+      <main className={`flex-1 flex flex-col ${isAdmin || isHome || isAuthRoute ? '' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
         <Routes>
           {/* Public Routes with Page Transitions */}
           <Route path="/" element={<PublicPageWrapper><HomePage /></PublicPageWrapper>} />
@@ -120,8 +120,11 @@ function MainApp() {
             }
           />
 
-          {/* Unified Public Login Route */}
+          {/* Unified Public Auth Routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/masuk" element={<Navigate to="/login" replace />} />
+          <Route path="/register" element={<LoginPage />} />
+          <Route path="/daftar" element={<Navigate to="/register" replace />} />
           <Route path="/admin/login" element={<Navigate to="/login" replace />} />
 
           {/* Admin Nested Routes: /admin/* handled by AdminApp */}
@@ -133,7 +136,7 @@ function MainApp() {
       </main>
 
       {/* Universal Footer & Privacy Modal (Only for public website) */}
-      {!isAdmin && !isLogin && (
+      {!isAdmin && !isAuthRoute && (
         <>
           <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
           <PrivacyModal

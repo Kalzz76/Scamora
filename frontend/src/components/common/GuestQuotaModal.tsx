@@ -102,7 +102,7 @@ export const GuestQuotaModal: React.FC<GuestQuotaModalProps> = ({ isOpen, onClos
               type="button"
               onClick={() => {
                 onClose();
-                navigate('/login?mode=register');
+                navigate('/register');
               }}
               className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white font-bold text-xs transition shadow-xs cursor-pointer"
             >

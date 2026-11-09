@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import {
   ShieldCheck,
   Lock,
@@ -19,6 +19,7 @@ import { adminAuth } from '../../services/adminAuth';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (adminAuth.isAuthenticated()) {
@@ -26,7 +27,36 @@ export const LoginPage: React.FC = () => {
     }
   }, [navigate]);
 
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const searchParams = new URLSearchParams(location.search);
+  const modeQuery = searchParams.get('mode');
+  const isRegisterRoute = location.pathname === '/register' || location.pathname === '/daftar' || modeQuery === 'register';
+
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(
+    isRegisterRoute ? 'register' : 'login'
+  );
+
+  useEffect(() => {
+    const isReg = location.pathname === '/register' || location.pathname === '/daftar' || modeQuery === 'register';
+    setAuthMode(isReg ? 'register' : 'login');
+  }, [location.pathname, modeQuery]);
+
+  const switchToLogin = () => {
+    setErrorMessage(null);
+    setAuthMode('login');
+    const params = new URLSearchParams(location.search);
+    params.delete('mode');
+    const searchStr = params.toString() ? `?${params.toString()}` : '';
+    navigate(`/login${searchStr}`, { replace: true });
+  };
+
+  const switchToRegister = () => {
+    setErrorMessage(null);
+    setAuthMode('register');
+    const params = new URLSearchParams(location.search);
+    params.delete('mode');
+    const searchStr = params.toString() ? `?${params.toString()}` : '';
+    navigate(`/register${searchStr}`, { replace: true });
+  };
   
   // Login fields
   const [username, setUsername] = useState('');
@@ -199,10 +229,7 @@ export const LoginPage: React.FC = () => {
           <div className="flex p-1 rounded-2xl bg-[#f1ede6] border border-[#e2ded7]">
             <button
               type="button"
-              onClick={() => {
-                setAuthMode('login');
-                setErrorMessage(null);
-              }}
+              onClick={switchToLogin}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 authMode === 'login'
                   ? 'bg-white text-[#0f9b8a] shadow-xs'
@@ -214,10 +241,7 @@ export const LoginPage: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setAuthMode('register');
-                setErrorMessage(null);
-              }}
+              onClick={switchToRegister}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMode === 'register'
                   ? 'bg-white text-[#0f9b8a] shadow-xs'
