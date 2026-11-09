@@ -16,13 +16,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../services/adminAuth';
-import adminBgLight from '../../assets/admin-bg.jpg';
-import adminBgDark from '../../assets/admin-bg-dark.jpg';
-import { useTheme } from '../../services/themeContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isDark } = useTheme();
 
   useEffect(() => {
     if (adminAuth.isAuthenticated()) {
@@ -64,7 +60,7 @@ export const LoginPage: React.FC = () => {
     try {
       const res = await adminAuth.login(username, password);
       if (res.success) {
-        toast.success(`Selamat datang, ${res.user?.name || username}! Mengakses sistem...`);
+        toast.success(`Selamat datang, ${res.user?.name || username}!`);
         navigate('/admin', { replace: true });
       } else {
         setErrorMessage(res.error || 'Autentikasi gagal. Periksa kembali akun Anda.');
@@ -128,64 +124,53 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center p-3.5 sm:p-6 font-sans overflow-hidden">
-      {/* Blurred City Landscape Ambient Background */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
-        <img
-          src={isDark ? adminBgDark : adminBgLight}
-          alt=""
-          aria-hidden="true"
-          className={`w-full h-full object-cover filter blur-[8px] scale-105 transition-all duration-700 ${
-            isDark ? 'opacity-90 brightness-95' : 'opacity-85 brightness-100'
-          }`}
-        />
-        <div
-          className={`absolute inset-0 transition-colors duration-700 ${
-            isDark ? 'bg-[#0B0F17]/50 backdrop-blur-[2px]' : 'bg-white/45 backdrop-blur-[2px]'
-          }`}
-        />
-      </div>
+    <div className="relative min-h-screen bg-[#faf8f5] text-[#14161c] flex flex-col justify-center items-center p-4 sm:p-6 font-['DM_Sans',sans-serif] selection:bg-[#0f9b8a]/20">
+      {/* Soft Ambient Radial Background Glow khas Scamora */}
+      <div 
+        className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 10%, rgba(15, 155, 138, 0.08) 0%, transparent 65%)',
+        }}
+      />
 
-      {/* Back to Home Button - Fixed to Top Left Corner of Screen */}
+      {/* Back to Home Button - Pojok Kiri Atas Layar */}
       <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#D8E0E7] dark:border-slate-700 text-[#334257] dark:text-slate-200 hover:text-[#0f9b8a] dark:hover:text-emerald-400 text-xs font-bold shadow-sm hover:shadow-md transition-all hover:-translate-x-0.5 group"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/95 hover:bg-white text-[#14161c] hover:text-[#0f9b8a] border border-[#d9d6d0] hover:border-[#0f9b8a] text-xs font-bold shadow-xs hover:shadow-sm transition-all hover:-translate-x-0.5 group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
           <span>Kembali ke Beranda</span>
         </Link>
       </div>
 
-      <div className="relative z-10 w-full max-w-md my-4">
+      <div className="relative z-10 w-full max-w-md my-6">
         {/* Brand Header */}
-        <div className="text-center mb-5 sm:mb-6 space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-mono font-bold tracking-wider uppercase text-[#334257] dark:text-slate-300">
-              Scamora Security Portal
-            </span>
+        <div className="text-center mb-6 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[#0f9b8a] text-[11px] font-semibold">
+            <span className="w-2 h-2 rounded-full bg-[#0f9b8a] animate-pulse" />
+            <span>Portal Akses Akun</span>
           </div>
 
-          <div className="flex items-center justify-center gap-2.5 pt-1">
-            <div className="w-10 h-10 rounded-2xl bg-[#334257] text-white flex items-center justify-center shadow-md">
-              <ShieldCheck className="w-6 h-6 text-[#548CA8]" />
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-white border border-[#d9d6d0] shadow-xs p-1.5 flex items-center justify-center">
+              <img src="/Logo.png" alt="Scamora Logo" className="w-full h-full object-contain" />
             </div>
             <div className="text-left">
-              <h1 className="text-xl sm:text-2xl font-black text-[#334257] dark:text-white tracking-tight leading-none">
-                Scamora <span className="text-[#548CA8]">Auth</span>
+              <h1 className="text-2xl font-black text-[#14161c] tracking-tight leading-none">
+                Scamora
               </h1>
-              <p className="text-[10px] sm:text-[11px] text-[#476072] dark:text-slate-400 font-mono">
-                Portal Akses Akun Pengguna
+              <p className="text-[11px] text-[#64748b] font-medium mt-1">
+                Perlindungan AI Cerdas Berbasis Komunitas
               </p>
             </div>
           </div>
         </div>
 
         {/* Card Box */}
-        <div className="glass-panel rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-7 space-y-5">
+        <div className="bg-white rounded-3xl border border-[#d9d6d0] shadow-sm p-5 sm:p-8 space-y-5">
           {/* Mode Switcher Tabs */}
-          <div className="flex p-1 rounded-2xl bg-[#E8EEF3] dark:bg-slate-800/80 border border-[#D8E0E7] dark:border-slate-700">
+          <div className="flex p-1 rounded-2xl bg-[#f1ede6] border border-[#e2ded7]">
             <button
               type="button"
               onClick={() => {
@@ -194,12 +179,12 @@ export const LoginPage: React.FC = () => {
               }}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 authMode === 'login'
-                  ? 'bg-white dark:bg-slate-900 text-[#334257] dark:text-white shadow-xs'
-                  : 'text-[#5E6D7E] dark:text-slate-400 hover:text-[#334257]'
+                  ? 'bg-white text-[#0f9b8a] shadow-xs'
+                  : 'text-[#64748b] hover:text-[#14161c]'
               }`}
             >
-              <LogIn className="w-4 h-4 text-[#548CA8]" />
-              <span>Masuk (Login)</span>
+              <LogIn className="w-4 h-4" />
+              <span>Masuk</span>
             </button>
             <button
               type="button"
@@ -209,40 +194,40 @@ export const LoginPage: React.FC = () => {
               }}
               className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authMode === 'register'
-                  ? 'bg-white dark:bg-slate-900 text-[#334257] dark:text-white shadow-xs'
-                  : 'text-[#5E6D7E] dark:text-slate-400 hover:text-[#334257]'
+                  ? 'bg-white text-[#0f9b8a] shadow-xs'
+                  : 'text-[#64748b] hover:text-[#14161c]'
               }`}
             >
-              <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Daftar (Register)</span>
+              <UserPlus className="w-4 h-4" />
+              <span>Daftar Akun</span>
             </button>
           </div>
 
           {/* Form Header Info */}
-          <div className="border-b border-[#D8E0E7] dark:border-slate-700 pb-3">
-            <h2 className="text-sm font-bold text-[#1A202C] dark:text-white flex items-center gap-2">
+          <div className="border-b border-[#e2ded7] pb-3 text-left">
+            <h2 className="text-sm font-bold text-[#14161c] flex items-center gap-2">
               {authMode === 'login' ? (
                 <>
-                  <KeyRound className="w-4 h-4 text-[#548CA8]" />
+                  <KeyRound className="w-4 h-4 text-[#0f9b8a]" />
                   <span>Masuk ke Akun Anda</span>
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-4 h-4 text-emerald-600" />
+                  <UserPlus className="w-4 h-4 text-[#0f9b8a]" />
                   <span>Pendaftaran Akun Baru</span>
                 </>
               )}
             </h2>
-            <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-[#64748b] mt-0.5">
               {authMode === 'login'
-                ? 'Gunakan akun Anda untuk mengakses sistem'
-                : 'Silakan lengkapi formulir di bawah ini untuk membuat akun baru'}
+                ? 'Gunakan kredensial Anda untuk masuk ke sistem'
+                : 'Silakan lengkapi data berikut untuk membuat akun Scamora'}
             </p>
           </div>
 
           {errorMessage && (
-            <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 flex items-start gap-2.5 text-rose-700 dark:text-rose-300 text-xs animate-in fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs animate-in fade-in text-left">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" />
               <div className="leading-relaxed font-medium">{errorMessage}</div>
             </div>
           )}
@@ -250,15 +235,15 @@ export const LoginPage: React.FC = () => {
           {/* ===================== FORM LOGIN ===================== */}
           {authMode === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div className="space-y-1 text-left">
+              <div className="space-y-1.5 text-left">
                 <label
                   htmlFor="username"
-                  className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider"
+                  className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider"
                 >
                   Nama Pengguna atau Email
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5E6D7E]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#94a3b8]">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -269,20 +254,20 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Nama pengguna atau email Anda"
                     disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-[#548CA8]/40 focus:border-[#548CA8] transition font-mono"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-sans"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1 text-left">
+              <div className="space-y-1.5 text-left">
                 <label
                   htmlFor="password"
-                  className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider"
+                  className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider"
                 >
-                  Kata Sandi (Password)
+                  Kata Sandi
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5E6D7E]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#94a3b8]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
@@ -293,12 +278,12 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     disabled={isLoading}
-                    className="w-full pl-10 pr-10 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-[#548CA8]/40 focus:border-[#548CA8] transition font-mono"
+                    className="w-full pl-10 pr-10 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5E6D7E] hover:text-[#334257] transition cursor-pointer"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94a3b8] hover:text-[#14161c] transition cursor-pointer"
                     tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -309,7 +294,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -318,8 +303,8 @@ export const LoginPage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span>Masuk ke Sistem</span>
-                    <ArrowRight className="w-4 h-4 text-[#548CA8]" />
+                    <span>Masuk ke Akun</span>
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
@@ -327,12 +312,12 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* ===================== FORM REGISTER ===================== */
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-              <div className="space-y-1 text-left">
-                <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
+              <div className="space-y-1.5 text-left">
+                <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
                   Nama Lengkap
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5E6D7E]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#94a3b8]">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -341,14 +326,14 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setRegFullName(e.target.value)}
                     placeholder="Contoh: Pratama Wicaksana"
                     disabled={isLoading}
-                    className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition"
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1 text-left">
-                  <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
                     Username
                   </label>
                   <input
@@ -357,30 +342,28 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setRegUsername(e.target.value)}
                     placeholder="pratama_w"
                     disabled={isLoading}
-                    className="w-full px-3 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition font-mono"
+                    className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
                 </div>
 
-                <div className="space-y-1 text-left">
-                  <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
                     Email (Opsional)
                   </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      value={regEmail}
-                      onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="nama@email.com"
-                      disabled={isLoading}
-                      className="w-full px-3 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition font-mono"
-                    />
-                  </div>
+                  <input
+                    type="email"
+                    value={regEmail}
+                    onChange={(e) => setRegEmail(e.target.value)}
+                    placeholder="nama@email.com"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition"
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1 text-left">
-                  <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
                     Kata Sandi
                   </label>
                   <input
@@ -389,12 +372,12 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="Min 6 karakter"
                     disabled={isLoading}
-                    className="w-full px-3 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition font-mono"
+                    className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
                 </div>
 
-                <div className="space-y-1 text-left">
-                  <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
                     Konfirmasi Sandi
                   </label>
                   <input
@@ -403,7 +386,7 @@ export const LoginPage: React.FC = () => {
                     onChange={(e) => setRegConfirmPassword(e.target.value)}
                     placeholder="Ulangi sandi"
                     disabled={isLoading}
-                    className="w-full px-3 py-2.5 bg-[#F8FAFC] dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white placeholder-[#94A3B8] focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition font-mono"
+                    className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
                 </div>
               </div>
@@ -411,7 +394,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <>
@@ -420,7 +403,7 @@ export const LoginPage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4 text-emerald-200" />
+                    <UserPlus className="w-4 h-4" />
                     <span>Daftar Akun Baru</span>
                   </>
                 )}
@@ -430,12 +413,12 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Security Footnote */}
-        <div className="text-center mt-5 space-y-1">
-          <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+        <div className="text-center mt-6 space-y-1">
+          <p className="text-[11px] text-[#64748b] flex items-center justify-center gap-1.5 font-medium">
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#0f9b8a]" />
             Enkripsi Kredensial Terproteksi &bull; Akses Aman
           </p>
-          <p className="text-[10px] text-[#94A3B8] font-mono">
+          <p className="text-[10px] text-[#94a3b8] font-mono">
             Scamora Cyber-Defense &bull; MIT-Week 2026 Challenge
           </p>
         </div>

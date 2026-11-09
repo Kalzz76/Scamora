@@ -58,7 +58,7 @@ function MainApp() {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isAdmin || isLogin ? '' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
+    <div className={`min-h-screen flex flex-col ${isAdmin ? '' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
       <ScrollToTop />
 
       {/* Navigation Bar (Only for public website, excluded on /admin and standalone /login) */}
