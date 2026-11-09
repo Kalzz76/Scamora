@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Globe, 
@@ -9,9 +9,13 @@ import {
   Users,
   LogIn,
   User,
-  ShieldCheck
+  ShieldCheck,
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
+import { UserAccountModal } from './UserAccountModal';
 
 interface NavbarProps {
   onOpenPrivacy?: () => void;
@@ -20,13 +24,22 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = () => {
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
   const isAuth = !!currentUser;
   const isHome = location.pathname === '/' && !scrolled;
 
   useEffect(() => {
     setCurrentUser(adminAuth.getUser());
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    adminAuth.clearSession();
+    setCurrentUser(null);
+    toast.success('Anda telah berhasil keluar dari akun.');
+    navigate('/', { replace: true });
+  };
 
   // Track window scroll to create smooth responsive sticky header
   useEffect(() => {
@@ -169,77 +182,50 @@ export const Navbar: React.FC<NavbarProps> = () => {
             <div className="hidden lg:flex items-center gap-2.5 z-10">
               {currentUser ? (
                 <div className="flex items-center gap-2">
-                  <Link
-                    to="/profil"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
-                    title="Profil & Pengaturan Akun"
+                  <button
+                    type="button"
+                    onClick={() => setAccountModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200/90 text-emerald-800 text-xs font-bold transition shadow-2xs font-mono cursor-pointer"
+                    title="Menu Akun & Profil"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                     <span>@{currentUser.username}</span>
                     <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
                       {currentUser.role === 'admin' ? 'Admin' : 'User'}
                     </span>
-                  </Link>
-
-                  {currentUser.role === 'admin' && (
-                    <Link
-                      to="/admin"
-                      className="px-3 py-1.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs"
-                    >
-                      Panel Admin
-                    </Link>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      adminAuth.clearSession();
-                      window.location.href = '/#/';
-                      window.location.reload();
-                    }}
-                    className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
-                    title="Keluar dari Akun"
-                  >
-                    Keluar
+                    <ChevronDown className="w-3 h-3 text-emerald-700 opacity-70 ml-0.5" />
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Link
-                    to="/register"
-                    className="text-xs text-[#475569] hover:text-[#0f9b8a] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-stone-100/70 transition cursor-pointer"
-                  >
-                    Daftar
-                  </Link>
-                  <Link
-                    to="/login"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
-                  >
-                    <LogIn className="w-3.5 h-3.5" />
-                    <span>Masuk</span>
-                  </Link>
-                </div>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 px-4.5 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm cursor-pointer"
+                >
+                  <span>Get Started</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               )}
             </div>
 
             {/* Mobile Header: Clean auth status / quick access */}
             <div className="flex items-center lg:hidden z-10">
               {currentUser ? (
-                <Link
-                  to="/profil"
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono"
-                  title="Profil Saya"
+                <button
+                  type="button"
+                  onClick={() => setAccountModalOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono cursor-pointer"
+                  title="Menu Akun & Profil"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                   <span className="truncate max-w-[90px]">@{currentUser.username}</span>
-                </Link>
+                  <ChevronDown className="w-3 h-3 text-emerald-700 opacity-70" />
+                </button>
               ) : (
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0f9b8a] text-white text-xs font-bold shadow-xs"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0f9b8a] text-white text-xs font-bold shadow-xs cursor-pointer"
                 >
-                  <LogIn className="w-3 h-3" />
-                  <span>Masuk</span>
+                  <span>Get Started</span>
                 </Link>
               )}
             </div>
@@ -279,6 +265,14 @@ export const Navbar: React.FC<NavbarProps> = () => {
           );
         })}
       </nav>
+
+      {/* User Account / Profile & Logout Modal */}
+      <UserAccountModal
+        isOpen={accountModalOpen}
+        onClose={() => setAccountModalOpen(false)}
+        user={currentUser}
+        onLogout={handleLogout}
+      />
     </>
   );
 };
