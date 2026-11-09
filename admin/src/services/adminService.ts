@@ -22,6 +22,10 @@ import type {
   QuizQuestionItem,
   ScamCategoryItem,
   SystemStats,
+  AppUserItem,
+  UserTier,
+  UserStatus,
+  UserStats,
 } from '../types/admin';
 
 // Local storage keys for persistent offline administration
@@ -36,6 +40,7 @@ const STORAGE_KEYS = {
   POSTS: 'scamora_admin_posts',
   REPORTS: 'scamora_admin_reports',
   LOGS: 'scamora_admin_logs',
+  USERS: 'scamora_admin_users',
 };
 
 function getStored<T>(key: string, fallback: T): T {
@@ -526,5 +531,151 @@ export const adminService = {
     } catch {}
     logs.unshift(item);
     setStored(STORAGE_KEYS.LOGS, logs.slice(0, 100)); // Keep latest 100 logs
+  },
+
+  // User Accounts Management (Guest & Verified)
+  async getUsers(params?: { search?: string; tier?: string; status?: string }): Promise<{ users: AppUserItem[]; stats: UserStats }> {
+    try {
+      const res = await adminApiClient.get('/users', { params });
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const stats: UserStats = res.data.stats || {
+          totalUsers: res.data.data.length,
+          verifiedUsers: res.data.data.filter((u: AppUserItem) => u.tier === 'verified').length,
+          guestUsers: res.data.data.filter((u: AppUserItem) => u.tier === 'guest').length,
+          activeUsers: res.data.data.filter((u: AppUserItem) => u.status === 'active').length,
+        };
+        setStored(STORAGE_KEYS.USERS, res.data.data);
+        return { users: res.data.data, stats };
+      }
+    } catch {}
+
+    const stored = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, [
+      {
+        id: 'usr-101',
+        username: 'budi_santoso',
+        email: 'budi.santoso@gmail.com',
+        fullName: 'Budi Santoso',
+        tier: 'verified',
+        role: 'user',
+        status: 'active',
+        scanCount: 14,
+        reportCount: 2,
+        lastActiveAt: new Date(Date.now() - 1800000).toISOString(),
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+      },
+      {
+        id: 'guest-204',
+        username: 'tamu_jakarta_44',
+        email: '',
+        fullName: 'Pengunjung Tamu (Guest)',
+        tier: 'guest',
+        role: 'user',
+        status: 'active',
+        scanCount: 3,
+        reportCount: 0,
+        lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
+        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+      },
+    ]);
+
+    let filtered = [...stored];
+    if (params?.tier && params.tier !== 'all') {
+      filtered = filtered.filter((u) => u.tier === params.tier);
+    }
+    if (params?.status && params.status !== 'all') {
+      filtered = filtered.filter((u) => u.status === params.status);
+    }
+    if (params?.search && params.search.trim()) {
+      const s = params.search.trim().toLowerCase();
+      filtered = filtered.filter(
+        (u) =>
+          u.username.toLowerCase().includes(s) ||
+          u.fullName.toLowerCase().includes(s) ||
+          (u.email && u.email.toLowerCase().includes(s))
+      );
+    }
+
+    const stats: UserStats = {
+      totalUsers: stored.length,
+      verifiedUsers: stored.filter((u) => u.tier === 'verified').length,
+      guestUsers: stored.filter((u) => u.tier === 'guest').length,
+      activeUsers: stored.filter((u) => u.status === 'active').length,
+    };
+
+    return { users: filtered, stats };
+  },
+
+  async createUser(data: { username: string; fullName: string; email?: string; tier: UserTier; role?: string; status?: UserStatus; password?: string }): Promise<AppUserItem> {
+    const list = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, []);
+    const newUser: AppUserItem = {
+      id: `usr-${Date.now()}`,
+      username: data.username.trim().toLowerCase(),
+      fullName: data.fullName.trim(),
+      email: data.email?.trim() || '',
+      tier: data.tier,
+      role: (data.role as 'admin' | 'user') || 'user',
+      status: data.status || 'active',
+      scanCount: 0,
+      reportCount: 0,
+      lastActiveAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const res = await adminApiClient.post('/users', { ...data, id: newUser.id });
+      if (res.data?.success && res.data.data) {
+        list.unshift(res.data.data);
+        setStored(STORAGE_KEYS.USERS, list);
+        await this.logAction('CREATE_USER', newUser.username, `Menambahkan pengguna baru (${newUser.tier})`);
+        return res.data.data;
+      }
+    } catch {}
+
+    list.unshift(newUser);
+    setStored(STORAGE_KEYS.USERS, list);
+    await this.logAction('CREATE_USER', newUser.username, `Menambahkan pengguna baru (${newUser.tier})`);
+    return newUser;
+  },
+
+  async updateUserTier(id: string, tier: UserTier): Promise<boolean> {
+    try {
+      await adminApiClient.put(`/users/${id}/tier`, { tier });
+    } catch {}
+    const list = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, []);
+    const target = list.find((u) => u.id === id);
+    if (target) {
+      target.tier = tier;
+      setStored(STORAGE_KEYS.USERS, list);
+      await this.logAction('UPDATE_USER_TIER', target.username, `Tingkatan diubah menjadi ${tier}`);
+    }
+    return true;
+  },
+
+  async updateUserStatus(id: string, status: UserStatus): Promise<boolean> {
+    try {
+      await adminApiClient.put(`/users/${id}/status`, { status });
+    } catch {}
+    const list = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, []);
+    const target = list.find((u) => u.id === id);
+    if (target) {
+      target.status = status;
+      setStored(STORAGE_KEYS.USERS, list);
+      await this.logAction('UPDATE_USER_STATUS', target.username, `Status diubah menjadi ${status}`, status === 'suspended' ? 'warning' : 'info');
+    }
+    return true;
+  },
+
+  async deleteUser(id: string): Promise<boolean> {
+    try {
+      await adminApiClient.delete(`/users/${id}`);
+    } catch {}
+    const list = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, []);
+    const target = list.find((u) => u.id === id);
+    const filtered = list.filter((u) => u.id !== id);
+    setStored(STORAGE_KEYS.USERS, filtered);
+    if (target) {
+      await this.logAction('DELETE_USER', target.username, `Akun user dihapus dari sistem`, 'warning');
+    }
+    return true;
   },
 };

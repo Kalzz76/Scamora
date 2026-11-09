@@ -3,7 +3,13 @@ import { env } from '../config/env';
 
 export interface TokenPayload {
   u: string;
+  role?: string;
+  tier?: 'guest' | 'verified';
   exp: number;
+}
+
+export function hashUserPassword(password: string): string {
+  return crypto.createHmac('sha256', env.ADMIN_SECRET).update(password).digest('hex');
 }
 
 export function validateAdminCredentials(username: string, password: string): boolean {
@@ -27,9 +33,11 @@ export function validateAdminCredentials(username: string, password: string): bo
   return crypto.timingSafeEqual(userPassBuf, expectedPassBuf);
 }
 
-export function createAdminToken(username: string): string {
+export function createAdminToken(username: string, role: string = 'admin', tier: 'guest' | 'verified' = 'verified'): string {
   const payload: TokenPayload = {
     u: username,
+    role,
+    tier,
     exp: Date.now() + 24 * 60 * 60 * 1000,
   };
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -40,7 +48,7 @@ export function createAdminToken(username: string): string {
   return `${payloadB64}.${signature}`;
 }
 
-export function verifyAdminToken(token: string): { valid: boolean; username?: string } {
+export function verifyAdminToken(token: string): { valid: boolean; username?: string; role?: string; tier?: string } {
   if (!token || typeof token !== 'string') {
     return { valid: false };
   }
@@ -75,11 +83,8 @@ export function verifyAdminToken(token: string): { valid: boolean; username?: st
       return { valid: false };
     }
 
-    if (parsed.u !== env.ADMIN_USERNAME) {
-      return { valid: false };
-    }
-
-    return { valid: true, username: parsed.u };
+    const role = parsed.role || (parsed.u === env.ADMIN_USERNAME ? 'admin' : 'user');
+    return { valid: true, username: parsed.u, role, tier: parsed.tier || 'verified' };
   } catch {
     return { valid: false };
   }

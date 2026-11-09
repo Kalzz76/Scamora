@@ -99,6 +99,27 @@ CREATE TABLE IF NOT EXISTS admin_users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- Tabel Pengguna Platform (Guest & Verified)
+CREATE TABLE IF NOT EXISTS app_users (
+    id VARCHAR(50) PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    password_hash VARCHAR(255),
+    full_name VARCHAR(150) NOT NULL,
+    tier VARCHAR(20) NOT NULL DEFAULT 'guest' CHECK (tier IN ('guest', 'verified')),
+    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
+    scan_count INTEGER NOT NULL DEFAULT 0,
+    report_count INTEGER NOT NULL DEFAULT 0,
+    last_active_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE INDEX IF NOT EXISTS idx_app_users_tier ON app_users(tier);
+CREATE INDEX IF NOT EXISTS idx_app_users_status ON app_users(status);
+CREATE INDEX IF NOT EXISTS idx_app_users_username ON app_users(username);
+
 -- =========================================================================
 -- BAGIAN B: ANALISIS KEAMANAN & TELEMETRI SCAN
 -- =========================================================================

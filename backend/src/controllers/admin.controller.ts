@@ -3,7 +3,7 @@ import { env } from '../config/env';
 import { query, isDbConnected } from '../config/db';
 import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
-import { createAdminToken, validateAdminCredentials } from '../services/adminAuthService';
+import { createAdminToken, validateAdminCredentials, hashUserPassword } from '../services/adminAuthService';
 import type { RiskLevel, ScamType } from '../types/analysis';
 
 export interface DemoPresetItem {
@@ -239,6 +239,37 @@ let auditLogsStore: any[] = [
   },
 ];
 
+let usersStore: any[] = [
+  {
+    id: 'usr-101',
+    username: 'budi_santoso',
+    email: 'budi.santoso@gmail.com',
+    fullName: 'Budi Santoso',
+    tier: 'verified',
+    role: 'user',
+    status: 'active',
+    scanCount: 14,
+    reportCount: 2,
+    lastActiveAt: new Date(Date.now() - 1800000).toISOString(),
+    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    passwordHash: hashUserPassword('password123'),
+  },
+  {
+    id: 'guest-204',
+    username: 'tamu_jakarta_44',
+    email: '',
+    fullName: 'Pengunjung Tamu (Guest)',
+    tier: 'guest',
+    role: 'user',
+    status: 'active',
+    scanCount: 3,
+    reportCount: 0,
+    lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    passwordHash: '',
+  },
+];
+
 export function getActivePresets(): DemoPresetItem[] {
   return presetsStore.filter((p) => p.isActive);
 }
@@ -248,40 +279,223 @@ export function getActivePresets(): DemoPresetItem[] {
 // =========================================================================
 export async function handleAdminLogin(req: Request, res: Response): Promise<void> {
   const { username, password } = req.body;
-  const isValid = validateAdminCredentials(username, password);
 
-  if (!isValid) {
-    res.status(401).json({
-      success: false,
-      error: {
-        code: 'INVALID_CREDENTIALS',
-        message: 'Nama pengguna atau kata sandi tidak valid. Periksa kembali akun Anda.',
+  // 1. Cek kredensial superadmin
+  if (validateAdminCredentials(username, password)) {
+    const token = createAdminToken(username, 'admin', 'verified');
+
+    if (isDbConnected()) {
+      query(
+        `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [`log-${Date.now()}`, username, 'LOGIN_SUCCESS', 'Admin Portal', 'info', 'Administrator berhasil login.']
+      ).catch(() => {});
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        token,
+        user: {
+          username,
+          role: 'admin',
+          tier: 'verified',
+          name: 'Super Administrator',
+        },
+        expiresIn: 86400,
       },
     });
     return;
   }
 
-  const token = createAdminToken(username);
-
-  // Record audit log asynchronously
+  // 2. Cek database PostgreSQL app_users
   if (isDbConnected()) {
-    query(
-      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [`log-${Date.now()}`, username, 'LOGIN_SUCCESS', 'Admin Portal', 'info', 'Administrator berhasil login.']
-    ).catch(() => {});
+    try {
+      const userRes = await query(
+        `SELECT * FROM app_users WHERE (username = $1 OR email = $1) LIMIT 1`,
+        [username]
+      );
+      if (userRes && userRes.rows.length > 0) {
+        const u = userRes.rows[0];
+        const passHash = hashUserPassword(password);
+        if (u.password_hash === passHash) {
+          if (u.status === 'suspended') {
+            res.status(403).json({
+              success: false,
+              error: {
+                code: 'ACCOUNT_SUSPENDED',
+                message: 'Akun Anda sedang ditangguhkan. Silakan hubungi administrator.',
+              },
+            });
+            return;
+          }
+
+          query(`UPDATE app_users SET last_active_at = NOW() WHERE id = $1`, [u.id]).catch(() => {});
+
+          const token = createAdminToken(u.username, u.role || 'user', u.tier || 'verified');
+          res.status(200).json({
+            success: true,
+            data: {
+              token,
+              user: {
+                id: u.id,
+                username: u.username,
+                email: u.email,
+                role: u.role || 'user',
+                tier: u.tier || 'verified',
+                name: u.full_name || u.username,
+              },
+              expiresIn: 86400,
+            },
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[DB] Error verifying app_user login:', err);
+    }
   }
 
-  res.status(200).json({
+  // 3. Cek in-memory usersStore
+  const memUser = usersStore.find((u) => u.username === username || u.email === username);
+  if (memUser && memUser.passwordHash === hashUserPassword(password)) {
+    if (memUser.status === 'suspended') {
+      res.status(403).json({
+        success: false,
+        error: {
+          code: 'ACCOUNT_SUSPENDED',
+          message: 'Akun Anda sedang ditangguhkan.',
+        },
+      });
+      return;
+    }
+    const token = createAdminToken(memUser.username, memUser.role, memUser.tier);
+    res.status(200).json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: memUser.id,
+          username: memUser.username,
+          email: memUser.email,
+          role: memUser.role,
+          tier: memUser.tier,
+          name: memUser.fullName,
+        },
+        expiresIn: 86400,
+      },
+    });
+    return;
+  }
+
+  res.status(401).json({
+    success: false,
+    error: {
+      code: 'INVALID_CREDENTIALS',
+      message: 'Nama pengguna atau kata sandi tidak valid. Periksa kembali akun Anda.',
+    },
+  });
+}
+
+export async function handleUserRegister(req: Request, res: Response): Promise<void> {
+  const { username, email, password, fullName } = req.body || {};
+
+  if (!username || typeof username !== 'string' || username.trim().length < 3) {
+    res.status(422).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Nama pengguna minimal 3 karakter (hanya huruf, angka, _).' },
+    });
+    return;
+  }
+
+  if (!password || typeof password !== 'string' || password.length < 6) {
+    res.status(422).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Kata sandi minimal 6 karakter.' },
+    });
+    return;
+  }
+
+  const cleanUsername = username.trim().toLowerCase();
+  const cleanEmail = email && typeof email === 'string' && email.trim() ? email.trim().toLowerCase() : null;
+  const cleanName = fullName && typeof fullName === 'string' && fullName.trim() ? fullName.trim() : cleanUsername;
+
+  // Cek apakah username dipakai superadmin
+  if (cleanUsername === env.ADMIN_USERNAME.toLowerCase()) {
+    res.status(409).json({
+      success: false,
+      error: { code: 'USERNAME_TAKEN', message: 'Nama pengguna sudah digunakan oleh administrator.' },
+    });
+    return;
+  }
+
+  const passHash = hashUserPassword(password);
+  const newUserId = `usr-${Date.now()}`;
+
+  if (isDbConnected()) {
+    try {
+      const existing = await query(
+        `SELECT id FROM app_users WHERE username = $1 OR (email IS NOT NULL AND email = $2) LIMIT 1`,
+        [cleanUsername, cleanEmail]
+      );
+      if (existing && existing.rows.length > 0) {
+        res.status(409).json({
+          success: false,
+          error: { code: 'USER_EXISTS', message: 'Nama pengguna atau email sudah terdaftar.' },
+        });
+        return;
+      }
+
+      await query(
+        `INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status, scan_count, report_count, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'verified', 'user', 'active', 0, 0, NOW(), NOW())`,
+        [newUserId, cleanUsername, cleanEmail, passHash, cleanName]
+      );
+
+      query(
+        `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [`log-${Date.now()}`, cleanUsername, 'USER_REGISTER', 'User Accounts', 'info', `Pengguna baru '${cleanUsername}' terdaftar dengan tingkatan Terverifikasi (Verified).`]
+      ).catch(() => {});
+    } catch (err: any) {
+      console.error('[DB] Gagal registrasi user:', err);
+      res.status(500).json({ success: false, error: { message: 'Gagal mendaftarkan akun di basis data.' } });
+      return;
+    }
+  }
+
+  // Simpan juga di memori cadangan
+  const newUser = {
+    id: newUserId,
+    username: cleanUsername,
+    email: cleanEmail || '',
+    passwordHash: passHash,
+    fullName: cleanName,
+    tier: 'verified' as const,
+    role: 'user' as const,
+    status: 'active' as const,
+    scanCount: 0,
+    reportCount: 0,
+    lastActiveAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+  usersStore.unshift(newUser);
+
+  const token = createAdminToken(cleanUsername, 'user', 'verified');
+
+  res.status(201).json({
     success: true,
     data: {
       token,
       user: {
-        username,
-        role: 'admin',
-        name: 'Super Administrator',
+        id: newUserId,
+        username: cleanUsername,
+        email: cleanEmail,
+        name: cleanName,
+        tier: 'verified',
+        role: 'user',
       },
-      expiresIn: 86400,
+      message: 'Registrasi berhasil! Akun Anda aktif dengan tingkatan Terverifikasi (Verified).',
     },
   });
 }
@@ -972,4 +1186,222 @@ export async function handleCreateAuditLog(req: Request, res: Response): Promise
   }
 
   res.status(201).json({ success: true, data: newLog });
+}
+
+// =========================================================================
+// 10. USER ACCOUNTS MANAGEMENT (GUEST & VERIFIED)
+// =========================================================================
+export async function handleGetUsers(req: Request, res: Response): Promise<void> {
+  const { search, tier, status } = req.query as { search?: string; tier?: string; status?: string };
+
+  if (isDbConnected()) {
+    try {
+      let sql = 'SELECT * FROM app_users WHERE 1=1';
+      const params: any[] = [];
+      let pIdx = 1;
+
+      if (tier && (tier === 'guest' || tier === 'verified')) {
+        sql += ` AND tier = $${pIdx++}`;
+        params.push(tier);
+      }
+      if (status && (status === 'active' || status === 'suspended')) {
+        sql += ` AND status = $${pIdx++}`;
+        params.push(status);
+      }
+      if (search && search.trim()) {
+        sql += ` AND (username ILIKE $${pIdx} OR full_name ILIKE $${pIdx} OR email ILIKE $${pIdx})`;
+        params.push(`%${search.trim()}%`);
+        pIdx++;
+      }
+
+      sql += ' ORDER BY created_at DESC';
+
+      const dbRes = await query(sql, params);
+      const statsRes = await query(`
+        SELECT 
+          COUNT(*) as total,
+          COUNT(*) FILTER (WHERE tier = 'verified') as verified_count,
+          COUNT(*) FILTER (WHERE tier = 'guest') as guest_count,
+          COUNT(*) FILTER (WHERE status = 'active') as active_count
+        FROM app_users
+      `);
+
+      const statRow = statsRes?.rows[0];
+      const stats = {
+        totalUsers: parseInt(statRow?.total || '0', 10),
+        verifiedUsers: parseInt(statRow?.verified_count || '0', 10),
+        guestUsers: parseInt(statRow?.guest_count || '0', 10),
+        activeUsers: parseInt(statRow?.active_count || '0', 10),
+      };
+
+      const mapped = (dbRes?.rows || []).map((r: any) => ({
+        id: r.id,
+        username: r.username,
+        email: r.email || '',
+        fullName: r.full_name || r.username,
+        tier: r.tier || 'guest',
+        role: r.role || 'user',
+        status: r.status || 'active',
+        scanCount: r.scan_count || 0,
+        reportCount: r.report_count || 0,
+        lastActiveAt: r.last_active_at || r.created_at,
+        createdAt: r.created_at,
+      }));
+
+      res.status(200).json({
+        success: true,
+        data: mapped,
+        stats,
+      });
+      return;
+    } catch (err) {
+      console.warn('[DB] Gagal query app_users, fallback memory:', err);
+    }
+  }
+
+  // In-memory fallback
+  let list = [...usersStore];
+  if (tier && (tier === 'guest' || tier === 'verified')) {
+    list = list.filter((u) => u.tier === tier);
+  }
+  if (status && (status === 'active' || status === 'suspended')) {
+    list = list.filter((u) => u.status === status);
+  }
+  if (search && search.trim()) {
+    const s = search.trim().toLowerCase();
+    list = list.filter(
+      (u) =>
+        u.username.toLowerCase().includes(s) ||
+        u.fullName.toLowerCase().includes(s) ||
+        (u.email && u.email.toLowerCase().includes(s))
+    );
+  }
+
+  const stats = {
+    totalUsers: usersStore.length,
+    verifiedUsers: usersStore.filter((u) => u.tier === 'verified').length,
+    guestUsers: usersStore.filter((u) => u.tier === 'guest').length,
+    activeUsers: usersStore.filter((u) => u.status === 'active').length,
+  };
+
+  res.status(200).json({
+    success: true,
+    data: list,
+    stats,
+  });
+}
+
+export async function handleCreateUser(req: Request, res: Response): Promise<void> {
+  const body = req.body || {};
+  const newUserId = body.id || `usr-${Date.now()}`;
+  const username = (body.username || `user_${Date.now()}`).trim().toLowerCase();
+  const fullName = body.fullName || username;
+  const email = body.email ? body.email.trim().toLowerCase() : null;
+  const tier = body.tier === 'guest' ? 'guest' : 'verified';
+  const role = body.role || 'user';
+  const status = body.status === 'suspended' ? 'suspended' : 'active';
+  const password = body.password || 'password123';
+  const passHash = hashUserPassword(password);
+
+  if (isDbConnected()) {
+    try {
+      await query(
+        `INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status, scan_count, report_count, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 0, NOW(), NOW())`,
+        [newUserId, username, email, passHash, fullName, tier, role, status]
+      );
+      query(
+        `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [`log-${Date.now()}`, 'admin', 'CREATE_USER', 'User Management', 'info', `Admin menambahkan pengguna '${username}' (${tier}).`]
+      ).catch(() => {});
+    } catch (err: any) {
+      console.error('[DB] Gagal membuat user:', err);
+      res.status(409).json({ success: false, error: { message: 'Username atau email sudah digunakan.' } });
+      return;
+    }
+  }
+
+  const createdUser = {
+    id: newUserId,
+    username,
+    email: email || '',
+    fullName,
+    tier,
+    role,
+    status,
+    scanCount: 0,
+    reportCount: 0,
+    lastActiveAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+  usersStore.unshift({ ...createdUser, passwordHash: passHash });
+
+  res.status(201).json({ success: true, data: createdUser });
+}
+
+export async function handleUpdateUserTier(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { tier } = req.body;
+
+  if (tier !== 'guest' && tier !== 'verified') {
+    res.status(422).json({ success: false, error: { message: 'Tingkatan harus berupa guest atau verified.' } });
+    return;
+  }
+
+  if (isDbConnected()) {
+    await query(`UPDATE app_users SET tier = $1, updated_at = NOW() WHERE id = $2`, [tier, id]).catch(() => {});
+    query(
+      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [`log-${Date.now()}`, 'admin', 'UPDATE_USER_TIER', 'User Management', 'info', `Mengubah tingkatan user '${id}' menjadi ${tier}.`]
+    ).catch(() => {});
+  }
+
+  const u = usersStore.find((x) => x.id === id);
+  if (u) u.tier = tier;
+
+  res.status(200).json({ success: true, data: { id, tier } });
+}
+
+export async function handleUpdateUserStatus(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (status !== 'active' && status !== 'suspended') {
+    res.status(422).json({ success: false, error: { message: 'Status harus active atau suspended.' } });
+    return;
+  }
+
+  if (isDbConnected()) {
+    await query(`UPDATE app_users SET status = $1, updated_at = NOW() WHERE id = $2`, [status, id]).catch(() => {});
+    query(
+      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [`log-${Date.now()}`, 'admin', 'UPDATE_USER_STATUS', 'User Management', 'warning', `Mengubah status user '${id}' menjadi ${status}.`]
+    ).catch(() => {});
+  }
+
+  const u = usersStore.find((x) => x.id === id);
+  if (u) u.status = status;
+
+  res.status(200).json({ success: true, data: { id, status } });
+}
+
+export async function handleDeleteUser(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+
+  if (isDbConnected()) {
+    await query(`DELETE FROM app_users WHERE id = $1`, [id]).catch(() => {});
+    query(
+      `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [`log-${Date.now()}`, 'admin', 'DELETE_USER', 'User Management', 'warning', `Menghapus akun user '${id}'.`]
+    ).catch(() => {});
+  }
+
+  const idx = usersStore.findIndex((x) => x.id === id);
+  if (idx !== -1) usersStore.splice(idx, 1);
+
+  res.status(200).json({ success: true, data: { id, message: 'User berhasil dihapus.' } });
 }

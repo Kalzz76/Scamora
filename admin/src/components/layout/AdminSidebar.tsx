@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Cpu,
@@ -9,6 +9,7 @@ import {
   ClipboardList,
   ExternalLink,
   User,
+  Users,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -19,16 +20,17 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
   const [accountOpen, setAccountOpen] = useState(false);
 
   const navItems = [
-    { to: '/', label: 'Dashboard Utama', icon: LayoutDashboard },
-    { to: '/engine', label: 'AI Engine & Crawler', icon: Cpu, badge: 'Active' },
-    { to: '/knowledge', label: 'Pusat Pengetahuan', icon: BookOpen },
-    { to: '/quiz', label: 'Guardian Challenge', icon: HelpCircle },
-    { to: '/moderation', label: 'Moderasi Komunitas', icon: ShieldCheck, badgeCount: reportCount },
-    { to: '/audit-logs', label: 'Log Audit & Telemetri', icon: ClipboardList },
+    { to: '/admin', label: 'Dashboard Utama', icon: LayoutDashboard },
+    { to: '/admin/users', label: 'Manajemen Pengguna', icon: Users, badge: '2 Tingkat' },
+    { to: '/admin/engine', label: 'AI Engine & Crawler', icon: Cpu, badge: 'Active' },
+    { to: '/admin/knowledge', label: 'Pusat Pengetahuan', icon: BookOpen },
+    { to: '/admin/quiz', label: 'Guardian Challenge', icon: HelpCircle },
+    { to: '/admin/moderation', label: 'Moderasi Komunitas', icon: ShieldCheck, badgeCount: reportCount },
+    { to: '/admin/audit-logs', label: 'Log Audit & Telemetri', icon: ClipboardList },
   ];
 
   return (
-    <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
+    <aside className="w-[74px] fixed top-[64px] left-0 h-[calc(100vh-64px)] z-40 hidden md:flex flex-col justify-between items-center py-6 pl-3 select-none pointer-events-auto bg-transparent">
       {/* 1. DOCK MENU AKSES KONTEN: Diketengahkan secara vertikal (my-auto) */}
       <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center my-auto shadow-xl">
         <nav className="flex flex-col items-center gap-3 w-full">
@@ -38,7 +40,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/'}
+                end={item.to === '/admin'}
                 className={({ isActive }) =>
                   `w-11 h-11 rounded-2xl flex items-center justify-center relative group transition-all duration-200 cursor-pointer ${
                     isActive
@@ -84,20 +86,18 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ reportCount = 1 }) =
 
       {/* 2. DOCK BAWAH TERPISAH: Buka Web Publik & Akun (dengan gap) */}
       <div className="w-[56px] glass-panel-dark rounded-3xl py-3 px-1.5 flex flex-col items-center gap-2.5 shadow-xl">
-        {/* Tombol Buka Web Publik */}
-        <a
-          href="http://localhost:5173"
-          target="_blank"
-          rel="noreferrer"
+        {/* Tombol Kembali ke Web Publik */}
+        <Link
+          to="/"
           className="w-11 h-11 rounded-2xl text-[#EEEEEE]/70 hover:bg-white/10 hover:text-white flex items-center justify-center transition-all duration-200 relative group cursor-pointer"
-          title="Buka Web Publik Scamora"
+          title="Kembali ke Web Publik Scamora"
         >
           <ExternalLink className="w-5 h-5 text-[#548CA8]" />
           <div className="absolute left-full ml-3 px-3 py-1.5 rounded-xl bg-[#242F3E] text-white text-xs font-bold whitespace-nowrap shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-x-1 group-hover:translate-x-0 transition-all duration-150 pointer-events-none z-50 flex items-center gap-1.5">
-            <span>Buka Web Publik Scamora</span>
+            <span>Kembali ke Web Publik Scamora</span>
             <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
           </div>
-        </a>
+        </Link>
 
         {/* Divider pemisah */}
         <div className="w-6 h-px bg-white/20 my-0.5" />

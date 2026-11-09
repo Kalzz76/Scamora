@@ -192,3 +192,27 @@ export interface AuditLogItem {
   severity: 'info' | 'warning' | 'critical';
 }
 
+export type UserTier = 'guest' | 'verified';
+export type UserStatus = 'active' | 'suspended';
+
+export interface AppUserItem {
+  id: string;
+  username: string;
+  email?: string;
+  fullName: string;
+  tier: UserTier;
+  role: 'admin' | 'user';
+  status: UserStatus;
+  scanCount: number;
+  reportCount: number;
+  lastActiveAt: string;
+  createdAt: string;
+}
+
+export interface UserStats {
+  totalUsers: number;
+  verifiedUsers: number;
+  guestUsers: number;
+  activeUsers: number;
+}
+

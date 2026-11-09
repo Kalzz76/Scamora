@@ -11,8 +11,11 @@ import {
   Gamepad2, 
   GraduationCap, 
   Users, 
-  ChevronRight 
+  ChevronRight,
+  User,
+  LogIn
 } from 'lucide-react';
+import { adminAuth } from '../../admin/services/adminAuth';
 
 interface NavbarProps {
   onOpenPrivacy: () => void;
@@ -179,6 +182,31 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             })}
           </nav>
 
+          {/* Desktop User Account / Auth Status Button */}
+          <div className="hidden lg:flex items-center gap-2.5 z-10">
+            {adminAuth.getUser() ? (
+              <Link
+                to="/admin"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
+                title="Buka Command Center / Akun"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>@{adminAuth.getUser()?.username}</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
+                  {adminAuth.getUser()?.tier || 'Verified'}
+                </span>
+              </Link>
+            ) : (
+              <Link
+                to="/admin/login"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Masuk / Daftar</span>
+              </Link>
+            )}
+          </div>
+
           {/* Right: Mobile Menu Toggle (lg:hidden) */}
           <div className="flex items-center lg:hidden z-10">
             <button
@@ -271,6 +299,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                 </div>
               </div>
             ))}
+
+            {/* User Account / Auth Entry Mobile */}
+            <div className="pt-2 border-t border-slate-100">
+              <Link
+                to={adminAuth.getUser() ? '/admin' : '/admin/login'}
+                onClick={() => setMobileOpen(false)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition border border-emerald-200/80 shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <User className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>
+                    {adminAuth.getUser()
+                      ? `Akun: @${adminAuth.getUser()?.username}`
+                      : 'Masuk / Daftar Akun Terverifikasi'}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                  {adminAuth.getUser()?.tier || 'Verified'}
+                </span>
+              </Link>
+            </div>
 
             {/* Bottom Security Card & Privacy Modal Trigger */}
             <div className="pt-2 border-t border-slate-100">

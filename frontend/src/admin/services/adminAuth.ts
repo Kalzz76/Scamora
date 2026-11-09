@@ -4,9 +4,12 @@ const TOKEN_KEY = 'scamora_admin_token';
 const USER_KEY = 'scamora_admin_user';
 
 export interface AdminUser {
+  id?: string;
   username: string;
   role: string;
   name: string;
+  tier?: 'guest' | 'verified';
+  email?: string;
 }
 
 export interface LoginResult {
@@ -96,11 +99,39 @@ export const adminAuth = {
         success: false,
         error: res.data?.error?.message || 'Nama pengguna atau kata sandi tidak valid. Gunakan admin / admin123.',
       };
-    } catch {
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Kredensial tidak cocok atau akun tidak ditemukan.';
       return {
         success: false,
-        error: 'Kredensial tidak cocok. Gunakan kredensial evaluasi: admin / admin123.',
+        error: msg,
       };
+    }
+  },
+
+  async register(data: { username: string; email?: string; password: string; fullName: string }): Promise<LoginResult> {
+    try {
+      const res = await adminApiClient.post('/register', data);
+      if (res.data?.success && res.data.data?.token) {
+        const token = res.data.data.token;
+        const u = res.data.data.user;
+        const user: AdminUser = {
+          id: u.id,
+          username: u.username,
+          name: u.name || u.username,
+          role: u.role || 'user',
+          tier: u.tier || 'verified',
+          email: u.email,
+        };
+        this.setSession(token, user);
+        return { success: true, user };
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Registrasi gagal. Periksa kembali formulir Anda.',
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || 'Gagal menghubungi server pendaftaran.';
+      return { success: false, error: msg };
     }
   },
 

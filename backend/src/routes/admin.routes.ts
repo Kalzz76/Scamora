@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   handleAdminLogin,
+  handleUserRegister,
   handleVerifyAdminSession,
   handleGetStats,
   handleGetAiConfig,
@@ -29,6 +30,11 @@ import {
   handleResolveReport,
   handleGetAuditLogs,
   handleCreateAuditLog,
+  handleGetUsers,
+  handleCreateUser,
+  handleUpdateUserTier,
+  handleUpdateUserStatus,
+  handleDeleteUser,
 } from '../controllers/admin.controller';
 import { requireAdminAuth } from '../middlewares/adminAuth';
 import { validateBody } from '../middlewares/validate';
@@ -38,6 +44,7 @@ const router = Router();
 
 // Public auth endpoints
 router.post('/login', validateBody(adminLoginSchema), handleAdminLogin);
+router.post('/register', handleUserRegister);
 router.get('/auth/verify', requireAdminAuth, handleVerifyAdminSession);
 
 // Protected routes (Admin token required)
@@ -46,37 +53,44 @@ router.use(requireAdminAuth);
 // 1. Dashboard & Telemetry
 router.get('/stats', handleGetStats);
 
-// 2. AI Engine Config
+// 2. User Accounts Management (Guest & Verified Tiers)
+router.get('/users', handleGetUsers);
+router.post('/users', handleCreateUser);
+router.put('/users/:id/tier', handleUpdateUserTier);
+router.put('/users/:id/status', handleUpdateUserStatus);
+router.delete('/users/:id', handleDeleteUser);
+
+// 3. AI Engine Config
 router.get('/ai-config', handleGetAiConfig);
 router.put('/ai-config', handleUpdateAiConfig);
 router.post('/test-ai', handleTestAi);
 
-// 3. Web Crawler Config
+// 4. Web Crawler Config
 router.get('/crawler-config', handleGetCrawlerConfig);
 router.put('/crawler-config', handleUpdateCrawlerConfig);
 
-// 4. Demo Presets
+// 5. Demo Presets
 router.get('/presets', handleGetPresets);
 router.post('/presets', handleCreatePreset);
 router.put('/presets/:id', handleUpdatePreset);
 router.delete('/presets/:id', handleDeletePreset);
 
-// 5. Knowledge Base Articles
+// 6. Knowledge Base Articles
 router.get('/articles', handleGetArticles);
 router.post('/articles', handleCreateArticle);
 router.put('/articles/:id', handleUpdateArticle);
 router.delete('/articles/:id', handleDeleteArticle);
 
-// 6. Threat Taxonomy Categories
+// 7. Threat Taxonomy Categories
 router.get('/categories', handleGetCategories);
 
-// 7. Guardian Challenge Questions
+// 8. Guardian Challenge Questions
 router.get('/questions', handleGetQuestions);
 router.post('/questions', handleCreateQuestion);
 router.put('/questions/:id', handleUpdateQuestion);
 router.delete('/questions/:id', handleDeleteQuestion);
 
-// 8. Community Moderation
+// 9. Community Moderation
 router.get('/posts', handleGetCommunityPosts);
 router.post('/posts', handleCreateCommunityPost);
 router.put('/posts/:id/status', handleUpdatePostStatus);
@@ -85,7 +99,7 @@ router.delete('/posts/:id', handleDeletePost);
 router.get('/reports', handleGetReports);
 router.put('/reports/:id/resolve', handleResolveReport);
 
-// 9. Audit Trail Logs
+// 10. Audit Trail Logs
 router.get('/audit-logs', handleGetAuditLogs);
 router.post('/audit-logs', handleCreateAuditLog);
 
