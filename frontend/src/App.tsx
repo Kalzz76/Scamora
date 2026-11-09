@@ -56,20 +56,21 @@ function PublicPageWrapper({ children }: { children: React.ReactNode }) {
 function MainApp() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isDashboard = location.pathname.startsWith('/dashboard');
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/masuk' || location.pathname === '/daftar';
   const isKomunitas = location.pathname === '/komunitas';
   const isHome = location.pathname === '/';
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isAdmin ? '' : isKomunitas ? 'bg-[#faf8f5] text-[#14161c] h-screen overflow-hidden' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
+    <div className={`min-h-screen flex flex-col ${isAdmin || isDashboard ? 'bg-[#F4F6F8] text-[#1A202C]' : isKomunitas ? 'bg-[#faf8f5] text-[#14161c] h-screen overflow-hidden' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
       <ScrollToTop />
 
-      {/* Navigation Bar (Only for public website, excluded on /admin and auth pages) */}
-      {!isAdmin && !isAuthRoute && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
+      {/* Navigation Bar (Only for public website, excluded on /admin, /dashboard, and auth pages) */}
+      {!isAdmin && !isAuthRoute && !isDashboard && <Navbar onOpenPrivacy={() => setPrivacyModalOpen(true)} />}
 
       {/* Main Content Area */}
-      <main className={`flex-1 flex flex-col ${isAdmin || isHome || isAuthRoute ? '' : isKomunitas ? 'pt-16 sm:pt-20 h-[calc(100vh-64px)] overflow-hidden' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
+      <main className={`flex-1 flex flex-col ${isAdmin || isHome || isAuthRoute || isDashboard ? '' : isKomunitas ? 'pt-16 sm:pt-20 h-[calc(100vh-64px)] overflow-hidden' : 'pt-16 sm:pt-20 lg:pt-24'}`}>
         <Routes>
           {/* Public Routes with Page Transitions */}
           <Route path="/" element={<PublicPageWrapper><HomePage /></PublicPageWrapper>} />
@@ -136,8 +137,8 @@ function MainApp() {
         </Routes>
       </main>
 
-      {/* Universal Footer & Privacy Modal (Footer excluded on /admin, auth pages, and full-screen /komunitas) */}
-      {!isAdmin && !isAuthRoute && !isKomunitas && (
+      {/* Universal Footer & Privacy Modal (Footer excluded on /admin, auth pages, /dashboard, and full-screen /komunitas) */}
+      {!isAdmin && !isAuthRoute && !isDashboard && !isKomunitas && (
         <Footer onOpenPrivacy={() => setPrivacyModalOpen(true)} />
       )}
       <PrivacyModal

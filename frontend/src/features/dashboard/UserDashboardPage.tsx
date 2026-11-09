@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ShieldCheck,
@@ -11,19 +11,22 @@ import {
   ExternalLink,
   ChevronRight,
   Clock,
-  Sparkles,
-  AlertTriangle,
   CheckCircle2,
   ShieldAlert,
   FileText,
-  Lock,
-  Unlock,
   PlusCircle,
   Eye,
   X,
   Filter,
   ArrowRight,
+  LogOut,
+  User,
+  Bell,
+  ArrowLeft,
+  ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
 import { userService, type UserStatistics, type UserScanHistoryItem } from '../../services/userService';
 
@@ -32,14 +35,15 @@ interface UserReportItem {
   title: string;
   category: string;
   targetInfo: string;
-  status: 'review' | 'verified' | 'resolved';
-  helpfulCount: number;
+  status: 'verified' | 'review' | 'resolved';
   createdAt: string;
 }
 
 export const UserDashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  const user = adminAuth.getUser();
+  const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const [stats, setStats] = useState<UserStatistics | null>(null);
   const [history, setHistory] = useState<UserScanHistoryItem[]>([]);
@@ -48,7 +52,7 @@ export const UserDashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedHistory, setSelectedHistory] = useState<UserScanHistoryItem | null>(null);
 
-  // Mock community reports for logged-in user (fallback to realistic state)
+  // Realistic reports submitted by the user
   const [myReports, setMyReports] = useState<UserReportItem[]>([
     {
       id: 'rep-01',
@@ -56,7 +60,6 @@ export const UserDashboardPage: React.FC = () => {
       category: 'APK Malware',
       targetInfo: 'No: +62 821-4921-9901',
       status: 'verified',
-      helpfulCount: 47,
       createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     },
     {
@@ -65,7 +68,6 @@ export const UserDashboardPage: React.FC = () => {
       category: 'Phishing',
       targetInfo: 'URL: mandiri-livin-pembaruan.top',
       status: 'review',
-      helpfulCount: 12,
       createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
     },
   ]);
@@ -91,9 +93,29 @@ export const UserDashboardPage: React.FC = () => {
     loadDashboardData();
   }, []);
 
+  // Click outside to dismiss user dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    if (userDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userDropdownOpen]);
+
+  const handleLogout = () => {
+    adminAuth.clearSession();
+    toast.success('Anda telah berhasil keluar dari akun.');
+    navigate('/', { replace: true });
+  };
+
   const filteredHistory = history.filter((item) => {
     const matchesFilter = historyFilter === 'all' || item.type === historyFilter;
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch =
+      searchQuery === '' ||
       item.inputSummary.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.scamType.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -105,22 +127,22 @@ export const UserDashboardPage: React.FC = () => {
     switch (level) {
       case 'high':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
             <span>Bahaya ({score}/100)</span>
           </span>
         );
       case 'review':
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
             <span>Perlu Tinjau ({score}/100)</span>
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             <span>Aman ({score}/100)</span>
           </span>
         );
@@ -131,23 +153,23 @@ export const UserDashboardPage: React.FC = () => {
     switch (status) {
       case 'verified':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold font-mono uppercase tracking-wider">
             <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-            <span>Terverifikasi & Tayang</span>
+            <span>TERVERIFIKASI & TAYANG</span>
           </span>
         );
       case 'review':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold font-mono uppercase tracking-wider">
             <Clock className="w-3 h-3 text-amber-600" />
-            <span>Sedang Ditinjau</span>
+            <span>SEDANG DITINJAU</span>
           </span>
         );
       case 'resolved':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-50 border border-sky-200 text-sky-800 text-[10px] font-bold uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-sky-50 border border-sky-200 text-sky-800 text-[10px] font-bold font-mono uppercase tracking-wider">
             <ShieldCheck className="w-3 h-3 text-sky-600" />
-            <span>Selesai / Di-take down</span>
+            <span>SELESAI</span>
           </span>
         );
     }
@@ -169,136 +191,192 @@ export const UserDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 font-['DM_Sans',sans-serif]">
-      {/* ===================== WELCOME HEADER ===================== */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 sm:p-8 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs">
-        <div className="space-y-1.5 text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Sesi Terautentikasi &bull; {user?.role === 'admin' ? 'Akun Administrator' : 'Warga Terverifikasi'}</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#14161c] tracking-tight">
-            Dashboard Keamanan Digital, {user?.name || user?.username || 'Warga'}! 👋
-          </h1>
-          <p className="text-xs sm:text-sm text-[#64748b]">
-            Pusat pemantauan perlindungan digital, riwayat analisis fraud, dan kontribusi komunitas siber Anda.
-          </p>
+    <div className="min-h-screen bg-[#F4F6F8] text-[#1A202C] font-sans flex flex-col">
+      {/* ========================================================================= */}
+      {/* 1. DEDICATED USER DASHBOARD TOP HEADER (ALIGNED WITH ADMIN HEADER STYLE)   */}
+      {/* ========================================================================= */}
+      <header className="h-[64px] bg-[#334257] border-b border-[#476072] fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 lg:px-8 flex items-center justify-between select-none shadow-md">
+        {/* Left: Brand + Breadcrumb/Workspace Identifier */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center shadow-xs">
+              <img src="/Logo.png" alt="Scamora" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-black text-base sm:text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+                Scamora
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#548CA8] text-white font-mono uppercase tracking-wider shadow-xs">
+                Dashboard Warga
+              </span>
+            </div>
+          </Link>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start md:self-auto shrink-0">
-          <Link
-            to="/laporan"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-[#faf8f5] border border-[#d9d6d0] text-[#14161c] text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4 text-[#0f9b8a]" />
-            <span>Buat Laporan</span>
-          </Link>
+        {/* Right: Quick Portal Navigation + User Profile Capsule */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Back to Public Home */}
           <Link
             to="/"
-            className="inline-flex items-center gap-2 px-4.5 py-2.5 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 hover:border-white/30 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition"
           >
-            <Search className="w-4 h-4" />
-            <span>Pindai Sekarang</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Beranda</span>
           </Link>
+
+          {/* User Account Capsule with Dropdown */}
+          <div className="relative" ref={userMenuRef}>
+            <button
+              type="button"
+              onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              className="flex items-center gap-2 p-1 sm:pr-3 rounded-xl border border-white/10 hover:border-[#548CA8] bg-white/10 hover:bg-white/20 transition cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-lg bg-[#476072] text-white flex items-center justify-center font-bold text-xs font-mono shadow-xs border border-white/20">
+                {(currentUser?.name || currentUser?.username || 'U')[0].toUpperCase()}
+              </div>
+              <div className="text-left hidden md:block">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white leading-none">
+                    {currentUser?.name || currentUser?.username}
+                  </span>
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-emerald-400 text-slate-900 font-bold uppercase">
+                    User
+                  </span>
+                </div>
+                <span className="text-[10px] text-slate-300 font-mono leading-none">
+                  @{currentUser?.username}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-300 transition-transform duration-200 ${
+                  userDropdownOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {userDropdownOpen && (
+              <div
+                className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#D8E0E7] p-2 z-50 text-left animate-in fade-in slide-in-from-top-1 duration-150"
+                role="menu"
+              >
+                <div className="p-2 border-b border-[#E2E8F0]">
+                  <p className="text-xs font-bold text-[#1A202C] truncate">
+                    {currentUser?.name || currentUser?.username}
+                  </p>
+                  <p className="text-[11px] font-mono text-[#476072] truncate">
+                    @{currentUser?.username}
+                  </p>
+                </div>
+
+                <div className="py-1 space-y-0.5">
+                  <Link
+                    to="/profil"
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#1A202C] hover:bg-[#F0F4F7] hover:text-[#334257] transition"
+                  >
+                    <User className="w-4 h-4 text-[#334257]" />
+                    <span>Profil Saya</span>
+                  </Link>
+
+                  <Link
+                    to="/"
+                    onClick={() => setUserDropdownOpen(false)}
+                    className="sm:hidden w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#1A202C] hover:bg-[#F0F4F7] hover:text-[#334257] transition"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-[#334257]" />
+                    <span>Kembali ke Beranda</span>
+                  </Link>
+
+                  {currentUser?.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-[#1A202C] hover:bg-[#F0F4F7] hover:text-[#334257] transition"
+                    >
+                      <ShieldCheck className="w-4 h-4 text-[#334257]" />
+                      <span>Panel Admin</span>
+                    </Link>
+                  )}
+
+                  <div className="border-t border-[#E2E8F0] my-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition cursor-pointer text-left"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                    <span>Keluar</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* ===================== UNLOCKED FEATURES BANNER ===================== */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-br from-teal-50/80 via-emerald-50/60 to-amber-50/40 border border-emerald-200/90 shadow-xs text-left relative overflow-hidden">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Akses Penuh Akun Aktif</span>
-            </div>
-            <h2 className="text-lg sm:text-xl font-black text-[#14161c] tracking-tight">
-              Fitur Eksklusif yang Terbuka untuk Anda
-            </h2>
-            <p className="text-xs text-[#475569] leading-relaxed">
-              Karena Anda telah masuk ke akun Scamora, limitasi tamu dihilangkan dan seluruh fitur berikut kini aktif sepenuhnya:
+      {/* ========================================================================= */}
+      {/* 2. MAIN DASHBOARD CONTENT AREA                                            */}
+      {/* ========================================================================= */}
+      <main className="flex-1 pt-[80px] pb-12 px-3 sm:px-6 lg:px-8 w-full max-w-7xl mx-auto space-y-6">
+        {/* Headline Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4 text-left">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-[#1A202C] tracking-tight">
+              Dashboard Keamanan Warga
+            </h1>
+            <p className="text-xs sm:text-sm text-[#476072] mt-0.5">
+              Pantau aktivitas pemindaian masukan, status laporan penipuan, dan progres kesiapan siber Anda.
             </p>
           </div>
-          <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-white border border-emerald-200 text-[#0f9b8a] items-center justify-center shadow-xs shrink-0">
-            <Unlock className="w-6 h-6" />
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/laporan"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#D8E0E7] hover:border-[#334257] text-[#1A202C] text-xs font-bold transition shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4 text-[#334257]" />
+              <span>Buat Laporan</span>
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs"
+            >
+              <Search className="w-4 h-4" />
+              <span>Pindai Sekarang</span>
+            </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
-          <div className="p-3.5 rounded-2xl bg-white/80 backdrop-blur-xs border border-emerald-100 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-[#0f9b8a] font-bold text-xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Riwayat Pemindaian 30 Hari</span>
-            </div>
-            <p className="text-[11px] text-[#64748b]">
-              Semua analisis URL & chat otomatis tersimpan dan dapat ditinjau kembali kapan saja.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-white/80 backdrop-blur-xs border border-emerald-100 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-[#0f9b8a] font-bold text-xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Laporan Komunitas Warga</span>
-            </div>
-            <p className="text-[11px] text-[#64748b]">
-              Hak menyampaikan laporan rekening dan nomor penipu ke database publik Scamora.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-white/80 backdrop-blur-xs border border-emerald-100 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-[#0f9b8a] font-bold text-xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Simulasi AI Tanpa Batas</span>
-            </div>
-            <p className="text-[11px] text-[#64748b]">
-              Bebas memainkan modul latihan studi kasus kuis untuk mengasah refleks keamanan.
-            </p>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-white/80 backdrop-blur-xs border border-emerald-100 space-y-1 shadow-2xs">
-            <div className="flex items-center gap-2 text-[#0f9b8a] font-bold text-xs">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Prioritas Engine AI Gemini</span>
-            </div>
-            <p className="text-[11px] text-[#64748b]">
-              Kapasitas pemindaian prioritas dengan kecepatan respons tinggi dan tanpa jeda kuota tamu.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ===================== SECTION 2: KEY SECURITY METRICS ===================== */}
-      <div className="space-y-3 text-left">
-        <h2 className="text-base font-bold text-[#14161c] flex items-center gap-2">
-          <ShieldCheck className="w-4.5 h-4.5 text-[#0f9b8a]" />
-          <span>Statistik Keamanan Digital Anda</span>
-        </h2>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 4 TELEMETRY METRIC CARDS (ADMIN DASHBOARD STYLE) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
           {/* Card 1: Total Scans */}
-          <div className="p-5 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#64748b]">Total Pemindaian</span>
-              <div className="w-8 h-8 rounded-xl bg-teal-50 text-[#0f9b8a] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-[#476072]">
+              <span className="text-xs font-semibold">Total Pemindaian</span>
+              <div className="w-8 h-8 rounded-lg bg-[#F0F4F7] text-[#334257] flex items-center justify-center">
                 <Search className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#14161c]">
+              <div className="text-2xl sm:text-3xl font-black text-[#1A202C]">
                 {stats?.totalScans || history.length || 8}
               </div>
-              <div className="text-[11px] text-[#64748b] mt-1 flex items-center gap-2">
-                <span>{stats?.urlScans || 5} Tautan</span>
-                <span>&bull;</span>
-                <span>{stats?.chatScans || 3} Pesan</span>
-              </div>
+              <p className="text-[11px] text-[#476072] font-mono mt-0.5">
+                {stats?.urlScans || 5} Tautan &bull; {stats?.chatScans || 3} Pesan
+              </p>
             </div>
           </div>
 
           {/* Card 2: Threats Blocked */}
-          <div className="p-5 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#64748b]">Ancaman Dihindari</span>
-              <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-[#476072]">
+              <span className="text-xs font-semibold">Ancaman Dihindari</span>
+              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center">
                 <ShieldAlert className="w-4 h-4" />
               </div>
             </div>
@@ -306,235 +384,244 @@ export const UserDashboardPage: React.FC = () => {
               <div className="text-2xl sm:text-3xl font-black text-rose-600">
                 {threatsBlocked}
               </div>
-              <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Terlindungi dari penipuan</span>
-              </div>
+              <p className="text-[11px] text-rose-600 font-semibold font-mono mt-0.5 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Terdeteksi Berisiko Tinggi
+              </p>
             </div>
           </div>
 
-          {/* Card 3: Cyber Literacy Score */}
-          <div className="p-5 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#64748b]">Skor Literasi Siber</span>
-              <div className="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+          {/* Card 3: Reports Contributed */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-[#476072]">
+              <span className="text-xs font-semibold">Laporan Diajukan</span>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+                <FileText className="w-4 h-4" />
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[#1A202C]">
+                {myReports.length}
+              </div>
+              <p className="text-[11px] text-[#476072] font-mono mt-0.5">
+                Riwayat Pengaduan Penipuan
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Cyber Literacy */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-[#D8E0E7] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-[#476072]">
+              <span className="text-xs font-semibold">Skor Kesiapan Siber</span>
+              <div className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 flex items-center justify-center">
                 <GraduationCap className="w-4 h-4" />
               </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#14161c]">
+              <div className="text-2xl sm:text-3xl font-black text-[#1A202C]">
                 {stats?.highestScore || 90}
                 <span className="text-sm font-normal text-[#94a3b8]">/100</span>
               </div>
-              <div className="text-[11px] text-[#0f9b8a] font-semibold mt-1">
-                Level: Warga Tanggap Siber
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Reports Contributed */}
-          <div className="p-5 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#64748b]">Laporan Warga</span>
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#14161c]">
-                {myReports.length}
-              </div>
-              <div className="text-[11px] text-amber-700 font-medium mt-1">
-                {myReports.reduce((acc, r) => acc + r.helpfulCount, 0)} Warga Terbantu
-              </div>
+              <p className="text-[11px] text-[#334257] font-semibold font-mono mt-0.5">
+                Tantangan Simulasi AI
+              </p>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ===================== TWO COLUMN LAYOUT: SECTIONS 4, 5, 6 ===================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* LEFT COLUMN (7 COLS): SECTION 4 - PERSONAL SCAN HISTORY */}
-        <div className="lg:col-span-7 space-y-6 text-left">
-          <div className="p-6 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#f0ede6]">
-              <div>
-                <h2 className="text-base font-bold text-[#14161c] flex items-center gap-2">
-                  <Clock className="w-4.5 h-4.5 text-[#0f9b8a]" />
-                  <span>Riwayat Pemindaian Mandiri</span>
+        {/* ========================================================================= */}
+        {/* SECTION 1: PERKEMBANGAN & RIWAYAT PEMINDAIAN (CARD 1 HEADLINE)            */}
+        {/* ========================================================================= */}
+        <section className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 border border-[#D8E0E7] shadow-xs space-y-5 text-left">
+          {/* Header Title with Numbered Badge */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
+                  1
+                </span>
+                <h2 className="text-base sm:text-lg font-black text-[#1A202C] tracking-tight">
+                  Riwayat Pemindaian Mandiri
                 </h2>
-                <p className="text-xs text-[#64748b] mt-0.5">
-                  Arsip otomatis 30 hari hasil analisis URL & pesan (privasi termasker)
-                </p>
+                <span className="px-2 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[9px] sm:text-[10px] font-bold uppercase">
+                  Arsip 30 Hari
+                </span>
               </div>
-
-              {/* Filters */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#faf8f5] border border-[#e8e4dc]">
-                <button
-                  type="button"
-                  onClick={() => setHistoryFilter('all')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    historyFilter === 'all'
-                      ? 'bg-white text-[#0f9b8a] shadow-2xs'
-                      : 'text-[#64748b] hover:text-[#14161c]'
-                  }`}
-                >
-                  Semua ({history.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHistoryFilter('url')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    historyFilter === 'url'
-                      ? 'bg-white text-[#0f9b8a] shadow-2xs'
-                      : 'text-[#64748b] hover:text-[#14161c]'
-                  }`}
-                >
-                  URL
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHistoryFilter('chat')}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                    historyFilter === 'chat'
-                      ? 'bg-white text-[#0f9b8a] shadow-2xs'
-                      : 'text-[#64748b] hover:text-[#14161c]'
-                  }`}
-                >
-                  Pesan
-                </button>
-              </div>
+              <p className="text-[11px] sm:text-xs text-[#476072] mt-1">
+                Rekam jejak pemindaian URL dan analisis pesan WhatsApp (input mentah termasker demi privasi)
+              </p>
             </div>
 
-            {/* Search filter input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-[#94a3b8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari domain atau kata kunci riwayat..."
-                className="w-full pl-9 pr-4 py-2 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+            {/* Filter buttons */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F0F4F7] border border-[#D8E0E7] self-start sm:self-center">
+              <button
+                type="button"
+                onClick={() => setHistoryFilter('all')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  historyFilter === 'all'
+                    ? 'bg-white text-[#334257] shadow-xs'
+                    : 'text-[#476072] hover:text-[#1A202C]'
+                }`}
+              >
+                Semua ({history.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setHistoryFilter('url')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  historyFilter === 'url'
+                    ? 'bg-white text-[#334257] shadow-xs'
+                    : 'text-[#476072] hover:text-[#1A202C]'
+                }`}
+              >
+                URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setHistoryFilter('chat')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  historyFilter === 'chat'
+                    ? 'bg-white text-[#334257] shadow-xs'
+                    : 'text-[#476072] hover:text-[#1A202C]'
+                }`}
+              >
+                Pesan
+              </button>
             </div>
+          </div>
 
-            {/* History List */}
-            {loading ? (
-              <div className="p-8 text-center text-xs text-[#64748b]">
-                <div className="w-6 h-6 border-2 border-[#0f9b8a]/30 border-t-[#0f9b8a] rounded-full animate-spin mx-auto mb-2" />
-                Memuat riwayat pemindaian...
-              </div>
-            ) : filteredHistory.length === 0 ? (
-              <div className="p-8 text-center rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] space-y-2">
-                <Search className="w-6 h-6 text-[#94a3b8] mx-auto" />
-                <p className="text-xs font-bold text-[#14161c]">Tidak ada riwayat pemindaian yang cocok</p>
-                <p className="text-[11px] text-[#64748b]">Gunakan pemindai di beranda untuk menganalisis link atau pesan mencurigakan.</p>
-                <Link
-                  to="/"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0f9b8a] text-white text-xs font-bold shadow-2xs mt-2"
-                >
-                  <span>Mulai Pindai Sekarang</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {filteredHistory.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-3.5 rounded-2xl bg-[#faf8f5] hover:bg-[#f3efe8] border border-[#e8e4dc] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left group"
-                  >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                        item.type === 'url' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
-                      }`}>
-                        {item.type === 'url' ? <Globe className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-                      </div>
-
-                      <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-xs text-[#14161c] truncate">
-                            {item.inputSummary}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-[#64748b] flex items-center gap-2">
-                          <span className="capitalize font-mono">{item.scamType.replace(/_/g, ' ')}</span>
-                          <span>&bull;</span>
-                          <span>{formatDate(item.createdAt)}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
-                      {getRiskBadge(item.riskLevel, item.riskScore)}
-                      <button
-                        type="button"
-                        onClick={() => setSelectedHistory(item)}
-                        className="p-1.5 rounded-lg bg-white border border-[#d9d6d0] hover:border-[#0f9b8a] text-[#475569] hover:text-[#0f9b8a] transition cursor-pointer shadow-2xs"
-                        title="Lihat Detail Hasil Analisis"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* Search filter */}
+          <div className="relative">
+            <Search className="w-4 h-4 text-[#94a3b8] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari domain atau kata kunci hasil pemindaian..."
+              className="w-full pl-9 pr-4 py-2 bg-[#F8FAFC] border border-[#D8E0E7] rounded-xl text-xs text-[#1A202C] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#334257]/20 focus:border-[#334257] transition"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             )}
           </div>
-        </div>
 
-        {/* RIGHT COLUMN (5 COLS): SECTIONS 5 & 6 */}
-        <div className="lg:col-span-5 space-y-6 text-left">
-          {/* SECTION 5: MY COMMUNITY REPORTS */}
-          <div className="p-6 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#f0ede6]">
+          {/* History List */}
+          {loading ? (
+            <div className="p-8 text-center text-xs text-[#476072]">
+              <div className="w-6 h-6 border-2 border-[#334257]/30 border-t-[#334257] rounded-full animate-spin mx-auto mb-2" />
+              Memuat riwayat pemindaian...
+            </div>
+          ) : filteredHistory.length === 0 ? (
+            <div className="p-8 text-center rounded-2xl bg-[#F8FAFC] border border-[#D8E0E7] space-y-2">
+              <Search className="w-6 h-6 text-[#94a3b8] mx-auto" />
+              <p className="text-xs font-bold text-[#1A202C]">Tidak ada riwayat pemindaian yang cocok</p>
+              <p className="text-[11px] text-[#476072]">Gunakan pemindai di beranda untuk menganalisis link atau pesan mencurigakan.</p>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#334257] text-white text-xs font-bold shadow-xs mt-2"
+              >
+                <span>Mulai Pindai Sekarang</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredHistory.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3.5 rounded-xl bg-[#F8FAFC] hover:bg-[#F0F4F7] border border-[#E2E8F0] transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left"
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                        item.type === 'url' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
+                      }`}
+                    >
+                      {item.type === 'url' ? <Globe className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                    </div>
+
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs text-[#1A202C] truncate font-mono">
+                          {item.inputSummary}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#476072] flex items-center gap-2">
+                        <span className="capitalize font-mono">{item.scamType.replace(/_/g, ' ')}</span>
+                        <span>&bull;</span>
+                        <span>{formatDate(item.createdAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
+                    {getRiskBadge(item.riskLevel, item.riskScore)}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedHistory(item)}
+                      className="p-1.5 rounded-lg bg-white border border-[#D8E0E7] hover:border-[#334257] text-[#476072] hover:text-[#334257] transition cursor-pointer shadow-2xs"
+                      title="Lihat Detail Hasil Analisis"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* ========================================================================= */}
+        {/* TWO COLUMN BOTTOM SECTION (SECTIONS 2 & 3)                                */}
+        {/* ========================================================================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start text-left">
+          {/* KOLOM KIRI (7 COLS): STATUS LAPORAN PENIPUAN SAYA */}
+          <section className="lg:col-span-7 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#D8E0E7] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D8E0E7]">
               <div>
-                <h2 className="text-base font-bold text-[#14161c] flex items-center gap-2">
-                  <FileText className="w-4.5 h-4.5 text-[#0f9b8a]" />
-                  <span>Status Laporan Penipuan Saya</span>
-                </h2>
-                <p className="text-xs text-[#64748b] mt-0.5">
-                  Laporan Anda membantu melindungi ribuan warga lain
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
+                    2
+                  </span>
+                  <h2 className="text-base font-black text-[#1A202C] tracking-tight">
+                    Status Laporan Penipuan Saya
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-[#476072] mt-0.5">
+                  Rekapitulasi pengaduan rekening/nomor penipuan yang telah Anda kirimkan
                 </p>
               </div>
               <Link
                 to="/laporan"
-                className="p-1.5 rounded-xl bg-[#faf8f5] border border-[#d9d6d0] hover:text-[#0f9b8a] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                className="p-1.5 rounded-lg bg-[#F0F4F7] border border-[#D8E0E7] hover:text-[#334257] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                 title="Kirim Laporan Baru"
               >
-                <PlusCircle className="w-4 h-4 text-[#0f9b8a]" />
+                <PlusCircle className="w-4 h-4 text-[#334257]" />
               </Link>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {myReports.map((report) => (
                 <div
                   key={report.id}
-                  className="p-3.5 rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] space-y-2 text-left"
+                  className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5 text-left"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-bold text-xs text-[#14161c] leading-tight">
+                    <span className="font-bold text-xs text-[#1A202C] leading-snug">
                       {report.title}
                     </span>
                     {getReportStatusBadge(report.status)}
                   </div>
-                  <div className="text-[11px] text-[#64748b] font-mono">
+                  <div className="text-[11px] text-[#476072] font-mono">
                     {report.targetInfo}
                   </div>
-                  <div className="flex items-center justify-between text-[11px] pt-1 border-t border-[#e8e4dc]/60">
-                    <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                      <Users className="w-3 h-3" /> {report.helpfulCount} warga terbantu
-                    </span>
-                    <span className="text-[#94a3b8]">{formatDate(report.createdAt)}</span>
+                  <div className="text-[10px] text-[#94a3b8] font-mono pt-0.5 border-t border-[#E2E8F0]/70">
+                    Dilaporkan pada {formatDate(report.createdAt)}
                   </div>
                 </div>
               ))}
@@ -542,31 +629,35 @@ export const UserDashboardPage: React.FC = () => {
 
             <Link
               to="/laporan"
-              className="w-full py-2.5 px-3 rounded-xl bg-[#faf8f5] hover:bg-[#f3efe8] border border-[#d9d6d0] text-xs font-bold text-[#14161c] transition flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-3 rounded-xl bg-[#F8FAFC] hover:bg-[#F0F4F7] border border-[#D8E0E7] text-xs font-bold text-[#1A202C] transition flex items-center justify-center gap-2"
             >
-              <PlusCircle className="w-4 h-4 text-[#0f9b8a]" />
+              <PlusCircle className="w-4 h-4 text-[#334257]" />
               <span>Laporkan Rekening / Modus Baru</span>
             </Link>
-          </div>
+          </section>
 
-          {/* SECTION 6: GUARDIAN CHALLENGE TRACKER */}
-          <div className="p-6 rounded-3xl bg-white border border-[#E3E0DA] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#f0ede6]">
+          {/* KOLOM KANAN (5 COLS): TANTANGAN AI & SIMULASI MODUS */}
+          <section className="lg:col-span-5 bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 border border-[#D8E0E7] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D8E0E7]">
               <div>
-                <h2 className="text-base font-bold text-[#14161c] flex items-center gap-2">
-                  <Gamepad2 className="w-4.5 h-4.5 text-[#0f9b8a]" />
-                  <span>Tantangan AI & Kuis Simulasi</span>
-                </h2>
-                <p className="text-xs text-[#64748b] mt-0.5">
-                  Uji refleks dan kepekaan mendeteksi social engineering
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0">
+                    3
+                  </span>
+                  <h2 className="text-base font-black text-[#1A202C] tracking-tight">
+                    Tantangan AI &amp; Simulasi Modus
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-[#476072] mt-0.5">
+                  Uji refleks dan kepekaan mendeteksi modus rekayasa sosial
                 </p>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#14161c] to-[#242b38] text-white space-y-3">
+            <div className="p-4 rounded-xl bg-[#334257] text-white space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold uppercase tracking-wider">
-                  Simulasi Aktif
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#548CA8] text-white font-bold uppercase tracking-wider">
+                  Modul Aktif
                 </span>
                 <span className="text-xs font-mono text-slate-300">Skor: {stats?.highestScore || 90}</span>
               </div>
@@ -579,13 +670,13 @@ export const UserDashboardPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Akurasi Deteksi: 95%
+              <div className="pt-2 flex items-center justify-between border-t border-white/10">
+                <span className="text-[11px] text-emerald-400 font-semibold font-mono flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Akurasi: 95%
                 </span>
                 <Link
                   to="/kuis"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#548CA8] hover:bg-[#437691] text-white text-xs font-bold transition shadow-xs"
                 >
                   <span>Mulai Kuis</span>
                   <ArrowRight className="w-3 h-3" />
@@ -593,34 +684,36 @@ export const UserDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] flex items-center justify-between">
+            <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xs">
+                <div className="w-8 h-8 rounded-lg bg-[#E2EBF0] text-[#334257] flex items-center justify-center font-bold text-xs">
                   🏆
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-[#14161c]">Lencana Pertahanan Aktif</div>
-                  <div className="text-[10px] text-[#64748b]">Tersertifikasi Waspada Phishing</div>
+                  <div className="text-xs font-bold text-[#1A202C]">Lencana Kesiapan Siber</div>
+                  <div className="text-[10px] text-[#476072]">Tersertifikasi Waspada Phishing</div>
                 </div>
               </div>
-              <Link to="/kuis" className="text-xs text-[#0f9b8a] hover:underline font-bold flex items-center gap-0.5">
-                <span>Semua Kuis</span>
+              <Link to="/kuis" className="text-xs text-[#334257] hover:underline font-bold flex items-center gap-0.5">
+                <span>Daftar Soal</span>
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
 
-      {/* ===================== MODAL DETAIL RIWAYAT ANALISIS ===================== */}
+      {/* ========================================================================= */}
+      {/* MODAL DETAIL RIWAYAT ANALISIS                                             */}
+      {/* ========================================================================= */}
       {selectedHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             onClick={() => setSelectedHistory(null)}
-            className="fixed inset-0 bg-[#14161c]/55 backdrop-blur-xs cursor-pointer"
+            className="fixed inset-0 bg-[#1A202C]/60 backdrop-blur-xs cursor-pointer"
           />
 
-          <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-[#E3E0DA] z-10 space-y-5 text-left animate-in fade-in zoom-in-95 duration-150">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl p-6 shadow-2xl border border-[#D8E0E7] z-10 space-y-4 text-left animate-in fade-in zoom-in-95 duration-150">
             <button
               type="button"
               onClick={() => setSelectedHistory(null)}
@@ -630,41 +723,43 @@ export const UserDashboardPage: React.FC = () => {
             </button>
 
             <div className="flex items-start gap-3">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                selectedHistory.type === 'url' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
-              }`}>
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  selectedHistory.type === 'url' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
+                }`}
+              >
                 {selectedHistory.type === 'url' ? <Globe className="w-5 h-5" /> : <MessageSquare className="w-5 h-5" />}
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#14161c]">Rincian Hasil Pemindaian</h3>
-                <p className="text-xs text-[#64748b]">Diperiksa pada {formatDate(selectedHistory.createdAt)}</p>
+                <h3 className="text-base font-bold text-[#1A202C]">Rincian Hasil Pemindaian</h3>
+                <p className="text-xs text-[#476072]">Diperiksa pada {formatDate(selectedHistory.createdAt)}</p>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] space-y-2">
-              <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider font-mono">
+            <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1.5">
+              <span className="text-[10px] font-bold text-[#476072] uppercase tracking-wider font-mono">
                 Input Analisis (Termasker):
               </span>
-              <p className="text-xs font-mono text-[#14161c] break-all bg-white p-2.5 rounded-xl border border-[#e2ded7]">
+              <p className="text-xs font-mono text-[#1A202C] break-all bg-white p-2.5 rounded-lg border border-[#D8E0E7]">
                 {selectedHistory.inputSummary}
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] space-y-1">
-                <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider font-mono">Tingkat Risiko:</span>
+              <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+                <span className="text-[10px] font-bold text-[#476072] uppercase tracking-wider font-mono">Tingkat Risiko:</span>
                 <div>{getRiskBadge(selectedHistory.riskLevel, selectedHistory.riskScore)}</div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-[#faf8f5] border border-[#e8e4dc] space-y-1">
-                <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-wider font-mono">Kategori Modus:</span>
-                <div className="text-xs font-bold text-[#14161c] capitalize">
+              <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-1">
+                <span className="text-[10px] font-bold text-[#476072] uppercase tracking-wider font-mono">Kategori Modus:</span>
+                <div className="text-xs font-bold text-[#1A202C] capitalize">
                   {selectedHistory.scamType.replace(/_/g, ' ')}
                 </div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs space-y-1.5">
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-amber-900 text-xs space-y-1.5">
               <div className="font-bold flex items-center gap-1.5 text-amber-800">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
                 <span>Rekomendasi Tindakan Keamanan:</span>
@@ -682,7 +777,7 @@ export const UserDashboardPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSelectedHistory(null)}
-                className="px-5 py-2.5 rounded-xl bg-[#14161c] hover:bg-[#2b2f3a] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs cursor-pointer"
               >
                 Tutup Rincian
               </button>
@@ -693,4 +788,3 @@ export const UserDashboardPage: React.FC = () => {
     </div>
   );
 };
-
