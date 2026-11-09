@@ -3,7 +3,13 @@ import { env } from '../config/env';
 import { query, isDbConnected } from '../config/db';
 import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
-import { createAdminToken, validateAdminCredentials, hashUserPassword } from '../services/adminAuthService';
+import {
+  createAdminToken,
+  validateAdminCredentials,
+  hashUserPassword,
+  verifyUserPassword,
+  hashPasswordBcrypt,
+} from '../services/adminAuthService';
 import type { RiskLevel, ScamType } from '../types/analysis';
 
 export interface DemoPresetItem {
@@ -247,7 +253,7 @@ let auditLogsStore: any[] = [
   },
 ];
 
-let usersStore: any[] = [
+export let usersStore: any[] = [
   {
     id: 'usr-101',
     username: 'budi_santoso',
@@ -325,8 +331,8 @@ export async function handleAdminLogin(req: Request, res: Response): Promise<voi
       );
       if (userRes && userRes.rows.length > 0) {
         const u = userRes.rows[0];
-        const passHash = hashUserPassword(password);
-        if (u.password_hash === passHash) {
+        const isMatch = await verifyUserPassword(password, u.password_hash);
+        if (isMatch) {
           if (u.status === 'suspended') {
             res.status(403).json({
               success: false,
@@ -365,8 +371,9 @@ export async function handleAdminLogin(req: Request, res: Response): Promise<voi
   }
 
   // 3. Cek in-memory usersStore
-  const memUser = usersStore.find((u) => u.username === username || u.email === username);
-  if (memUser && memUser.passwordHash === hashUserPassword(password)) {
+  const lowerId = username.toLowerCase();
+  const memUser = usersStore.find((u) => u.username.toLowerCase() === lowerId || (u.email && u.email.toLowerCase() === lowerId));
+  if (memUser && (await verifyUserPassword(password, memUser.passwordHash))) {
     if (memUser.status === 'suspended') {
       res.status(403).json({
         success: false,
@@ -446,7 +453,7 @@ export async function handleUserRegister(req: Request, res: Response): Promise<v
     return;
   }
 
-  const passHash = hashUserPassword(password);
+  const passHash = await hashPasswordBcrypt(password);
   const newUserId = `usr-${Date.now()}`;
 
   if (isDbConnected()) {
