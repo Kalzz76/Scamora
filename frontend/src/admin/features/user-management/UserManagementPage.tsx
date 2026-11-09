@@ -2,27 +2,18 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Users,
   ShieldCheck,
-  Globe,
-  UserCheck,
   Search,
   Plus,
   Trash2,
   AlertCircle,
-  MoreVertical,
   CheckCircle2,
-  XCircle,
-  ArrowUpDown,
-  Mail,
-  Calendar,
-  Activity,
   RefreshCw,
   X,
-  Lock,
   UserPlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminService } from '../../services/adminService';
-import type { AppUserItem, UserTier, UserStatus, UserStats } from '../../types/admin';
+import type { AppUserItem, UserStatus, UserStats } from '../../types/admin';
 
 export const UserManagementPage: React.FC = () => {
   const [users, setUsers] = useState<AppUserItem[]>([]);
@@ -34,7 +25,6 @@ export const UserManagementPage: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [tierFilter, setTierFilter] = useState<'all' | 'verified' | 'guest'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
 
   // Modal State
@@ -45,7 +35,6 @@ export const UserManagementPage: React.FC = () => {
     username: '',
     email: '',
     password: '',
-    tier: 'verified' as UserTier,
     status: 'active' as UserStatus,
   });
 
@@ -54,7 +43,6 @@ export const UserManagementPage: React.FC = () => {
     try {
       const res = await adminService.getUsers({
         search: searchQuery,
-        tier: tierFilter !== 'all' ? tierFilter : undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
       });
       setUsers(res.users);
@@ -64,25 +52,11 @@ export const UserManagementPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, tierFilter, statusFilter]);
+  }, [searchQuery, statusFilter]);
 
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
-
-  // Handle Quick Toggle Tier
-  const handleToggleTier = async (user: AppUserItem) => {
-    const nextTier: UserTier = user.tier === 'verified' ? 'guest' : 'verified';
-    try {
-      await adminService.updateUserTier(user.id, nextTier);
-      toast.success(
-        `Tingkatan @${user.username} diubah menjadi ${nextTier === 'verified' ? 'TERVERIFIKASI (Verified)' : 'TAMU (Guest)'}.`
-      );
-      loadUsers();
-    } catch {
-      toast.error('Gagal memperbarui tingkatan pengguna.');
-    }
-  };
 
   // Handle Quick Toggle Status
   const handleToggleStatus = async (user: AppUserItem) => {
@@ -131,17 +105,16 @@ export const UserManagementPage: React.FC = () => {
         username: modalForm.username.trim().toLowerCase(),
         email: modalForm.email.trim() || undefined,
         password: modalForm.password || 'password123',
-        tier: modalForm.tier,
+        tier: 'verified',
         status: modalForm.status,
       });
-      toast.success(`Pengguna @${modalForm.username} (${modalForm.tier}) berhasil ditambahkan!`);
+      toast.success(`Pengguna @${modalForm.username} (Verified) berhasil ditambahkan!`);
       setIsModalOpen(false);
       setModalForm({
         fullName: '',
         username: '',
         email: '',
         password: '',
-        tier: 'verified',
         status: 'active',
       });
       loadUsers();
@@ -160,12 +133,11 @@ export const UserManagementPage: React.FC = () => {
         u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (u.email && u.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      const matchTier = tierFilter === 'all' || u.tier === tierFilter;
       const matchStatus = statusFilter === 'all' || u.status === statusFilter;
 
-      return matchSearch && matchTier && matchStatus;
+      return matchSearch && matchStatus;
     });
-  }, [users, searchQuery, tierFilter, statusFilter]);
+  }, [users, searchQuery, statusFilter]);
 
   return (
     <div className="p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
@@ -181,7 +153,7 @@ export const UserManagementPage: React.FC = () => {
                 Manajemen Akun Pengguna
               </h1>
               <p className="text-xs text-[#5E6D7E] dark:text-slate-400 font-mono mt-0.5">
-                Kontrol Tingkatan: Tamu (Guest) &bull; Terverifikasi (Verified)
+                Pengguna Terdaftar &amp; Terverifikasi (Basis Data PostgreSQL)
               </p>
             </div>
           </div>
@@ -208,12 +180,12 @@ export const UserManagementPage: React.FC = () => {
       </div>
 
       {/* 2. Metric KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Total Users */}
         <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-[#D8E0E7] dark:border-slate-700 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5E6D7E] dark:text-slate-400 font-mono uppercase">
-              Total Pengguna
+              Total Pengguna Terdaftar
             </span>
             <div className="w-8 h-8 rounded-xl bg-[#F0F4F7] dark:bg-slate-800 text-[#334257] dark:text-slate-300 flex items-center justify-center">
               <Users className="w-4 h-4" />
@@ -224,67 +196,47 @@ export const UserManagementPage: React.FC = () => {
               {stats.totalUsers}
             </span>
             <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 mt-0.5">
-              Tercatat di basis data platform
-            </p>
-          </div>
-        </div>
-
-        {/* Verified Users */}
-        <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 font-mono uppercase">
-              Terverifikasi (Verified)
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400">
-              {stats.verifiedUsers}
-            </span>
-            <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">
-              Pengguna registrasi &amp; berizin penuh
-            </p>
-          </div>
-        </div>
-
-        {/* Guest Users */}
-        <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-sky-200 dark:border-sky-800/60 bg-sky-50/20 dark:bg-sky-950/10 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-sky-800 dark:text-sky-400 font-mono uppercase">
-              Tamu (Guest)
-            </span>
-            <div className="w-8 h-8 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 flex items-center justify-center">
-              <Globe className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-black text-sky-700 dark:text-sky-400">
-              {stats.guestUsers}
-            </span>
-            <p className="text-[11px] text-sky-600/80 dark:text-sky-400/80 mt-0.5">
-              Akses cepat tanpa login permanen
+              Tersimpan di basis data platform
             </p>
           </div>
         </div>
 
         {/* Active Accounts */}
-        <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-[#D8E0E7] dark:border-slate-700 flex flex-col justify-between">
+        <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5E6D7E] dark:text-slate-400 font-mono uppercase">
+            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 font-mono uppercase">
               Akun Aktif
             </span>
-            <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-700 dark:text-teal-300 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-black text-[#1A202C] dark:text-white">
+            <span className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-400">
               {stats.activeUsers}
             </span>
-            <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 mt-0.5">
-              Bebas dari sanksi penangguhan
+            <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">
+              Bebas dari penangguhan
+            </p>
+          </div>
+        </div>
+
+        {/* Suspended Accounts */}
+        <div className="glass-panel p-4 sm:p-5 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-800/60 bg-amber-50/20 dark:bg-amber-950/10 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-800 dark:text-amber-400 font-mono uppercase">
+              Akun Ditangguhkan
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center">
+              <AlertCircle className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-black text-amber-700 dark:text-amber-400">
+              {Math.max(0, stats.totalUsers - stats.activeUsers)}
+            </span>
+            <p className="text-[11px] text-amber-600/80 dark:text-amber-400/80 mt-0.5">
+              Akses login dibatasi sementara
             </p>
           </div>
         </div>
@@ -306,45 +258,6 @@ export const UserManagementPage: React.FC = () => {
 
         {/* Filter Pills */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Tier Filter */}
-          <div className="flex p-0.5 rounded-xl bg-[#E8EEF3] dark:bg-slate-800 border border-[#D8E0E7] dark:border-slate-700 text-xs">
-            <button
-              type="button"
-              onClick={() => setTierFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition cursor-pointer ${
-                tierFilter === 'all'
-                  ? 'bg-white dark:bg-slate-900 text-[#334257] dark:text-white shadow-2xs'
-                  : 'text-[#5E6D7E] hover:text-[#334257]'
-              }`}
-            >
-              Semua Tingkat
-            </button>
-            <button
-              type="button"
-              onClick={() => setTierFilter('verified')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                tierFilter === 'verified'
-                  ? 'bg-emerald-600 text-white shadow-2xs'
-                  : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100/50'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Verified</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setTierFilter('guest')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                tierFilter === 'guest'
-                  ? 'bg-sky-600 text-white shadow-2xs'
-                  : 'text-sky-700 dark:text-sky-400 hover:bg-sky-100/50'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Guest</span>
-            </button>
-          </div>
-
           {/* Status Filter */}
           <div className="flex p-0.5 rounded-xl bg-[#E8EEF3] dark:bg-slate-800 border border-[#D8E0E7] dark:border-slate-700 text-xs">
             <button
@@ -356,7 +269,7 @@ export const UserManagementPage: React.FC = () => {
                   : 'text-[#5E6D7E] hover:text-[#334257]'
               }`}
             >
-              Semua Status
+              Semua Akun
             </button>
             <button
               type="button"
@@ -392,7 +305,7 @@ export const UserManagementPage: React.FC = () => {
               <tr>
                 <th className="py-3 px-4">Pengguna</th>
                 <th className="py-3 px-4">Email / Kontak</th>
-                <th className="py-3 px-4">Tingkatan (Tier)</th>
+                <th className="py-3 px-4">Peran &amp; Tingkat</th>
                 <th className="py-3 px-4">Status Akun</th>
                 <th className="py-3 px-4 text-center">Pemindaian</th>
                 <th className="py-3 px-4">Terakhir Aktif</th>
@@ -409,15 +322,15 @@ export const UserManagementPage: React.FC = () => {
                         Tidak Ada Pengguna Ditemukan
                       </p>
                       <p className="text-[11px]">
-                        Coba sesuaikan kata kunci pencarian atau filter tingkatan/status akun.
+                        Coba sesuaikan kata kunci pencarian atau filter status akun.
                       </p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => {
-                  const isVerified = user.tier === 'verified';
                   const isActive = user.status === 'active';
+                  const isAdmin = user.role === 'admin';
 
                   return (
                     <tr
@@ -427,21 +340,13 @@ export const UserManagementPage: React.FC = () => {
                       {/* Name & Avatar */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-2xs ${
-                              isVerified
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                                : 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
-                            }`}
-                          >
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-2xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
                             {user.fullName.slice(0, 2)}
                           </div>
                           <div>
                             <div className="font-bold text-[#1A202C] dark:text-white flex items-center gap-1.5">
                               <span>{user.fullName}</span>
-                              {isVerified && (
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                              )}
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             </div>
                             <div className="text-[11px] text-[#5E6D7E] dark:text-slate-400 font-mono">
                               @{user.username}
@@ -452,40 +357,21 @@ export const UserManagementPage: React.FC = () => {
 
                       {/* Email */}
                       <td className="py-3.5 px-4 font-mono text-[#5E6D7E] dark:text-slate-400">
-                        {user.email || <span className="italic text-slate-400">Tidak ada email (Tamu)</span>}
+                        {user.email || <span className="italic text-slate-400">Tidak ada email</span>}
                       </td>
 
-                      {/* Tier Badge & Toggle */}
+                      {/* Tier & Role Badge */}
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-mono text-[11px] font-bold shadow-2xs ${
-                              isVerified
-                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                                : 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 border border-sky-300 dark:border-sky-800'
-                            }`}
-                          >
-                            {isVerified ? (
-                              <>
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Verified</span>
-                              </>
-                            ) : (
-                              <>
-                                <Globe className="w-3.5 h-3.5 text-sky-600" />
-                                <span>Guest</span>
-                              </>
-                            )}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-mono text-[11px] font-bold shadow-2xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Verified</span>
                           </span>
-
-                          <button
-                            type="button"
-                            onClick={() => handleToggleTier(user)}
-                            className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-[#5E6D7E] hover:text-[#334257] transition cursor-pointer"
-                            title={`Ubah menjadi ${isVerified ? 'Guest' : 'Verified'}`}
-                          >
-                            <ArrowUpDown className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full font-mono text-[10px] font-black uppercase bg-[#334257] text-white">
+                              Admin
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -628,20 +514,16 @@ export const UserManagementPage: React.FC = () => {
                 />
               </div>
 
-              {/* Tier & Status Selection */}
+              {/* Tier Info & Status Selection */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div className="space-y-1">
                   <label className="block text-xs font-bold text-[#334257] dark:text-slate-300 font-mono">
-                    Tingkatan Pengguna (Tier)
+                    Tingkatan Pengguna
                   </label>
-                  <select
-                    value={modalForm.tier}
-                    onChange={(e) => setModalForm({ ...modalForm, tier: e.target.value as UserTier })}
-                    className="w-full px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800 border border-[#D8E0E7] dark:border-slate-700 rounded-xl text-xs text-[#1A202C] dark:text-white font-bold"
-                  >
-                    <option value="verified">Verified (Terverifikasi)</option>
-                    <option value="guest">Guest (Pengunjung Tamu)</option>
-                  </select>
+                  <div className="w-full px-3 py-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Verified (Terverifikasi)</span>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -682,3 +564,4 @@ export const UserManagementPage: React.FC = () => {
     </div>
   );
 };
+

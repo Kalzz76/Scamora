@@ -30,9 +30,9 @@ adminApiClient.interceptors.response.use(
       localStorage.removeItem('scamora_admin_user');
       if (
         typeof window !== 'undefined' &&
-        !window.location.hash.includes('/admin/login')
+        !window.location.hash.includes('/login')
       ) {
-        window.location.hash = '#/admin/login';
+        window.location.hash = '#/login';
       }
     }
     return Promise.reject(error);

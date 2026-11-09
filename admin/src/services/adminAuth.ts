@@ -137,6 +137,6 @@ export const adminAuth = {
 
   logout(): void {
     this.clearSession();
-    window.location.hash = '#/admin/login';
+    window.location.hash = '#/login';
   },
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   ShieldCheck,
   Lock,
@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   KeyRound,
   CheckCircle2,
@@ -27,7 +28,12 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (adminAuth.isAuthenticated()) {
-      navigate('/admin', { replace: true });
+      const user = adminAuth.getUser();
+      if (user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     }
   }, [navigate]);
 
@@ -66,7 +72,11 @@ export const LoginPage: React.FC = () => {
       const res = await adminAuth.login(username, password);
       if (res.success) {
         toast.success(`Selamat datang, ${res.user?.name || username}! Mengakses sistem...`);
-        navigate('/admin', { replace: true });
+        if (res.user?.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
         setErrorMessage(res.error || 'Autentikasi gagal. Periksa kembali akun Anda.');
       }
@@ -117,7 +127,11 @@ export const LoginPage: React.FC = () => {
 
       if (res.success) {
         toast.success('Pendaftaran berhasil! Akun Anda aktif dengan status TERVERIFIKASI (Verified).');
-        navigate('/admin', { replace: true });
+        if (res.user?.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
       } else {
         setErrorMessage(res.error || 'Pendaftaran gagal. Periksa kembali formulir.');
       }
@@ -156,6 +170,17 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md my-4">
+        {/* Back to Home Button */}
+        <div className="mb-3 text-left">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-[#D8E0E7] dark:border-slate-700 text-[#334257] dark:text-slate-300 hover:text-[#0f9b8a] dark:hover:text-emerald-400 text-xs font-semibold shadow-xs transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Beranda</span>
+          </Link>
+        </div>
+
         {/* Brand Header */}
         <div className="text-center mb-5 sm:mb-6 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 shadow-xs">
@@ -466,7 +491,7 @@ export const LoginPage: React.FC = () => {
         <div className="text-center mt-5 space-y-1">
           <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Enkripsi Kredensial Terproteksi &bull; Tingkatan: Guest &amp; Verified
+            Enkripsi Kredensial Terproteksi &bull; Akun Terverifikasi (Verified)
           </p>
           <p className="text-[10px] text-[#94A3B8] font-mono">
             Scamora Cyber-Defense &bull; MIT-Week 2026 Challenge

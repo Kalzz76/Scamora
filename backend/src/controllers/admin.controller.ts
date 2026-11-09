@@ -255,18 +255,18 @@ let usersStore: any[] = [
     passwordHash: hashUserPassword('password123'),
   },
   {
-    id: 'guest-204',
-    username: 'tamu_jakarta_44',
-    email: '',
-    fullName: 'Pengunjung Tamu (Guest)',
-    tier: 'guest',
+    id: 'usr-102',
+    username: 'warga_cermat',
+    email: 'warga.cermat@scamora.id',
+    fullName: 'Warga Cermat Penipuan',
+    tier: 'verified',
     role: 'user',
     status: 'active',
-    scanCount: 3,
-    reportCount: 0,
+    scanCount: 8,
+    reportCount: 1,
     lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
-    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    passwordHash: '',
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    passwordHash: hashUserPassword('password123'),
   },
 ];
 
@@ -1192,18 +1192,14 @@ export async function handleCreateAuditLog(req: Request, res: Response): Promise
 // 10. USER ACCOUNTS MANAGEMENT (GUEST & VERIFIED)
 // =========================================================================
 export async function handleGetUsers(req: Request, res: Response): Promise<void> {
-  const { search, tier, status } = req.query as { search?: string; tier?: string; status?: string };
+  const { search, status } = req.query as { search?: string; status?: string };
 
   if (isDbConnected()) {
     try {
-      let sql = 'SELECT * FROM app_users WHERE 1=1';
+      let sql = "SELECT * FROM app_users WHERE tier = 'verified'";
       const params: any[] = [];
       let pIdx = 1;
 
-      if (tier && (tier === 'guest' || tier === 'verified')) {
-        sql += ` AND tier = $${pIdx++}`;
-        params.push(tier);
-      }
       if (status && (status === 'active' || status === 'suspended')) {
         sql += ` AND status = $${pIdx++}`;
         params.push(status);
@@ -1220,18 +1216,17 @@ export async function handleGetUsers(req: Request, res: Response): Promise<void>
       const statsRes = await query(`
         SELECT 
           COUNT(*) as total,
-          COUNT(*) FILTER (WHERE tier = 'verified') as verified_count,
-          COUNT(*) FILTER (WHERE tier = 'guest') as guest_count,
-          COUNT(*) FILTER (WHERE status = 'active') as active_count
+          COUNT(*) FILTER (WHERE status = 'active') as active_count,
+          COUNT(*) FILTER (WHERE status = 'suspended') as suspended_count
         FROM app_users
+        WHERE tier = 'verified'
       `);
 
       const statRow = statsRes?.rows[0];
       const stats = {
         totalUsers: parseInt(statRow?.total || '0', 10),
-        verifiedUsers: parseInt(statRow?.verified_count || '0', 10),
-        guestUsers: parseInt(statRow?.guest_count || '0', 10),
         activeUsers: parseInt(statRow?.active_count || '0', 10),
+        suspendedUsers: parseInt(statRow?.suspended_count || '0', 10),
       };
 
       const mapped = (dbRes?.rows || []).map((r: any) => ({
@@ -1239,7 +1234,7 @@ export async function handleGetUsers(req: Request, res: Response): Promise<void>
         username: r.username,
         email: r.email || '',
         fullName: r.full_name || r.username,
-        tier: r.tier || 'guest',
+        tier: 'verified',
         role: r.role || 'user',
         status: r.status || 'active',
         scanCount: r.scan_count || 0,
@@ -1260,10 +1255,7 @@ export async function handleGetUsers(req: Request, res: Response): Promise<void>
   }
 
   // In-memory fallback
-  let list = [...usersStore];
-  if (tier && (tier === 'guest' || tier === 'verified')) {
-    list = list.filter((u) => u.tier === tier);
-  }
+  let list = usersStore.filter((u) => u.tier === 'verified');
   if (status && (status === 'active' || status === 'suspended')) {
     list = list.filter((u) => u.status === status);
   }
@@ -1277,11 +1269,11 @@ export async function handleGetUsers(req: Request, res: Response): Promise<void>
     );
   }
 
+  const verifiedList = usersStore.filter((u) => u.tier === 'verified');
   const stats = {
-    totalUsers: usersStore.length,
-    verifiedUsers: usersStore.filter((u) => u.tier === 'verified').length,
-    guestUsers: usersStore.filter((u) => u.tier === 'guest').length,
-    activeUsers: usersStore.filter((u) => u.status === 'active').length,
+    totalUsers: verifiedList.length,
+    activeUsers: verifiedList.filter((u) => u.status === 'active').length,
+    suspendedUsers: verifiedList.filter((u) => u.status === 'suspended').length,
   };
 
   res.status(200).json({
@@ -1297,7 +1289,7 @@ export async function handleCreateUser(req: Request, res: Response): Promise<voi
   const username = (body.username || `user_${Date.now()}`).trim().toLowerCase();
   const fullName = body.fullName || username;
   const email = body.email ? body.email.trim().toLowerCase() : null;
-  const tier = body.tier === 'guest' ? 'guest' : 'verified';
+  const tier = 'verified'; // Selalu verified, akun guest tidak disimpan/dihitung
   const role = body.role || 'user';
   const status = body.status === 'suspended' ? 'suspended' : 'active';
   const password = body.password || 'password123';
@@ -1307,13 +1299,13 @@ export async function handleCreateUser(req: Request, res: Response): Promise<voi
     try {
       await query(
         `INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status, scan_count, report_count, created_at, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 0, 0, NOW(), NOW())`,
-        [newUserId, username, email, passHash, fullName, tier, role, status]
+         VALUES ($1, $2, $3, $4, $5, 'verified', $6, $7, 0, 0, NOW(), NOW())`,
+        [newUserId, username, email, passHash, fullName, role, status]
       );
       query(
         `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [`log-${Date.now()}`, 'admin', 'CREATE_USER', 'User Management', 'info', `Admin menambahkan pengguna '${username}' (${tier}).`]
+        [`log-${Date.now()}`, 'admin', 'CREATE_USER', 'User Management', 'info', `Admin menambahkan pengguna verified '${username}'.`]
       ).catch(() => {});
     } catch (err: any) {
       console.error('[DB] Gagal membuat user:', err);
@@ -1327,7 +1319,7 @@ export async function handleCreateUser(req: Request, res: Response): Promise<voi
     username,
     email: email || '',
     fullName,
-    tier,
+    tier: 'verified' as const,
     role,
     status,
     scanCount: 0,

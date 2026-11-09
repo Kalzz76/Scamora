@@ -185,24 +185,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
           {/* Desktop User Account / Auth Status Button */}
           <div className="hidden lg:flex items-center gap-2.5 z-10">
             {adminAuth.getUser() ? (
-              <Link
-                to="/admin"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
-                title="Buka Command Center / Akun"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>@{adminAuth.getUser()?.username}</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
-                  {adminAuth.getUser()?.tier || 'Verified'}
-                </span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={adminAuth.getUser()?.role === 'admin' ? '/admin' : '/'}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
+                  title="Status Akun Pengguna"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>@{adminAuth.getUser()?.username}</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
+                    {adminAuth.getUser()?.role === 'admin' ? 'Admin' : 'Verified'}
+                  </span>
+                </Link>
+
+                {adminAuth.getUser()?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className="px-3 py-1.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs"
+                  >
+                    Panel Admin
+                  </Link>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    adminAuth.clearSession();
+                    window.location.reload();
+                  }}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                  title="Keluar dari Akun"
+                >
+                  Keluar
+                </button>
+              </div>
             ) : (
               <Link
-                to="/admin/login"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
+                to="/login"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>Masuk / Daftar</span>
+                <span>Masuk</span>
               </Link>
             )}
           </div>
@@ -301,9 +324,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             ))}
 
             {/* User Account / Auth Entry Mobile */}
-            <div className="pt-2 border-t border-slate-100">
+            <div className="pt-2 border-t border-slate-100 space-y-2">
               <Link
-                to={adminAuth.getUser() ? '/admin' : '/admin/login'}
+                to={adminAuth.getUser() ? (adminAuth.getUser()?.role === 'admin' ? '/admin' : '/') : '/login'}
                 onClick={() => setMobileOpen(false)}
                 className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition border border-emerald-200/80 shadow-2xs"
               >
@@ -312,13 +335,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   <span>
                     {adminAuth.getUser()
                       ? `Akun: @${adminAuth.getUser()?.username}`
-                      : 'Masuk / Daftar Akun Terverifikasi'}
+                      : 'Masuk / Daftar Akun'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-                  {adminAuth.getUser()?.tier || 'Verified'}
+                  {adminAuth.getUser() ? (adminAuth.getUser()?.role === 'admin' ? 'Admin' : 'Verified') : 'Masuk'}
                 </span>
               </Link>
+
+              {adminAuth.getUser() && (
+                <div className="flex items-center gap-2 px-1">
+                  {adminAuth.getUser()?.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex-1 text-center py-2 rounded-xl bg-[#334257] text-white text-xs font-bold transition"
+                    >
+                      Buka Panel Admin
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      adminAuth.clearSession();
+                      setMobileOpen(false);
+                      window.location.reload();
+                    }}
+                    className="flex-1 text-center py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition cursor-pointer"
+                  >
+                    Keluar Sesi
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Bottom Security Card & Privacy Modal Trigger */}

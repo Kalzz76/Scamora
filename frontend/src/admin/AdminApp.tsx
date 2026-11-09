@@ -77,7 +77,7 @@ const ProtectedRoute: React.FC<{ children?: ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   if (!isAuth) {
-    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;
@@ -144,7 +144,7 @@ export const AdminApp: React.FC = () => {
     <ErrorBoundary>
       <ThemeProvider>
         <Routes>
-          <Route path="login" element={<LoginPage />} />
+          <Route path="login" element={<Navigate to="/login" replace />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AdminLayout />}>
               <Route index element={<DashboardOverview />} />

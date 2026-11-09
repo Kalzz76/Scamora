@@ -158,7 +158,7 @@ export const DashboardOverview: React.FC = () => {
       </section>
 
       {/* ========================================================================= */}
-      {/* USER MANAGEMENT & TIER OVERVIEW (GUEST & VERIFIED)                        */}
+      {/* USER MANAGEMENT OVERVIEW (VERIFIED DATABASE USERS)                        */}
       {/* ========================================================================= */}
       <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] dark:border-slate-700 pb-3">
@@ -168,10 +168,10 @@ export const DashboardOverview: React.FC = () => {
             </span>
             <div>
               <h2 className="text-base sm:text-lg font-black text-[#1A202C] dark:text-white tracking-tight">
-                Kontrol Pengguna (2 Tingkatan Akses)
+                Kontrol Pengguna Terdaftar (Verified Database)
               </h2>
               <p className="text-[11px] text-[#476072] dark:text-slate-400 mt-0.5">
-                Pengguna Tamu (Guest tanpa login) &amp; Pengguna Terverifikasi (Verified via registrasi)
+                Pengguna yang terdaftar dan terverifikasi secara resmi di basis data platform
               </p>
             </div>
           </div>
@@ -190,8 +190,8 @@ export const DashboardOverview: React.FC = () => {
               <Users className="w-5 h-5 text-[#548CA8]" />
             </div>
             <div>
-              <div className="text-[10px] font-mono text-[#5E6D7E] dark:text-slate-400 uppercase font-bold">Total Pengguna</div>
-              <div className="text-xl font-black text-[#1A202C] dark:text-white">{userStats.totalUsers} Pengguna</div>
+              <div className="text-[10px] font-mono text-[#5E6D7E] dark:text-slate-400 uppercase font-bold">Total Pengguna Terdaftar</div>
+              <div className="text-xl font-black text-[#1A202C] dark:text-white">{userStats.totalUsers} Akun</div>
             </div>
           </div>
 
@@ -200,18 +200,20 @@ export const DashboardOverview: React.FC = () => {
               <ShieldCheck className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold">Terverifikasi (Verified)</div>
-              <div className="text-xl font-black text-emerald-700 dark:text-emerald-400">{userStats.verifiedUsers} Akun Aktif</div>
+              <div className="text-[10px] font-mono text-emerald-800 dark:text-emerald-400 uppercase font-bold">Akun Aktif</div>
+              <div className="text-xl font-black text-emerald-700 dark:text-emerald-400">{userStats.activeUsers} Akun Aktif</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold">
-              <Globe className="w-5 h-5 text-sky-600" />
+          <div className="p-3.5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center font-bold">
+              <Users className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <div className="text-[10px] font-mono text-sky-800 dark:text-sky-400 uppercase font-bold">Tamu (Guest)</div>
-              <div className="text-xl font-black text-sky-700 dark:text-sky-400">{userStats.guestUsers} Pengunjung</div>
+              <div className="text-[10px] font-mono text-amber-800 dark:text-amber-400 uppercase font-bold">Akun Ditangguhkan</div>
+              <div className="text-xl font-black text-amber-700 dark:text-amber-400">
+                {Math.max(0, userStats.totalUsers - userStats.activeUsers)} Ditangguhkan
+              </div>
             </div>
           </div>
         </div>
