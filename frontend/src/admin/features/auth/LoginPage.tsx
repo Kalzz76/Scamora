@@ -45,7 +45,7 @@ export const LoginPage: React.FC = () => {
         authProvider: 'google',
       });
       toast.success(`Selamat datang, ${displayName}! Berhasil masuk dengan Akun Google.`);
-      navigate(redirectQuery || '/dashboard', { replace: true });
+      navigate(redirectQuery || '/', { replace: true });
     }
   }, [googleTokenQuery, googleUsernameQuery, googleNameQuery, googleErrorQuery, navigate, redirectQuery]);
 
@@ -58,7 +58,7 @@ export const LoginPage: React.FC = () => {
       } else if (user?.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
       }
     }
   }, [navigate, redirectQuery, googleTokenQuery]);
@@ -162,7 +162,7 @@ export const LoginPage: React.FC = () => {
       const res = await adminAuth.login(cleanUser, cleanPass, rememberMe);
       if (res.success) {
         toast.success(`Selamat datang kembali, ${res.user?.name || cleanUser}!`);
-        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/dashboard');
+        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/');
         navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Autentikasi gagal. Periksa kembali akun Anda.');
@@ -245,7 +245,7 @@ export const LoginPage: React.FC = () => {
 
       if (res.success) {
         toast.success('Pendaftaran berhasil! Akun Anda aktif dan siap digunakan.');
-        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/dashboard');
+        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/');
         navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Pendaftaran gagal. Periksa kembali data formulir.');

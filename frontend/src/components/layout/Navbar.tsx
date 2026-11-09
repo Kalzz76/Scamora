@@ -22,7 +22,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
   const isAuth = !!currentUser;
-  const isHome = location.pathname === '/' || (location.pathname === '/dashboard' && !scrolled);
+  const isHome = location.pathname === '/' && !scrolled;
 
   useEffect(() => {
     setCurrentUser(adminAuth.getUser());
@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   // Desktop navigation links - Dynamic based on Auth state
   const navLinks = isAuth
     ? [
-        { path: '/dashboard', label: 'Beranda' },
+        { path: '/', label: 'Beranda' },
         { path: '/laporan', label: 'Pemindaian Publik' },
         { path: '/panduan', label: 'Panduan' },
         { path: '/kuis', label: 'Tantangan AI' },
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   // Mobile Bottom Navigation Links (thumb-friendly access everywhere)
   const bottomNavLinks = isAuth
     ? [
-        { path: '/dashboard', label: 'Beranda', icon: Home },
+        { path: '/', label: 'Beranda', icon: Home },
         { path: '/laporan', label: 'Publik', icon: Globe },
         { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
         { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
@@ -74,8 +74,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
-    if (path === '/dashboard' && location.pathname === '/dashboard') return true;
-    if (path !== '/' && path !== '/dashboard' && location.pathname.startsWith(path)) return true;
+    if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
   };
 
@@ -103,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
           >
             
             {/* Left: Brand Logo */}
-            <Link to={isAuth ? "/dashboard" : "/"} className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
+            <Link to="/" className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
               <span 
                 style={{
                   width: isTransparent ? 'calc(var(--u16) * 2.9)' : '2.5rem',
