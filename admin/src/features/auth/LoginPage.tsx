@@ -12,7 +12,6 @@ import {
   KeyRound,
   CheckCircle2,
   UserPlus,
-  BadgeCheck,
   LogIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -116,7 +115,7 @@ export const LoginPage: React.FC = () => {
       });
 
       if (res.success) {
-        toast.success('Pendaftaran berhasil! Akun Anda aktif dengan status TERVERIFIKASI (Verified).');
+        toast.success('Pendaftaran berhasil! Akun Anda telah aktif.');
         navigate('/admin', { replace: true });
       } else {
         setErrorMessage(res.error || 'Pendaftaran gagal. Periksa kembali formulir.');
@@ -177,7 +176,7 @@ export const LoginPage: React.FC = () => {
                 Scamora <span className="text-[#548CA8]">Auth</span>
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#476072] dark:text-slate-400 font-mono">
-                Portal Akses Pengguna Terverifikasi
+                Portal Akses Akun Pengguna
               </p>
             </div>
           </div>
@@ -216,9 +215,6 @@ export const LoginPage: React.FC = () => {
             >
               <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Daftar (Register)</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-mono font-bold">
-                Verified
-              </span>
             </button>
           </div>
 
@@ -232,15 +228,15 @@ export const LoginPage: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <BadgeCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Registrasi Akun Terverifikasi</span>
+                  <UserPlus className="w-4 h-4 text-emerald-600" />
+                  <span>Pendaftaran Akun Baru</span>
                 </>
               )}
             </h2>
             <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 mt-0.5">
               {authMode === 'login'
-                ? 'Gunakan akun terverifikasi Anda untuk mengakses sistem'
-                : 'Pendaftaran otomatis memberikan tingkatan Pengguna Terverifikasi (Verified User)'}
+                ? 'Gunakan akun Anda untuk mengakses sistem'
+                : 'Silakan lengkapi formulir di bawah ini untuk membuat akun baru'}
             </p>
           </div>
 
@@ -331,11 +327,6 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* ===================== FORM REGISTER ===================== */
             <form onSubmit={handleRegisterSubmit} className="space-y-3.5">
-              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 text-emerald-800 dark:text-emerald-300 text-[11px] font-medium">
-                <BadgeCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Akun Anda otomatis memperoleh tingkatan <strong>Terverifikasi (Verified)</strong>.</span>
-              </div>
-
               <div className="space-y-1 text-left">
                 <label className="block text-[11px] font-bold text-[#334257] dark:text-slate-300 uppercase font-mono tracking-wider">
                   Nama Lengkap
@@ -425,12 +416,12 @@ export const LoginPage: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Mendaftarkan Akun Terverifikasi...</span>
+                    <span>Mendaftarkan Akun Baru...</span>
                   </>
                 ) : (
                   <>
-                    <BadgeCheck className="w-4 h-4 text-emerald-200" />
-                    <span>Daftar Akun Terverifikasi</span>
+                    <UserPlus className="w-4 h-4 text-emerald-200" />
+                    <span>Daftar Akun Baru</span>
                   </>
                 )}
               </button>
@@ -442,7 +433,7 @@ export const LoginPage: React.FC = () => {
         <div className="text-center mt-5 space-y-1">
           <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 flex items-center justify-center gap-1.5 font-medium">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            Enkripsi Kredensial Terproteksi &bull; Akun Terverifikasi (Verified)
+            Enkripsi Kredensial Terproteksi &bull; Akses Aman
           </p>
           <p className="text-[10px] text-[#94A3B8] font-mono">
             Scamora Cyber-Defense &bull; MIT-Week 2026 Challenge
