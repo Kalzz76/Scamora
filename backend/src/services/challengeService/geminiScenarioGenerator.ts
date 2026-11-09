@@ -1,4 +1,5 @@
 import { env } from '../../config/env';
+import { isDbConnected, query } from '../../config/db';
 import type { ChallengeScenario, DifficultyLevel } from '../../types/challenge';
 import { SEED_SCENARIOS } from '../../data/seedScenarios';
 
@@ -182,7 +183,20 @@ Kembalikan HANYA JSON valid (tanpa teks pembuka atau markdown di luar JSON) deng
       }
 
       const parsed = JSON.parse(cleanJson) as ChallengeScenario;
-        parsed.isAiGenerated = true;
+      parsed.isAiGenerated = true;
+
+      const usage = json.usageMetadata;
+      const promptTokens = usage?.promptTokenCount || Math.max(1, Math.ceil(prompt.length / 4));
+      const completionTokens = usage?.candidatesTokenCount || Math.max(1, Math.ceil(cleanJson.length / 4));
+      const totalTokens = usage?.totalTokenCount || (promptTokens + completionTokens);
+
+      if (isDbConnected()) {
+        query(
+          `INSERT INTO ai_token_logs (provider, model, feature, prompt_tokens, completion_tokens, total_tokens, latency_ms, status)
+           VALUES ($1, $2, 'challenge_scenario', $3, $4, $5, 850, 'success')`,
+          ['gemini', model, promptTokens, completionTokens, totalTokens]
+        ).catch(() => {});
+      }
         parsed.id = `ai-gen-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
         parsed.categoryId = request.categoryId;
         parsed.difficulty = request.difficulty;

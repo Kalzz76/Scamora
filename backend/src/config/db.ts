@@ -22,9 +22,10 @@ if (env.DATABASE_URL && env.DATABASE_URL.trim().length > 0) {
 
     // Test connection asynchronously
     pool.query('SELECT NOW()')
-      .then((res) => {
+      .then(async (res) => {
         isConnected = true;
         console.log(`[DB] Berhasil terhubung ke database PostgreSQL! Waktu DB: ${res.rows[0].now}`);
+        await initDatabaseTables();
       })
       .catch((err) => {
         isConnected = false;
@@ -36,6 +37,36 @@ if (env.DATABASE_URL && env.DATABASE_URL.trim().length > 0) {
   }
 } else {
   console.log('[DB] DATABASE_URL belum diatur di .env. Backend beroperasi dengan in-memory/seed data mode.');
+}
+
+async function initDatabaseTables(): Promise<void> {
+  if (!pool) return;
+  try {
+    await pool.query(`
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS user_agent VARCHAR(255) DEFAULT 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS detect_apk BOOLEAN DEFAULT TRUE;
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS detect_forms BOOLEAN DEFAULT TRUE;
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS allow_redirects BOOLEAN DEFAULT TRUE;
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS credential_code VARCHAR(100) DEFAULT 'SCAMORA-SEC-CRED-8821';
+      ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS extra_config JSONB DEFAULT '{}'::jsonb;
+
+      CREATE TABLE IF NOT EXISTS ai_token_logs (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          provider VARCHAR(50) NOT NULL DEFAULT 'gemini',
+          model VARCHAR(100) NOT NULL,
+          feature VARCHAR(50) NOT NULL,
+          prompt_tokens INT NOT NULL DEFAULT 0,
+          completion_tokens INT NOT NULL DEFAULT 0,
+          total_tokens INT NOT NULL DEFAULT 0,
+          latency_ms INT NOT NULL DEFAULT 0,
+          status VARCHAR(20) NOT NULL DEFAULT 'success',
+          created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+      CREATE INDEX IF NOT EXISTS idx_ai_token_logs_created ON ai_token_logs(created_at DESC);
+    `);
+  } catch (err: any) {
+    console.warn('[DB] Schema init warning:', err.message);
+  }
 }
 
 export function isDbConnected(): boolean {
