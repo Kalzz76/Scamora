@@ -51,6 +51,27 @@ async function initDatabaseTables(): Promise<void> {
       ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS credential_code VARCHAR(100) DEFAULT 'SCAMORA-SEC-CRED-8821';
       ALTER TABLE system_runtime_config ADD COLUMN IF NOT EXISTS extra_config JSONB DEFAULT '{}'::jsonb;
 
+      CREATE TABLE IF NOT EXISTS app_users (
+          id VARCHAR(50) PRIMARY KEY,
+          username VARCHAR(100) UNIQUE NOT NULL,
+          email VARCHAR(255) UNIQUE,
+          password_hash VARCHAR(255),
+          full_name VARCHAR(150) NOT NULL,
+          tier VARCHAR(20) NOT NULL DEFAULT 'verified',
+          role VARCHAR(50) NOT NULL DEFAULT 'user',
+          status VARCHAR(20) NOT NULL DEFAULT 'active',
+          scan_count INTEGER NOT NULL DEFAULT 0,
+          report_count INTEGER NOT NULL DEFAULT 0,
+          last_active_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+          created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS google_id VARCHAR(100);
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(50) DEFAULT 'local';
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_app_users_google_id ON app_users(google_id) WHERE google_id IS NOT NULL;
+
       CREATE TABLE IF NOT EXISTS ai_token_logs (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           provider VARCHAR(50) NOT NULL DEFAULT 'gemini',

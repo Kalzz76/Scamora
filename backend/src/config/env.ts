@@ -19,6 +19,9 @@ const envSchema = z.object({
   ADMIN_USERNAME: z.string().default('admin'),
   ADMIN_PASSWORD: z.string().default('admin123'),
   ADMIN_SECRET: z.string().default('scamora-super-secret-admin-key-2026'),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/google/callback'),
 });
 
 const parsed = envSchema.safeParse(process.env);

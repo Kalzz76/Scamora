@@ -106,7 +106,10 @@ CREATE TABLE IF NOT EXISTS app_users (
     email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255),
     full_name VARCHAR(150) NOT NULL,
-    tier VARCHAR(20) NOT NULL DEFAULT 'guest' CHECK (tier IN ('guest', 'verified')),
+    google_id VARCHAR(100) UNIQUE,
+    avatar_url TEXT,
+    auth_provider VARCHAR(50) NOT NULL DEFAULT 'local',
+    tier VARCHAR(20) NOT NULL DEFAULT 'verified' CHECK (tier IN ('guest', 'verified')),
     role VARCHAR(50) NOT NULL DEFAULT 'user',
     status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
     scan_count INTEGER NOT NULL DEFAULT 0,
@@ -119,6 +122,8 @@ CREATE TABLE IF NOT EXISTS app_users (
 CREATE INDEX IF NOT EXISTS idx_app_users_tier ON app_users(tier);
 CREATE INDEX IF NOT EXISTS idx_app_users_status ON app_users(status);
 CREATE INDEX IF NOT EXISTS idx_app_users_username ON app_users(username);
+CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_app_users_google_id ON app_users(google_id) WHERE google_id IS NOT NULL;
 
 -- =========================================================================
 -- BAGIAN B: ANALISIS KEAMANAN & TELEMETRI SCAN
