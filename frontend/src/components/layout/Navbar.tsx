@@ -25,7 +25,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const isHome = location.pathname === '/';
+  const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
+  const isAuth = !!currentUser;
+  const isHome = location.pathname === '/' || (location.pathname === '/dashboard' && !scrolled);
+
+  useEffect(() => {
+    setCurrentUser(adminAuth.getUser());
+  }, [location.pathname]);
 
   // Track window scroll to create smooth responsive sticky header
   useEffect(() => {
@@ -49,53 +55,79 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
     }
   }, [mobileOpen]);
 
-  // Desktop navigation links
-  const navLinks = [
-    { path: '/', label: 'Beranda' },
-    { path: '/laporan', label: 'Pemindaian Publik' },
-    { path: '/panduan', label: 'Panduan' },
-    { path: '/kuis', label: 'Tantangan AI' },
-    { path: '/pengetahuan', label: 'Edukasi' },
-    { path: '/komunitas', label: 'Komunitas' },
-  ];
+  // Desktop navigation links - Dynamic based on Auth state
+  const navLinks = isAuth
+    ? [
+        { path: '/dashboard', label: 'Beranda' },
+        { path: '/laporan', label: 'Pemindaian Publik' },
+        { path: '/panduan', label: 'Panduan' },
+        { path: '/kuis', label: 'Tantangan AI' },
+        { path: '/pengetahuan', label: 'Edukasi' },
+        { path: '/komunitas', label: 'Komunitas' },
+      ]
+    : [
+        { path: '/', label: 'Beranda' },
+        { path: '/laporan', label: 'Pemindaian Publik' },
+        { path: '/panduan', label: 'Panduan' },
+      ];
 
   // Mobile Bottom Navigation Links (thumb-friendly access everywhere)
-  const bottomNavLinks = [
-    { path: '/', label: 'Beranda', icon: Home },
-    { path: '/laporan', label: 'Publik', icon: Globe },
-    { path: '/panduan', label: 'Panduan', icon: Compass },
-    { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
-    { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
-    { path: '/komunitas', label: 'Komunitas', icon: Users },
-  ];
+  const bottomNavLinks = isAuth
+    ? [
+        { path: '/dashboard', label: 'Beranda', icon: Home },
+        { path: '/laporan', label: 'Publik', icon: Globe },
+        { path: '/kuis', label: 'Tantangan', icon: Gamepad2 },
+        { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap },
+        { path: '/komunitas', label: 'Komunitas', icon: Users },
+        { path: '/profil', label: 'Profil', icon: User },
+      ]
+    : [
+        { path: '/', label: 'Beranda', icon: Home },
+        { path: '/laporan', label: 'Publik', icon: Globe },
+        { path: '/panduan', label: 'Panduan', icon: Compass },
+        { path: '/login', label: 'Masuk', icon: LogIn },
+      ];
 
-  // Mobile categorized navigation groups (Konsep 2)
-  const menuGroups = [
-    {
-      title: 'Modul Pemeriksaan',
-      items: [
-        { path: '/', label: 'Beranda', icon: Home, badge: null },
-        { path: '/laporan', label: 'Pemindaian Publik', icon: Globe, badge: 'Live' },
-      ],
-    },
-    {
-      title: 'Edukasi & Dukungan',
-      items: [
-        { path: '/panduan', label: 'Panduan', icon: Compass, badge: null },
-        { path: '/kuis', label: 'Tantangan AI', icon: Gamepad2, badge: 'Kuis' },
-        { path: '/pengetahuan', label: 'Edukasi', icon: GraduationCap, badge: null },
-        { path: '/komunitas', label: 'Komunitas', icon: Users, badge: null },
-      ],
-    },
-  ];
+  // Mobile categorized navigation groups
+  const menuGroups = isAuth
+    ? [
+        {
+          title: 'Modul Utama',
+          items: [
+            { path: '/dashboard', label: 'Beranda Pengguna', icon: Home, badge: 'User' },
+            { path: '/laporan', label: 'Pemindaian Publik', icon: Globe, badge: 'Live' },
+          ],
+        },
+        {
+          title: 'Fitur Anggota Terverifikasi',
+          items: [
+            { path: '/panduan', label: 'Panduan Keamanan', icon: Compass, badge: null },
+            { path: '/kuis', label: 'Tantangan AI', icon: Gamepad2, badge: 'Kuis' },
+            { path: '/pengetahuan', label: 'Pusat Edukasi', icon: GraduationCap, badge: null },
+            { path: '/komunitas', label: 'Komunitas Warga', icon: Users, badge: null },
+            { path: '/profil', label: 'Pengaturan Profil', icon: User, badge: null },
+          ],
+        },
+      ]
+    : [
+        {
+          title: 'Modul Publik',
+          items: [
+            { path: '/', label: 'Beranda', icon: Home, badge: null },
+            { path: '/laporan', label: 'Pemindaian Publik', icon: Globe, badge: 'Live' },
+            { path: '/panduan', label: 'Panduan Keamanan', icon: Compass, badge: null },
+          ],
+        },
+      ];
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
+    if (path === '/dashboard' && location.pathname === '/dashboard') return true;
+    if (path !== '/' && path !== '/dashboard' && location.pathname.startsWith(path)) return true;
     return false;
   };
 
-  const isTransparent = isHome && !scrolled;
+  const isTransparent = location.pathname === '/' && !scrolled;
 
   return (
     <>
@@ -119,7 +151,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
         >
           
           {/* Left: Brand Logo */}
-          <Link to="/" className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
+          <Link to={isAuth ? "/dashboard" : "/"} className="flex items-center gap-[calc(var(--u16)*1.1)] shrink-0 z-10 group">
             <span 
               style={{
                 width: isTransparent ? 'calc(var(--u16) * 2.9)' : '2.5rem',
@@ -184,21 +216,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
 
           {/* Desktop User Account / Auth Status Button */}
           <div className="hidden lg:flex items-center gap-2.5 z-10">
-            {adminAuth.getUser() ? (
+            {currentUser ? (
               <div className="flex items-center gap-2">
                 <Link
-                  to={adminAuth.getUser()?.role === 'admin' ? '/admin' : '/'}
+                  to="/profil"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 border border-emerald-200/90 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition shadow-2xs font-mono"
-                  title="Status Akun Pengguna"
+                  title="Profil & Pengaturan Akun"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>@{adminAuth.getUser()?.username}</span>
+                  <span>@{currentUser.username}</span>
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
-                    {adminAuth.getUser()?.role === 'admin' ? 'Admin' : 'Verified'}
+                    {currentUser.role === 'admin' ? 'Admin' : 'Verified'}
                   </span>
                 </Link>
 
-                {adminAuth.getUser()?.role === 'admin' && (
+                {currentUser.role === 'admin' && (
                   <Link
                     to="/admin"
                     className="px-3 py-1.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs"
@@ -211,6 +243,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                   type="button"
                   onClick={() => {
                     adminAuth.clearSession();
+                    window.location.href = '/#/';
                     window.location.reload();
                   }}
                   className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
@@ -220,13 +253,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                 </button>
               </div>
             ) : (
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Masuk</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login?mode=register"
+                  className="text-xs text-[#475569] hover:text-[#0f9b8a] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-stone-100/70 transition cursor-pointer"
+                >
+                  Daftar
+                </Link>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Masuk</span>
+                </Link>
+              </div>
             )}
           </div>
 
@@ -326,32 +367,39 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
             {/* User Account / Auth Entry Mobile */}
             <div className="pt-2 border-t border-slate-100 space-y-2">
               <Link
-                to={adminAuth.getUser() ? (adminAuth.getUser()?.role === 'admin' ? '/admin' : '/') : '/login'}
+                to={currentUser ? '/profil' : '/login'}
                 onClick={() => setMobileOpen(false)}
                 className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-800 text-xs font-bold transition border border-emerald-200/80 shadow-2xs"
               >
                 <div className="flex items-center gap-2.5">
                   <User className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
-                    {adminAuth.getUser()
-                      ? `Akun: @${adminAuth.getUser()?.username}`
+                    {currentUser
+                      ? `Akun: @${currentUser.username}`
                       : 'Masuk / Daftar Akun'}
                   </span>
                 </div>
                 <span className="text-[10px] font-mono font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-                  {adminAuth.getUser() ? (adminAuth.getUser()?.role === 'admin' ? 'Admin' : 'Verified') : 'Masuk'}
+                  {currentUser ? (currentUser.role === 'admin' ? 'Admin' : 'Verified') : 'Masuk'}
                 </span>
               </Link>
 
-              {adminAuth.getUser() && (
+              {currentUser && (
                 <div className="flex items-center gap-2 px-1">
-                  {adminAuth.getUser()?.role === 'admin' && (
+                  <Link
+                    to="/profil"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex-1 text-center py-2 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 text-xs font-bold hover:bg-teal-100 transition"
+                  >
+                    Profil Saya
+                  </Link>
+                  {currentUser.role === 'admin' && (
                     <Link
                       to="/admin"
                       onClick={() => setMobileOpen(false)}
                       className="flex-1 text-center py-2 rounded-xl bg-[#334257] text-white text-xs font-bold transition"
                     >
-                      Buka Panel Admin
+                      Panel Admin
                     </Link>
                   )}
                   <button
@@ -359,6 +407,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenPrivacy }) => {
                     onClick={() => {
                       adminAuth.clearSession();
                       setMobileOpen(false);
+                      window.location.href = '/#/';
                       window.location.reload();
                     }}
                     className="flex-1 text-center py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition cursor-pointer"

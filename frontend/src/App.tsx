@@ -11,6 +11,9 @@ import { PanduanPage } from './features/panduan/PanduanPage';
 import { QuizPage } from './features/challenge/QuizPage';
 import { KnowledgePage } from './features/knowledge/KnowledgePage';
 import { KomunitasPage } from './features/community/KomunitasPage';
+import { UserDashboardPage } from './features/dashboard/UserDashboardPage';
+import { UserProfilePage } from './features/profile/UserProfilePage';
+import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { LoginPage } from './admin/features/auth/LoginPage';
 import { AdminApp } from './admin/AdminApp';
 
@@ -74,9 +77,48 @@ function MainApp() {
           <Route path="/laporan" element={<PublicPageWrapper><ReportPage /></PublicPageWrapper>} />
           <Route path="/direktori" element={<Navigate to="/laporan" replace />} />
           <Route path="/panduan" element={<PublicPageWrapper><PanduanPage /></PublicPageWrapper>} />
-          <Route path="/kuis" element={<PublicPageWrapper><QuizPage /></PublicPageWrapper>} />
-          <Route path="/pengetahuan" element={<PublicPageWrapper><KnowledgePage /></PublicPageWrapper>} />
-          <Route path="/komunitas" element={<PublicPageWrapper><KomunitasPage /></PublicPageWrapper>} />
+
+          {/* Protected Routes for Authenticated Users */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute featureName="User Dashboard">
+                <PublicPageWrapper><UserDashboardPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profil"
+            element={
+              <ProtectedRoute featureName="Profil Pengguna">
+                <PublicPageWrapper><UserProfilePage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kuis"
+            element={
+              <ProtectedRoute featureName="Tantangan AI">
+                <PublicPageWrapper><QuizPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pengetahuan"
+            element={
+              <ProtectedRoute featureName="Pusat Edukasi">
+                <PublicPageWrapper><KnowledgePage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/komunitas"
+            element={
+              <ProtectedRoute featureName="Komunitas Warga">
+                <PublicPageWrapper><KomunitasPage /></PublicPageWrapper>
+              </ProtectedRoute>
+            }
+          />
 
           {/* Unified Public Login Route */}
           <Route path="/login" element={<LoginPage />} />

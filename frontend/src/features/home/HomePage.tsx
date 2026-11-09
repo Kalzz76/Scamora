@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ShieldCheck, ShieldAlert, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { analysisService } from '../../services/analysisService';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
 import { AnalysisResultView } from '../../components/analysis/AnalysisResultView';
 import type { AnalysisResult } from '../../types/analysis';
+import { adminAuth } from '../../admin/services/adminAuth';
+import { quotaService } from '../../services/quotaService';
+import { GuestQuotaModal } from '../../components/common/GuestQuotaModal';
 
 const MODUS_EXAMPLES = [
   {
@@ -117,6 +120,11 @@ export const HomePage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
 
+  // Guest Quota & Auth State
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+  const [guestScansUsed, setGuestScansUsed] = useState(quotaService.getGuestScanCount());
+  const isAuthenticated = adminAuth.isAuthenticated();
+
   // Dynamic Community Directory Domains (4 kotak)
   const [recentDomains, setRecentDomains] = useState<ScannedDomain[]>([]);
 
@@ -167,6 +175,12 @@ export const HomePage: React.FC = () => {
     const raw = (targetUrl !== undefined ? targetUrl : urlInput).trim();
     setErrorMessage(null);
 
+    // Guest Quota Check: Exactly 1 total combined scan across URL & Chat
+    if (!adminAuth.isAuthenticated() && !quotaService.hasGuestQuota()) {
+      setShowQuotaModal(true);
+      return;
+    }
+
     const isConsented = bypassConsent || privacyAgreedUrl;
     if (!isConsented) {
       setErrorMessage('Centang dulu persetujuan ketentuan di atas.');
@@ -202,6 +216,12 @@ export const HomePage: React.FC = () => {
         privacy_consent: true,
       });
 
+      // Record guest scan usage only on successful completion
+      if (!adminAuth.isAuthenticated()) {
+        quotaService.recordGuestScan();
+        setGuestScansUsed(quotaService.getGuestScanCount());
+      }
+
       setAnalysisResult(res);
 
       // Record to community directory automatically
@@ -213,7 +233,11 @@ export const HomePage: React.FC = () => {
         hasilRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Pemeriksaan tautan gagal diproses.');
+      if (err.code === 'GUEST_LIMIT_REACHED' || err.status === 403) {
+        setShowQuotaModal(true);
+      } else {
+        setErrorMessage(err.message || 'Pemeriksaan tautan gagal diproses.');
+      }
     } finally {
       setLoading(false);
     }
@@ -222,6 +246,12 @@ export const HomePage: React.FC = () => {
   const handleScanChat = async (targetChat?: string, bypassConsent = false) => {
     const raw = (targetChat !== undefined ? targetChat : chatInput).trim();
     setErrorMessage(null);
+
+    // Guest Quota Check: Exactly 1 total combined scan across URL & Chat
+    if (!adminAuth.isAuthenticated() && !quotaService.hasGuestQuota()) {
+      setShowQuotaModal(true);
+      return;
+    }
 
     const isConsented = bypassConsent || privacyAgreedChat;
     if (!isConsented) {
@@ -250,6 +280,12 @@ export const HomePage: React.FC = () => {
         privacy_consent: true,
       });
 
+      // Record guest scan usage only on successful completion
+      if (!adminAuth.isAuthenticated()) {
+        quotaService.recordGuestScan();
+        setGuestScansUsed(quotaService.getGuestScanCount());
+      }
+
       setAnalysisResult(res);
 
       // Smooth scroll to results
@@ -257,7 +293,11 @@ export const HomePage: React.FC = () => {
         hasilRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 150);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Pemeriksaan pesan WhatsApp gagal diproses.');
+      if (err.code === 'GUEST_LIMIT_REACHED' || err.status === 403) {
+        setShowQuotaModal(true);
+      } else {
+        setErrorMessage(err.message || 'Pemeriksaan pesan WhatsApp gagal diproses.');
+      }
     } finally {
       setLoading(false);
     }
@@ -386,6 +426,30 @@ export const HomePage: React.FC = () => {
             >
               Cek Chat WhatsApp
             </button>
+          </div>
+
+          {/* Scan Quota Indicator Pill */}
+          <div className="mt-3">
+            {isAuthenticated ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-800 text-[11px] font-bold shadow-2xs font-mono">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Akun Terverifikasi &bull; Pemindaian Tanpa Batas</span>
+              </div>
+            ) : guestScansUsed < 1 ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/90 text-amber-900 text-[11px] font-semibold shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                <span>Mode Tamu: 1 Kuota Gratis Tersedia</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowQuotaModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-[11px] font-bold shadow-2xs hover:bg-rose-100 transition cursor-pointer"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                <span>Kuota Tamu Habis (1/1) &bull; Masuk untuk Pemindaian Tanpa Batas &rarr;</span>
+              </button>
+            )}
           </div>
 
           {/* Row Form: Single Unified Pill Container */}
@@ -1466,6 +1530,12 @@ export const HomePage: React.FC = () => {
           </details>
         </div>
       </section>
+
+      {/* Guest Quota Limit Reached Modal */}
+      <GuestQuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+      />
 
     </div>
   );

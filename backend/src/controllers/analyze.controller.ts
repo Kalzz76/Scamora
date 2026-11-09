@@ -4,6 +4,38 @@ import type { ApiSuccessResponse, AnalysisResult } from '../types/analysis';
 import { analyzeUrl } from '../services/urlAnalyzer';
 import { analyzeChat } from '../services/chatAnalyzer';
 import { isDbConnected, query } from '../config/db';
+import { verifyAdminToken } from '../services/adminAuthService';
+import { historyService } from '../services/historyService';
+
+function getAuthOrGuestSession(req: Request): {
+  isAuthenticated: boolean;
+  username: string | null;
+  guestSessionId: string | null;
+} {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    const verification = verifyAdminToken(token);
+    if (verification.valid && verification.username) {
+      return {
+        isAuthenticated: true,
+        username: verification.username,
+        guestSessionId: null,
+      };
+    }
+  }
+
+  const rawGuestId = req.headers['x-guest-session-id'];
+  const guestSessionId = typeof rawGuestId === 'string' && rawGuestId.trim().length > 0
+    ? rawGuestId.trim()
+    : null;
+
+  return {
+    isAuthenticated: false,
+    username: null,
+    guestSessionId,
+  };
+}
 
 export async function handleAnalyzeUrl(
   req: Request,
@@ -11,32 +43,63 @@ export async function handleAnalyzeUrl(
   next: NextFunction
 ): Promise<void> {
   try {
+    const sessionInfo = getAuthOrGuestSession(req);
+
+    // Enforce 1-scan limit for guest sessions
+    if (!sessionInfo.isAuthenticated && sessionInfo.guestSessionId) {
+      const count = historyService.getGuestScanCount(sessionInfo.guestSessionId);
+      if (count >= 1) {
+        res.status(403).json({
+          success: false,
+          error: {
+            code: 'GUEST_LIMIT_REACHED',
+            message: 'Kesempatan pemindaian gratis Anda telah digunakan. Daftar atau masuk ke akun Scamora untuk menikmati pemindaian tanpa batas.',
+          },
+        });
+        return;
+      }
+    }
+
     const { url } = req.body as { url: string };
     const result = await analyzeUrl(url);
 
+    let domain = url;
+    try {
+      const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
+      domain = parsed.hostname;
+    } catch {}
+
+    const riskLevel = result.risk_level || 'low';
+    const riskScore = result.risk_score ?? 0;
+    const scamType = result.scam_type || 'unknown';
+
+    // Successful scan: record guest scan consumption if guest
+    if (!sessionInfo.isAuthenticated && sessionInfo.guestSessionId) {
+      historyService.recordGuestScan(sessionInfo.guestSessionId);
+    }
+
+    // Record to unified history
+    await historyService.recordScan({
+      userId: sessionInfo.username || 'guest',
+      type: 'url',
+      inputSummary: `Analisis URL: ${domain}`,
+      riskLevel,
+      riskScore,
+      scamType,
+      indicatorsCount: result.indicators?.length || 0,
+      result,
+    });
+
+    if (sessionInfo.username && isDbConnected()) {
+      query(`UPDATE app_users SET scan_count = scan_count + 1 WHERE username = $1`, [sessionInfo.username]).catch(() => {});
+    }
+
     if (isDbConnected()) {
       try {
-        const inputHash = crypto.createHash('sha256').update(url).digest('hex');
-        let domain = url;
-        try {
-          const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
-          domain = parsed.hostname;
-        } catch {}
-
-        const riskLevel = result.risk_level || 'low';
-        const riskScore = result.risk_score ?? 0;
-        const scamType = result.scam_type || 'unknown';
-
         query(
           `INSERT INTO analysis_stats (analysis_type, risk_level, risk_score, scam_type, indicators_count)
            VALUES ($1, $2, $3, $4, $5)`,
           ['url', riskLevel, riskScore, scamType, result.indicators?.length || 0]
-        ).catch(() => {});
-
-        query(
-          `INSERT INTO analysis_history (analysis_type, input_hash, sanitized_summary, risk_level, risk_score, scam_type, indicators_summary)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          ['url', inputHash, `Analisis URL: ${domain}`, riskLevel, riskScore, scamType, JSON.stringify(result.indicators || [])]
         ).catch(() => {});
 
         if (riskLevel === 'high' || riskLevel === 'review') {
@@ -71,28 +134,58 @@ export async function handleAnalyzeChat(
   next: NextFunction
 ): Promise<void> {
   try {
+    const sessionInfo = getAuthOrGuestSession(req);
+
+    // Enforce 1-scan limit for guest sessions
+    if (!sessionInfo.isAuthenticated && sessionInfo.guestSessionId) {
+      const count = historyService.getGuestScanCount(sessionInfo.guestSessionId);
+      if (count >= 1) {
+        res.status(403).json({
+          success: false,
+          error: {
+            code: 'GUEST_LIMIT_REACHED',
+            message: 'Kesempatan pemindaian gratis Anda telah digunakan. Daftar atau masuk ke akun Scamora untuk menikmati pemindaian tanpa batas.',
+          },
+        });
+        return;
+      }
+    }
+
     const { text } = req.body as { text: string };
     const result = await analyzeChat(text);
 
+    const preview = text.slice(0, 50).replace(/\n/g, ' ') + (text.length > 50 ? '...' : '');
+    const riskLevel = result.risk_level || 'low';
+    const riskScore = result.risk_score ?? 0;
+    const scamType = result.scam_type || 'unknown';
+
+    // Successful scan: record guest scan consumption if guest
+    if (!sessionInfo.isAuthenticated && sessionInfo.guestSessionId) {
+      historyService.recordGuestScan(sessionInfo.guestSessionId);
+    }
+
+    // Record to unified history
+    await historyService.recordScan({
+      userId: sessionInfo.username || 'guest',
+      type: 'chat',
+      inputSummary: `Analisis Pesan: ${preview}`,
+      riskLevel,
+      riskScore,
+      scamType,
+      indicatorsCount: result.indicators?.length || 0,
+      result,
+    });
+
+    if (sessionInfo.username && isDbConnected()) {
+      query(`UPDATE app_users SET scan_count = scan_count + 1 WHERE username = $1`, [sessionInfo.username]).catch(() => {});
+    }
+
     if (isDbConnected()) {
       try {
-        const inputHash = crypto.createHash('sha256').update(text).digest('hex');
-        const preview = text.slice(0, 50).replace(/\n/g, ' ') + (text.length > 50 ? '...' : '');
-
-        const riskLevel = result.risk_level || 'low';
-        const riskScore = result.risk_score ?? 0;
-        const scamType = result.scam_type || 'unknown';
-
         query(
           `INSERT INTO analysis_stats (analysis_type, risk_level, risk_score, scam_type, indicators_count)
            VALUES ($1, $2, $3, $4, $5)`,
           ['chat', riskLevel, riskScore, scamType, result.indicators?.length || 0]
-        ).catch(() => {});
-
-        query(
-          `INSERT INTO analysis_history (analysis_type, input_hash, sanitized_summary, risk_level, risk_score, scam_type, indicators_summary)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          ['chat', inputHash, `Analisis Pesan: ${preview}`, riskLevel, riskScore, scamType, JSON.stringify(result.indicators || [])]
         ).catch(() => {});
       } catch {}
     }

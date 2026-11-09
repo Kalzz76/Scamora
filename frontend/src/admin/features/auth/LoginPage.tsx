@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   ShieldCheck,
   Lock,
@@ -19,19 +19,27 @@ import { adminAuth } from '../../services/adminAuth';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const redirectQuery = searchParams.get('redirect');
+  const modeQuery = searchParams.get('mode');
 
   useEffect(() => {
     if (adminAuth.isAuthenticated()) {
       const user = adminAuth.getUser();
-      if (user?.role === 'admin') {
+      if (redirectQuery) {
+        navigate(redirectQuery, { replace: true });
+      } else if (user?.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     }
-  }, [navigate]);
+  }, [navigate, redirectQuery]);
 
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>(
+    modeQuery === 'register' ? 'register' : 'login'
+  );
   
   // Login fields
   const [username, setUsername] = useState('');
@@ -66,11 +74,8 @@ export const LoginPage: React.FC = () => {
       const res = await adminAuth.login(username, password);
       if (res.success) {
         toast.success(`Selamat datang, ${res.user?.name || username}!`);
-        if (res.user?.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
+        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/dashboard');
+        navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Autentikasi gagal. Periksa kembali akun Anda.');
       }
@@ -126,11 +131,8 @@ export const LoginPage: React.FC = () => {
 
       if (res.success) {
         toast.success('Pendaftaran berhasil! Akun Anda telah aktif.');
-        if (res.user?.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
+        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/dashboard');
+        navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Pendaftaran gagal. Periksa kembali formulir.');
       }
@@ -215,6 +217,18 @@ export const LoginPage: React.FC = () => {
 
         {/* Card Box */}
         <div className="bg-white rounded-3xl border border-[#d9d6d0] shadow-sm p-5 sm:p-8 space-y-5">
+          {redirectQuery && (
+            <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 flex items-start gap-2.5 text-xs text-amber-900 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Akses Akun Diperlukan</span>
+                <span className="text-[11px] text-amber-800 leading-relaxed">
+                  Fitur yang Anda buka memerlukan akun terdaftar. Silakan masuk atau buat akun baru di bawah untuk melanjutkan.
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Mode Switcher Tabs */}
           <div className="flex p-1 rounded-2xl bg-[#f1ede6] border border-[#e2ded7]">
             <button

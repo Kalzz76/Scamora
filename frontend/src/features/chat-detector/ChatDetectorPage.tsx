@@ -21,6 +21,9 @@ import { MockAnalyzer } from '../../services/mockAnalyzer';
 import { Stepper } from '../../components/common/Stepper';
 import { ChatForensicsIllustration } from '../../components/illustrations/Illustrations2D';
 import type { AnalysisResult } from '../../types/analysis';
+import { adminAuth } from '../../admin/services/adminAuth';
+import { quotaService } from '../../services/quotaService';
+import { GuestQuotaModal } from '../../components/common/GuestQuotaModal';
 
 interface ChatDetectorPageProps {
   initialPresetId?: string | null;
@@ -39,6 +42,7 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showPiiPreview, setShowPiiPreview] = useState(false);
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
   const navigate = useNavigate();
 
   const chatPresets = DEMO_PRESETS.filter((p) => p.type === 'chat');
@@ -75,6 +79,11 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
     e.preventDefault();
     setErrorMessage(null);
 
+    if (!adminAuth.isAuthenticated() && !quotaService.hasGuestQuota()) {
+      setShowQuotaModal(true);
+      return;
+    }
+
     const trimmed = chatText.trim();
     if (!trimmed) {
       setErrorMessage('Silakan tempelkan teks percakapan WhatsApp yang ingin diperiksa.');
@@ -103,10 +112,19 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
         text: trimmed,
         privacy_consent: privacyAgreed,
       });
+
+      if (!adminAuth.isAuthenticated()) {
+        quotaService.recordGuestScan();
+      }
+
       onAnalysisComplete(result);
       navigate('/laporan');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Gagal memproses analisis chat WhatsApp.');
+      if (err.code === 'GUEST_LIMIT_REACHED' || err.status === 403) {
+        setShowQuotaModal(true);
+      } else {
+        setErrorMessage(err.message || 'Gagal memproses analisis chat WhatsApp.');
+      }
     } finally {
       setLoading(false);
     }
@@ -451,6 +469,11 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
         </div>
 
       </div>
+
+      <GuestQuotaModal
+        isOpen={showQuotaModal}
+        onClose={() => setShowQuotaModal(false)}
+      />
 
     </div>
   );
