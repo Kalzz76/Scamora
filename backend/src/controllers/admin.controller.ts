@@ -1302,22 +1302,35 @@ export async function handleGetCategories(_req: Request, res: Response): Promise
 export async function handleGetQuestions(_req: Request, res: Response): Promise<void> {
   if (isDbConnected()) {
     try {
-      const dbRes = await query('SELECT * FROM challenge_questions ORDER BY order_index ASC');
+      const dbRes = await query(`
+        SELECT 
+          cq.id,
+          cq.category_code as "categoryCode",
+          COALESCE(sc.name, cq.category_code) as "categoryName",
+          cq.scenario,
+          cq.question,
+          CASE 
+            WHEN cq.difficulty = 'hard' THEN 'Hard'
+            WHEN cq.difficulty = 'medium' THEN 'Medium'
+            ELSE 'Easy'
+          END as difficulty,
+          cq.points,
+          cq.options,
+          cq.correct_option_id as "correctOptionId",
+          cq.explanation,
+          cq.is_active as "isActive",
+          cq.created_at as "createdAt"
+        FROM challenge_questions cq
+        LEFT JOIN scam_categories sc ON cq.category_code = sc.code
+        ORDER BY cq.order_index ASC, cq.created_at ASC
+      `);
       if (dbRes) {
-        const mapped = dbRes.rows.map((r: any) => ({
-          id: r.id,
-          categoryCode: r.category_code,
-          scenario: r.scenario,
-          question: r.question,
-          difficulty: r.difficulty === 'hard' ? 'Hard' : r.difficulty === 'medium' ? 'Medium' : 'Easy',
-          points: r.points || 20,
-          options: r.options || [],
-          explanation: r.explanation || '',
-        }));
-        res.status(200).json({ success: true, data: mapped });
+        res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch {}
+    } catch (err) {
+      console.warn('[Admin] Failed to get questions from DB:', err);
+    }
   }
 
   res.status(200).json({ success: true, data: questionsStore });
@@ -1325,19 +1338,54 @@ export async function handleGetQuestions(_req: Request, res: Response): Promise<
 
 export async function handleCreateQuestion(req: Request, res: Response): Promise<void> {
   const body = req.body;
+  const id = body.id || `quiz-${Date.now()}`;
+  const categoryCode = body.categoryCode || 'phishing';
+  const scenario = body.scenario || '';
+  const question = body.question || '';
+  const diffStr = (body.difficulty || 'Medium').toLowerCase();
+  const difficulty = diffStr === 'hard' || diffStr === 'easy' ? diffStr : 'medium';
+  const points = body.points || 20;
+  const options = body.options || [];
+  const correctOpt = options.find((o: any) => o.isCorrect)?.id || body.correctOptionId || options[0]?.id || 'opt-1';
+  const explanation = body.explanation || '';
+
   const newQ = {
-    ...body,
-    id: body.id || `quiz-${Date.now()}`,
+    id,
+    categoryCode,
+    scenario,
+    question,
+    difficulty: difficulty === 'hard' ? 'Hard' : difficulty === 'medium' ? 'Medium' : 'Easy',
+    points,
+    options,
+    correctOptionId: correctOpt,
+    explanation,
+    isActive: true,
   };
 
   questionsStore.push(newQ);
 
   if (isDbConnected()) {
-    query(
-      `INSERT INTO challenge_questions (id, category_code, scenario, question, difficulty, options, correct_option_id, explanation, points)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [newQ.id, newQ.categoryCode || 'phishing', newQ.scenario, newQ.question, (newQ.difficulty || 'medium').toLowerCase(), JSON.stringify(newQ.options || []), newQ.options?.[0]?.id || 'opt-1', newQ.explanation || '', newQ.points || 20]
-    ).catch(() => {});
+    try {
+      await query(
+        `INSERT INTO challenge_questions (
+           id, category_code, scenario, question, difficulty, options, correct_option_id, explanation, points, is_active, order_index, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, 0, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           category_code = EXCLUDED.category_code,
+           scenario = EXCLUDED.scenario,
+           question = EXCLUDED.question,
+           difficulty = EXCLUDED.difficulty,
+           options = EXCLUDED.options,
+           correct_option_id = EXCLUDED.correct_option_id,
+           explanation = EXCLUDED.explanation,
+           points = EXCLUDED.points,
+           updated_at = NOW()`,
+        [id, categoryCode, scenario, question, difficulty, JSON.stringify(options), correctOpt, explanation, points]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleCreateQuestion:', err.message);
+    }
   }
 
   res.status(201).json({ success: true, data: newQ });
@@ -1345,25 +1393,48 @@ export async function handleCreateQuestion(req: Request, res: Response): Promise
 
 export async function handleUpdateQuestion(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
+  const body = req.body;
+
   const idx = questionsStore.findIndex((q) => q.id === id);
   if (idx !== -1) {
-    questionsStore[idx] = { ...questionsStore[idx], ...req.body };
+    questionsStore[idx] = { ...questionsStore[idx], ...body };
   }
 
   if (isDbConnected()) {
-    query(
-      `UPDATE challenge_questions SET
-         scenario = COALESCE($1, scenario),
-         question = COALESCE($2, question),
-         points = COALESCE($3, points),
-         explanation = COALESCE($4, explanation),
-         options = COALESCE($5, options)
-       WHERE id = $6`,
-      [req.body.scenario, req.body.question, req.body.points, req.body.explanation, req.body.options ? JSON.stringify(req.body.options) : null, id]
-    ).catch(() => {});
+    try {
+      const diffStr = body.difficulty ? body.difficulty.toLowerCase() : null;
+      const correctOpt = body.options ? body.options.find((o: any) => o.isCorrect)?.id : body.correctOptionId;
+
+      await query(
+        `UPDATE challenge_questions SET
+           category_code = COALESCE($1, category_code),
+           scenario = COALESCE($2, scenario),
+           question = COALESCE($3, question),
+           difficulty = COALESCE($4, difficulty),
+           options = COALESCE($5, options),
+           correct_option_id = COALESCE($6, correct_option_id),
+           explanation = COALESCE($7, explanation),
+           points = COALESCE($8, points),
+           updated_at = NOW()
+         WHERE id = $9`,
+        [
+          body.categoryCode || null,
+          body.scenario || null,
+          body.question || null,
+          diffStr || null,
+          body.options ? JSON.stringify(body.options) : null,
+          correctOpt || null,
+          body.explanation || null,
+          body.points || null,
+          id,
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleUpdateQuestion:', err.message);
+    }
   }
 
-  res.status(200).json({ success: true, data: questionsStore[idx] || { id, ...req.body } });
+  res.status(200).json({ success: true, data: questionsStore[idx] || { id, ...body } });
 }
 
 export async function handleDeleteQuestion(req: Request, res: Response): Promise<void> {
@@ -1371,7 +1442,11 @@ export async function handleDeleteQuestion(req: Request, res: Response): Promise
   questionsStore = questionsStore.filter((q) => q.id !== id);
 
   if (isDbConnected()) {
-    query('DELETE FROM challenge_questions WHERE id = $1', [id]).catch(() => {});
+    try {
+      await query('DELETE FROM challenge_questions WHERE id = $1', [id]);
+    } catch (err: any) {
+      console.warn('[DB Error] handleDeleteQuestion:', err.message);
+    }
   }
 
   res.status(200).json({ success: true, data: { message: `Soal '${id}' dihapus.` } });

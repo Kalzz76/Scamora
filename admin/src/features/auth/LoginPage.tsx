@@ -166,11 +166,23 @@ export const LoginPage: React.FC = () => {
         </svg>
       </div>
 
-      {/* Back to Home Button - Pojok Kiri Atas Layar */}
+      {/* Brand in Top Left (Matching Home Page) */}
       <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
+        <Link to="/" className="flex items-center gap-2.5 sm:gap-3 group">
+          <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center p-1 bg-white shadow-xs border border-slate-200/80 lg:border-transparent group-hover:scale-105 transition-transform">
+            <img src="/Logo.png" alt="Scamora" className="w-full h-full object-contain" />
+          </span>
+          <span className="font-bold tracking-tight text-lg sm:text-xl leading-none text-[#14161c] lg:text-white drop-shadow-sm font-['DM_Sans',sans-serif]">
+            Scamora
+          </span>
+        </Link>
+      </div>
+
+      {/* Back to Home Button - Top Right */}
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-30">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-white/95 hover:bg-white text-[#14161c] hover:text-[#0f9b8a] border border-[#d9d6d0] hover:border-[#0f9b8a] text-xs font-bold shadow-md hover:shadow-lg transition-all hover:-translate-x-0.5 group"
+          className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl bg-white/95 hover:bg-white text-[#14161c] hover:text-[#0f9b8a] border border-[#d9d6d0] hover:border-[#0f9b8a] text-xs font-bold shadow-md hover:shadow-lg transition-all group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
           <span>Kembali ke Beranda</span>

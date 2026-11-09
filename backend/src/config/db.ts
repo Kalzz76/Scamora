@@ -1,5 +1,6 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 import { env } from './env';
+import { SEED_SCENARIOS } from '../data/seedScenarios';
 
 let pool: Pool | null = null;
 let isConnected = false;
@@ -184,6 +185,181 @@ async function initDatabaseTables(): Promise<void> {
           1120,
           6,
           true,
+          NOW(),
+          NOW()
+        )
+        ON CONFLICT (id) DO NOTHING;
+      `);
+    }
+
+    // Inisialisasi kategori tantangan Guardian Challenge jika belum ada
+    await pool.query(`
+      INSERT INTO challenge_categories (id, name, description, icon, sort_order) VALUES
+      ('kurir-apk', 'Modus Kurir Paket (.APK)', 'Simulasi pesan kurir paket palsu yang mengirimkan file .apk berbahaya berkedok foto resi pengiriman.', 'Package', 1),
+      ('bank-phishing', 'Phishing CS Bank & Perubahan Tarif', 'Simulasi penipu mengaku petugas resmi bank mengancam kenaikan biaya bulanan atau meminta verifikasi OTP.', 'Landmark', 2),
+      ('job-scam', 'Lowongan Kerja Like & Follow (Task Scam)', 'Tawaran komisi fantastis hanya dengan like video atau memberi rating Google Maps yang berujung permintaan deposit.', 'Briefcase', 3),
+      ('tilang-etle', 'Surat Tilang ETLE Palsu', 'Pesan mengatasnamakan Kepolisian yang mengirimkan berkas surat tilang digital dengan format aplikasi berbahaya.', 'FileWarning', 4),
+      ('undian-belanja', 'Undian Belanja & Biaya di Muka', 'Manipulasi euforia kemenangan hadiah ratusan juta dengan syarat transfer pajak pemenang ke rekening pribadi.', 'Gift', 5)
+      ON CONFLICT (id) DO NOTHING;
+    `);
+
+    // Tambah kolom is_ai_generated jika belum ada dan seed challenge_scenarios
+    await pool.query(`
+      ALTER TABLE challenge_scenarios ADD COLUMN IF NOT EXISTS is_ai_generated BOOLEAN DEFAULT FALSE;
+    `);
+
+    const scenCount = await pool.query('SELECT COUNT(*) FROM challenge_scenarios');
+    if (scenCount && parseInt(scenCount.rows[0].count, 10) === 0) {
+      console.log('[DB] Menginisialisasi skenario Guardian Challenge ke tabel challenge_scenarios...');
+      for (const scen of SEED_SCENARIOS) {
+        await pool.query(
+          `INSERT INTO challenge_scenarios (
+             id, category_id, title, difficulty, character_name, character_role, character_avatar,
+             initial_dialogue, decision_nodes, red_flags, learning_points, is_ai_generated, created_at
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, false, NOW())
+           ON CONFLICT (id) DO NOTHING`,
+          [
+            scen.id,
+            scen.categoryId,
+            scen.title,
+            scen.difficulty,
+            scen.characterName,
+            scen.characterRole || null,
+            scen.characterAvatar || null,
+            JSON.stringify(scen.initialDialogue),
+            JSON.stringify(scen.decisionNodes),
+            JSON.stringify(scen.redFlags),
+            JSON.stringify(scen.learningPoints),
+          ]
+        );
+      }
+    }
+
+    // Inisialisasi soal kuis Guardian Challenge ke challenge_questions jika masih kosong
+    const qCount = await pool.query('SELECT COUNT(*) FROM challenge_questions');
+    if (qCount && parseInt(qCount.rows[0].count, 10) === 0) {
+      console.log('[DB] Menginisialisasi soal kuis asli ke tabel challenge_questions...');
+      await pool.query(`
+        INSERT INTO challenge_questions (
+          id, category_code, scenario, question, difficulty, options, correct_option_id, explanation, points, is_active, order_index, created_at, updated_at
+        ) VALUES
+        (
+          'quiz-apk-01',
+          'apk_malware',
+          'Anda menerima pesan WhatsApp dari nomor kurir paket: "Paket Anda tertahan di gudang, silakan cek resi pelacakan di berkas terlampir: Resi_Pelacakan_JNT.apk"',
+          'Tindakan paling aman yang harus Anda ambil adalah:',
+          'easy',
+          '[
+            {"id": "opt-1", "text": "Mengunduh dan memasang aplikasi untuk mengetahui nomor resi asli", "isCorrect": false},
+            {"id": "opt-2", "text": "Meneruskan pesan ke keluarga untuk menanyakan apakah ada yang pesan paket", "isCorrect": false},
+            {"id": "opt-3", "text": "Tidak membuka berkas .APK, hapus pesan, dan cek resi melalui website atau aplikasi resmi ekspedisi", "isCorrect": true},
+            {"id": "opt-4", "text": "Membalas chat meminta foto fisik paket", "isCorrect": false}
+          ]'::jsonb,
+          'opt-3',
+          'Kurir resmi ekspedisi tidak pernah mengirim berkas biner .apk. Berkas ini adalah trojan pencuri SMS OTP m-Banking.',
+          20,
+          true,
+          1,
+          NOW(),
+          NOW()
+        ),
+        (
+          'quiz-phishing-02',
+          'phishing',
+          'Anda menerima SMS dari bank ternama bahwa akun Anda terancam ditutup. Tautan yang disertakan adalah "https://bca.klik-login-verifikasi.xyz"',
+          'Mengapa tautan tersebut sangat berbahaya?',
+          'medium',
+          '[
+            {"id": "opt-2a", "text": "Karena menggunakan protokol HTTPS", "isCorrect": false},
+            {"id": "opt-2b", "text": "Karena nama BCA diletakkan di subdomain, sedangkan domain aslinya adalah klik-login-verifikasi.xyz", "isCorrect": true},
+            {"id": "opt-2c", "text": "Karena pesan dikirim melalui SMS bukan email", "isCorrect": false},
+            {"id": "opt-2d", "text": "Karena tidak menyertakan foto logo bank", "isCorrect": false}
+          ]'::jsonb,
+          'opt-2b',
+          'Teknik subdomain spoofing menyamarkan domain root asli (klik-login-verifikasi.xyz) dengan mencantumkan nama bank di awal subdomain.',
+          25,
+          true,
+          2,
+          NOW(),
+          NOW()
+        ),
+        (
+          'quiz-job-03',
+          'job_scam',
+          'Anda ditawari pekerjaan freelance like video YouTube bergaji Rp 1.500.000/hari, namun sebelum tugas berikutnya Anda diminta transfer deposit jaminan Rp 250.000.',
+          'Apa langkah rasional yang wajib dilakukan?',
+          'medium',
+          '[
+            {"id": "opt-3a", "text": "Transfer deposit Rp 250.000 karena nominalnya kecil dibanding gaji yang dijanjikan", "isCorrect": false},
+            {"id": "opt-3b", "text": "Langsung tolak tawaran dan blokir kontak karena pekerjaan legal tidak pernah memungut deposit di muka", "isCorrect": true},
+            {"id": "opt-3c", "text": "Minta diskon biaya deposit menjadi Rp 100.000", "isCorrect": false},
+            {"id": "opt-3d", "text": "Pinjam uang teman untuk membayar deposit", "isCorrect": false}
+          ]'::jsonb,
+          'opt-3b',
+          'Pekerjaan legal dan profesional tidak pernah membebankan deposit uang muka kepada pekerja. Ini adalah modus klasik Task Scam.',
+          25,
+          true,
+          3,
+          NOW(),
+          NOW()
+        ),
+        (
+          'quiz-banking-04',
+          'banking_fraud',
+          'Seseorang menelepon mengaku dari Customer Service Bank dan meminta 6 digit kode OTP yang baru saja masuk ke SMS Anda untuk membatalkan kenaikan biaya bulanan.',
+          'Apakah Anda boleh membacakan kode OTP tersebut?',
+          'easy',
+          '[
+            {"id": "opt-4a", "text": "Boleh, asalkan penelpon terdengar ramah dan meyakinkan", "isCorrect": false},
+            {"id": "opt-4b", "text": "Boleh, asalkan penelpon menyebutkan nama lengkap dan tanggal lahir kita dengan benar", "isCorrect": false},
+            {"id": "opt-4c", "text": "TIDAK BOLEH, pihak bank resmi tidak pernah meminta kode OTP untuk alasan apapun", "isCorrect": true},
+            {"id": "opt-4d", "text": "Boleh, tapi hanya 3 digit pertama saja", "isCorrect": false}
+          ]'::jsonb,
+          'opt-4c',
+          'Kode OTP adalah kunci rahasia transaksi satu kali. Pihak bank dan lembaga keuangan resmi di seluruh dunia dilarang keras meminta OTP nasabah.',
+          20,
+          true,
+          4,
+          NOW(),
+          NOW()
+        ),
+        (
+          'quiz-giveaway-05',
+          'giveaway_scam',
+          'Anda mendapat pesan bahwa nomor Anda memenangkan undian mobil Avanza dari e-commerce ternama, namun harus membayar pajak hadiah 10% ke rekening pribadi sebelum mobil dikirim.',
+          'Bagaimana cara memastikan keaslian undian tersebut?',
+          'medium',
+          '[
+            {"id": "opt-5a", "text": "Segera transfer pajak karena takut hadiah dialihkan ke pemenang lain", "isCorrect": false},
+            {"id": "opt-5b", "text": "Cek ke media sosial resmi bercentang biru atau website resmi e-commerce terkait tanpa menghubungi nomor pengirim", "isCorrect": true},
+            {"id": "opt-5c", "text": "Minta pelaku mengirimkan foto KTP bendahara undian", "isCorrect": false},
+            {"id": "opt-5d", "text": "Percaya karena ada surat keputusan izin Kemensos palsu yang dilampirkan", "isCorrect": false}
+          ]'::jsonb,
+          'opt-5b',
+          'Pajak undian resmi dari korporasi besar tidak pernah ditransfer ke rekening bank perorangan atau pribadi.',
+          25,
+          true,
+          5,
+          NOW(),
+          NOW()
+        ),
+        (
+          'quiz-investment-06',
+          'investment_scam',
+          'Sebuah platform investasi di Telegram menjanjikan profit tetap 30% per minggu tanpa risiko kerugian sama sekali melalui robot trading cerdas.',
+          'Prinsip investasi apa yang dilanggar oleh penawaran tersebut?',
+          'hard',
+          '[
+            {"id": "opt-6a", "text": "Prinsip High Risk High Return: tidak ada instrumen investasi legal yang menjamin profit tinggi tanpa risiko", "isCorrect": true},
+            {"id": "opt-6b", "text": "Prinsip diversifikasi portofolio", "isCorrect": false},
+            {"id": "opt-6c", "text": "Prinsip likuiditas pasar modal", "isCorrect": false},
+            {"id": "opt-6d", "text": "Prinsip compound interest", "isCorrect": false}
+          ]'::jsonb,
+          'opt-6a',
+          'Janji keuntungan tetap tanpa risiko rugi adalah ciri mutlak investasi bodong (skema Ponzi). Semua investasi legal memiliki risiko pasar.',
+          30,
+          true,
+          6,
           NOW(),
           NOW()
         )
