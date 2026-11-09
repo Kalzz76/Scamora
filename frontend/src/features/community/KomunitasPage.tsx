@@ -575,29 +575,18 @@ export const KomunitasPage: React.FC = () => {
       `}</style>
 
       {/* ========================================================================= */}
-      {/* 1. COMPACT COMMUNITY SUB-NAVBAR */}
+      {/* 1. UNIFIED ACTION & SEARCH SUB-NAVBAR (OPTION A) */}
       {/* ========================================================================= */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 pt-3 shrink-0 z-20">
-        <header className="bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-sm rounded-2xl flex justify-between items-center px-4 sm:px-5 py-2.5 transition-all">
+        <header className="bg-white/90 backdrop-blur-xl border border-gray-200/80 shadow-xs rounded-2xl flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-2 transition-all">
           
-          {/* Left: Brand Identification */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#143826] text-[#A6F4C5] flex items-center justify-center shadow-xs">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div className="text-left">
-              <h2 className="font-black text-xs sm:text-sm text-[#143826] leading-none">Forum Warga Siaga</h2>
-              <span className="text-[9.5px] font-bold text-gray-400">Komunitas Anti-Penipuan Siber</span>
-            </div>
-          </div>
-
-          {/* Center: Clean 3-Pill Navigation (No Truncation) */}
-          <nav className="flex items-center gap-1 bg-[#14161c]/5 p-1 rounded-full border border-gray-200/50">
+          {/* Left: View Switching Tabs */}
+          <nav className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-full border border-gray-200/60 shrink-0">
             <button
               onClick={() => setMainTab('beranda')}
-              className={`rounded-full px-3.5 sm:px-4 py-1.5 flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
+              className={`rounded-full px-3 sm:px-3.5 py-1.5 flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
                 mainTab === 'beranda'
-                  ? 'bg-[#E86A33] text-white shadow-xs'
+                  ? 'bg-[#143826] text-white shadow-xs'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-white/70'
               }`}
             >
@@ -607,40 +596,55 @@ export const KomunitasPage: React.FC = () => {
 
             <button
               onClick={() => setMainTab('grup')}
-              className={`rounded-full px-3.5 sm:px-4 py-1.5 flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
+              className={`rounded-full px-3 sm:px-3.5 py-1.5 flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
                 mainTab === 'grup'
-                  ? 'bg-[#E86A33] text-white shadow-xs'
+                  ? 'bg-[#143826] text-white shadow-xs'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-white/70'
               }`}
             >
               <Users className="w-3.5 h-3.5" />
               <span>Kanal Modus</span>
             </button>
+          </nav>
 
+          {/* Center: Always-Visible Interactive Search Bar */}
+          <div className="flex-1 max-w-lg relative min-w-0">
+            <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                if (mainTab !== 'beranda') setMainTab('beranda');
+              }}
+              placeholder="Cari modus, rekening, atau tag..."
+              className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-gray-50/80 hover:bg-gray-100/70 focus:bg-white border border-gray-200/80 focus:border-[#143826] rounded-xl focus:outline-none transition font-medium text-gray-900 placeholder:text-gray-400 shadow-2xs"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')} 
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 cursor-pointer"
+                title="Hapus pencarian"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Right: Quick Action & Notification */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => setMainTab('postingan')}
-              className={`rounded-full px-3.5 sm:px-4 py-1.5 flex items-center gap-1.5 font-bold text-xs transition-all cursor-pointer ${
+              onClick={() => setMainTab(mainTab === 'postingan' ? 'beranda' : 'postingan')}
+              className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full font-bold text-xs transition-all shadow-xs cursor-pointer ${
                 mainTab === 'postingan'
-                  ? 'bg-[#E86A33] text-white shadow-xs'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/70'
+                  ? 'bg-[#143826] text-white ring-2 ring-[#143826]/30'
+                  : 'bg-[#E86A33] hover:bg-[#d45823] text-white'
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Postingan</span>
-            </button>
-          </nav>
-
-          {/* Right: Quick Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setShowSearchInput(!showSearchInput);
-                setTimeout(() => searchInputRef.current?.focus(), 100);
-              }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#143826] hover:bg-white border border-gray-200/60 shadow-2xs bg-white/70 transition cursor-pointer"
-              title="Cari diskusi"
-            >
-              <Search className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tulis Postingan</span>
+              <span className="sm:hidden">Tulis</span>
             </button>
 
             <button
@@ -648,7 +652,7 @@ export const KomunitasPage: React.FC = () => {
                 setIsNotificationsOpen(true);
                 fetchNotifications();
               }}
-              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#143826] hover:bg-white border border-gray-200/60 shadow-2xs bg-white/70 relative transition cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:text-[#143826] hover:bg-gray-50 border border-gray-200/80 shadow-2xs bg-white relative transition cursor-pointer"
               title="Pusat Notifikasi"
             >
               <Bell className="w-3.5 h-3.5" />
@@ -659,32 +663,6 @@ export const KomunitasPage: React.FC = () => {
           </div>
 
         </header>
-
-        {/* Expandable Search Input Strip */}
-        {showSearchInput && (
-          <div className="mt-2 p-2 bg-white rounded-2xl border border-gray-200/80 shadow-md flex items-center gap-2">
-            <Search className="w-4 h-4 text-gray-400 ml-2" />
-            <input
-              ref={searchInputRef}
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari kata kunci (contoh: APK Resi, Rekening BCA, Loker Telegram)..."
-              className="w-full bg-transparent text-xs sm:text-sm text-gray-900 placeholder-gray-400 focus:outline-none font-medium py-1"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="text-gray-400 hover:text-gray-600 p-1">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              onClick={() => setShowSearchInput(false)}
-              className="px-3 py-1 rounded-xl bg-gray-100 hover:bg-gray-200 text-xs font-bold text-gray-700"
-            >
-              Tutup
-            </button>
-          </div>
-        )}
       </div>
 
       {/* ========================================================================= */}
