@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { env } from '../config/env';
 
 export interface TokenPayload {
@@ -8,8 +9,48 @@ export interface TokenPayload {
   exp: number;
 }
 
+/**
+ * Hash password menggunakan Bcrypt (salt rounds = 10)
+ */
+export async function hashPasswordBcrypt(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+
+/**
+ * Hash password sinkron menggunakan Bcrypt
+ */
 export function hashUserPassword(password: string): string {
-  return crypto.createHmac('sha256', env.ADMIN_SECRET).update(password).digest('hex');
+  return bcrypt.hashSync(password, 10);
+}
+
+/**
+ * Verifikasi kecocokan password dengan hash yang tersimpan.
+ * Mendukung hash Bcrypt ($2a$, $2b$) dan fallback legacy HMAC SHA-256
+ * untuk menjaga kompatibilitas akun seeded/existing.
+ */
+export async function verifyUserPassword(password: string, storedHash?: string | null): Promise<boolean> {
+  if (!password || !storedHash) return false;
+
+  // 1. Bcrypt Hash
+  if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$') || storedHash.startsWith('$2y$')) {
+    try {
+      return await bcrypt.compare(password, storedHash);
+    } catch {
+      return false;
+    }
+  }
+
+  // 2. Fallback legacy HMAC SHA-256
+  try {
+    const legacyHash = crypto.createHmac('sha256', env.ADMIN_SECRET).update(password).digest('hex');
+    const legacyBuf = Buffer.from(legacyHash);
+    const storedBuf = Buffer.from(storedHash);
+    if (legacyBuf.length === storedBuf.length && crypto.timingSafeEqual(legacyBuf, storedBuf)) {
+      return true;
+    }
+  } catch {}
+
+  return false;
 }
 
 export function validateAdminCredentials(username: string, password: string): boolean {
