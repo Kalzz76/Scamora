@@ -1100,25 +1100,33 @@ export async function handleDeletePreset(req: Request, res: Response): Promise<v
 export async function handleGetArticles(_req: Request, res: Response): Promise<void> {
   if (isDbConnected()) {
     try {
-      const dbRes = await query('SELECT * FROM knowledge_articles ORDER BY created_at DESC');
+      const dbRes = await query(`
+        SELECT 
+          ka.id,
+          ka.category_code as "categoryCode",
+          COALESCE(sc.name, ka.category_code) as "categoryName",
+          ka.title,
+          ka.summary,
+          ka.content,
+          COALESCE(ka.target_victim, 'Masyarakat umum & pengguna smartphone') as "targetVictims",
+          ka.incident_channel as "incidentChannel",
+          ka.red_flags as "redFlags",
+          ka.mitigation_steps as "responseSteps",
+          CASE WHEN ka.is_published THEN 'published' ELSE 'draft' END as status,
+          ka.read_count as views,
+          ka.created_at as "createdAt",
+          ka.updated_at as "updatedAt"
+        FROM knowledge_articles ka
+        LEFT JOIN scam_categories sc ON ka.category_code = sc.code
+        ORDER BY ka.order_index ASC, ka.created_at DESC
+      `);
       if (dbRes) {
-        const mapped = dbRes.rows.map((r: any) => ({
-          id: r.id,
-          categoryCode: r.category_code,
-          categoryName: r.category_code,
-          title: r.title,
-          summary: r.summary,
-          targetVictims: r.target_victim || '',
-          redFlags: r.red_flags || [],
-          responseSteps: r.mitigation_steps || [],
-          status: r.is_published ? 'published' : 'draft',
-          views: r.read_count || 0,
-          updatedAt: r.updated_at,
-        }));
-        res.status(200).json({ success: true, data: mapped });
+        res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch {}
+    } catch (err) {
+      console.warn('[Admin] Failed to get articles from DB:', err);
+    }
   }
 
   res.status(200).json({ success: true, data: articlesStore });
@@ -1126,9 +1134,30 @@ export async function handleGetArticles(_req: Request, res: Response): Promise<v
 
 export async function handleCreateArticle(req: Request, res: Response): Promise<void> {
   const body = req.body;
+  const id = body.id || `art-${Date.now()}`;
+  const categoryCode = body.categoryCode || 'phishing';
+  const title = body.title || 'Artikel Baru';
+  const slug = `art-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const summary = body.summary || '';
+  const content = body.content || body.summary || '';
+  const targetVictim = body.targetVictims || 'Masyarakat umum & pengguna smartphone';
+  const incidentChannel = body.incidentChannel || 'WhatsApp / SMS / Web';
+  const redFlags = body.redFlags || [];
+  const responseSteps = body.responseSteps || [];
+  const isPublished = body.status !== 'draft';
+
   const newArt = {
-    ...body,
-    id: body.id || `art-${Date.now()}`,
+    id,
+    categoryCode,
+    categoryName: categoryCode,
+    title,
+    summary,
+    content,
+    targetVictims: targetVictim,
+    incidentChannel,
+    redFlags,
+    responseSteps,
+    status: isPublished ? 'published' : 'draft',
     views: 0,
     updatedAt: new Date().toISOString(),
   };
@@ -1136,12 +1165,39 @@ export async function handleCreateArticle(req: Request, res: Response): Promise<
   articlesStore.unshift(newArt);
 
   if (isDbConnected()) {
-    query(
-      `INSERT INTO knowledge_articles (id, category_code, title, slug, summary, content, red_flags, mitigation_steps, is_published, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-       ON CONFLICT (id) DO NOTHING`,
-      [newArt.id, newArt.categoryCode || 'phishing', newArt.title, `art-${Date.now()}`, newArt.summary || '', newArt.summary || '', JSON.stringify(newArt.redFlags || []), JSON.stringify(newArt.responseSteps || []), true]
-    ).catch(() => {});
+    try {
+      await query(
+        `INSERT INTO knowledge_articles (
+           id, category_code, title, slug, risk_level, target_victim, incident_channel, summary, content, red_flags, mitigation_steps, is_published, read_count, order_index, created_at, updated_at
+         )
+         VALUES ($1, $2, $3, $4, 'TINGGI', $5, $6, $7, $8, $9, $10, $11, 0, 0, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           title = EXCLUDED.title,
+           summary = EXCLUDED.summary,
+           content = EXCLUDED.content,
+           target_victim = EXCLUDED.target_victim,
+           incident_channel = EXCLUDED.incident_channel,
+           red_flags = EXCLUDED.red_flags,
+           mitigation_steps = EXCLUDED.mitigation_steps,
+           is_published = EXCLUDED.is_published,
+           updated_at = NOW()`,
+        [
+          id,
+          categoryCode,
+          title,
+          slug,
+          targetVictim,
+          incidentChannel,
+          summary,
+          content,
+          JSON.stringify(redFlags),
+          JSON.stringify(responseSteps),
+          isPublished,
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleCreateArticle:', err.message);
+    }
   }
 
   res.status(201).json({ success: true, data: newArt });
@@ -1149,25 +1205,46 @@ export async function handleCreateArticle(req: Request, res: Response): Promise<
 
 export async function handleUpdateArticle(req: Request, res: Response): Promise<void> {
   const { id } = req.params;
+  const body = req.body;
+  const isPublished = body.status !== undefined ? body.status === 'published' : undefined;
+
   const idx = articlesStore.findIndex((a) => a.id === id);
   if (idx !== -1) {
-    articlesStore[idx] = { ...articlesStore[idx], ...req.body, updatedAt: new Date().toISOString() };
+    articlesStore[idx] = { ...articlesStore[idx], ...body, updatedAt: new Date().toISOString() };
   }
 
   if (isDbConnected()) {
-    query(
-      `UPDATE knowledge_articles SET
-         title = COALESCE($1, title),
-         summary = COALESCE($2, summary),
-         red_flags = COALESCE($3, red_flags),
-         mitigation_steps = COALESCE($4, mitigation_steps),
-         updated_at = NOW()
-       WHERE id = $5`,
-      [req.body.title, req.body.summary, req.body.redFlags ? JSON.stringify(req.body.redFlags) : null, req.body.responseSteps ? JSON.stringify(req.body.responseSteps) : null, id]
-    ).catch(() => {});
+    try {
+      await query(
+        `UPDATE knowledge_articles SET
+           title = COALESCE($1, title),
+           category_code = COALESCE($2, category_code),
+           summary = COALESCE($3, summary),
+           content = COALESCE($4, content),
+           target_victim = COALESCE($5, target_victim),
+           red_flags = COALESCE($6, red_flags),
+           mitigation_steps = COALESCE($7, mitigation_steps),
+           is_published = COALESCE($8, is_published),
+           updated_at = NOW()
+         WHERE id = $9`,
+        [
+          body.title || null,
+          body.categoryCode || null,
+          body.summary || null,
+          body.content || body.summary || null,
+          body.targetVictims || null,
+          body.redFlags ? JSON.stringify(body.redFlags) : null,
+          body.responseSteps ? JSON.stringify(body.responseSteps) : null,
+          isPublished !== undefined ? isPublished : null,
+          id,
+        ]
+      );
+    } catch (err: any) {
+      console.warn('[DB Error] handleUpdateArticle:', err.message);
+    }
   }
 
-  res.status(200).json({ success: true, data: articlesStore[idx] || { id, ...req.body } });
+  res.status(200).json({ success: true, data: articlesStore[idx] || { id, ...body } });
 }
 
 export async function handleDeleteArticle(req: Request, res: Response): Promise<void> {
@@ -1175,7 +1252,11 @@ export async function handleDeleteArticle(req: Request, res: Response): Promise<
   articlesStore = articlesStore.filter((a) => a.id !== id);
 
   if (isDbConnected()) {
-    query('DELETE FROM knowledge_articles WHERE id = $1', [id]).catch(() => {});
+    try {
+      await query('DELETE FROM knowledge_articles WHERE id = $1', [id]);
+    } catch (err: any) {
+      console.warn('[DB Error] handleDeleteArticle:', err.message);
+    }
   }
 
   res.status(200).json({ success: true, data: { message: `Artikel '${id}' dihapus.` } });
@@ -1187,22 +1268,29 @@ export async function handleDeleteArticle(req: Request, res: Response): Promise<
 export async function handleGetCategories(_req: Request, res: Response): Promise<void> {
   if (isDbConnected()) {
     try {
-      const dbRes = await query('SELECT * FROM scam_categories ORDER BY order_index ASC');
+      const dbRes = await query(`
+        SELECT 
+          sc.id,
+          sc.code,
+          sc.name,
+          sc.icon_name as icon,
+          sc.description,
+          sc.risk_tier as "riskTier",
+          COUNT(DISTINCT ka.id)::int as "articleCount",
+          COUNT(DISTINCT cq.id)::int as "quizCount"
+        FROM scam_categories sc
+        LEFT JOIN knowledge_articles ka ON sc.code = ka.category_code
+        LEFT JOIN challenge_questions cq ON sc.code = cq.category_code
+        GROUP BY sc.id, sc.code, sc.name, sc.icon_name, sc.description, sc.risk_tier, sc.order_index
+        ORDER BY sc.order_index ASC
+      `);
       if (dbRes && dbRes.rows.length > 0) {
-        const mapped = dbRes.rows.map((r: any) => ({
-          id: r.id,
-          code: r.code,
-          name: r.name,
-          icon: r.icon_name || 'ShieldAlert',
-          description: r.description,
-          riskTier: r.risk_tier,
-          articleCount: 5,
-          quizCount: 2,
-        }));
-        res.status(200).json({ success: true, data: mapped });
+        res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch {}
+    } catch (err) {
+      console.warn('[Admin] Failed to get categories from DB:', err);
+    }
   }
 
   res.status(200).json({ success: true, data: categoriesStore });
