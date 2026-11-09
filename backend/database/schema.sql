@@ -1,13 +1,13 @@
 -- =========================================================================
--- Scamora Platform - Master Database Schema (PostgreSQL & Supabase Compatible)
--- Version: 2.1.0
--- Description: Skema lengkap untuk seluruh fitur Scamora:
---   - Analisis URL & Chat (Realtime & Histori)
---   - Direktori Ancaman Domain Publik (Scanned Domains)
---   - Modul Admin Command Center (Telemetry, Audit Logs, Settings, Presets)
---   - Pusat Pengetahuan & Taksonomi Modus Kejahatan
---   - Bank Soal & Simulasi Percabangan Guardian Challenge
---   - Forum Diskusi & Moderasi Komunitas Warga
+-- Scamora Platform - Master Database Schema (Full Relational / Supabase)
+-- Version: 3.0.0 (Fully Connected Relational Architecture)
+-- Description: Skema lengkap dan terintegrasi penuh untuk seluruh modul Scamora:
+--   - Identity & Auth (admin_users, app_users)
+--   - Threat Intelligence & Scanner (analysis_stats, analysis_history, scanned_domains, demo_presets)
+--   - Knowledge Center & Taxonomy (scam_categories, knowledge_articles)
+--   - Guardian Challenge AI Simulation (categories, scenarios, sessions, decisions, results, questions)
+--   - Citizen Community & Moderation (channels, posts, reports, discussions, comments, votes, reputations, notifications)
+--   - Observability & Admin Ops (admin_audit_logs, system_runtime_config, ai_token_logs)
 -- =========================================================================
 
 -- 1. EXTENSIONS
@@ -75,7 +75,11 @@ DO $$ BEGIN
     CREATE TYPE audit_severity_enum AS ENUM ('info', 'warning', 'critical');
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
--- 3. HELPER TRIGGER FUNCTION
+DO $$ BEGIN
+    CREATE TYPE community_discussion_status AS ENUM ('TERBUKA', 'TERJAWAB', 'DITUTUP');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+-- 3. HELPER TRIGGER FUNCTION FOR AUTO UPDATED_AT
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -85,8 +89,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- =========================================================================
--- BAGIAN A: AUTENTIKASI & PETUGAS ADMIN
+-- BAGIAN A: IDENTITAS & AKUN PENGGUNA (CENTRAL ENTITIES)
 -- =========================================================================
+
+-- 1. Administrator & Analis Keamanan
 CREATE TABLE IF NOT EXISTS admin_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(100) UNIQUE NOT NULL,
@@ -99,92 +105,46 @@ CREATE TABLE IF NOT EXISTS admin_users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Tabel Pengguna Platform (Guest & Verified)
+-- 2. Pengguna Publik & Warga Terverifikasi
 CREATE TABLE IF NOT EXISTS app_users (
-    id VARCHAR(50) PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(100) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE,
     password_hash VARCHAR(255),
-    full_name VARCHAR(150) NOT NULL,
+    full_name VARCHAR(150),
     google_id VARCHAR(100) UNIQUE,
     avatar_url TEXT,
-    auth_provider VARCHAR(50) NOT NULL DEFAULT 'local',
-    tier VARCHAR(20) NOT NULL DEFAULT 'verified' CHECK (tier IN ('guest', 'verified')),
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
-    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended')),
-    scan_count INTEGER NOT NULL DEFAULT 0,
-    report_count INTEGER NOT NULL DEFAULT 0,
-    last_active_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
+    auth_provider VARCHAR(50) DEFAULT 'local',
+    tier VARCHAR(50) DEFAULT 'guest',
+    role VARCHAR(50) DEFAULT 'user',
+    status VARCHAR(50) DEFAULT 'active',
+    scan_count INT DEFAULT 0,
+    report_count INT DEFAULT 0,
+    last_active_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
-CREATE INDEX IF NOT EXISTS idx_app_users_tier ON app_users(tier);
-CREATE INDEX IF NOT EXISTS idx_app_users_status ON app_users(status);
-CREATE INDEX IF NOT EXISTS idx_app_users_username ON app_users(username);
-CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_app_users_google_id ON app_users(google_id) WHERE google_id IS NOT NULL;
+-- =========================================================================
+-- BAGIAN B: TAKSONOMI KEJAHATAN & PUSAT EDUKASI
+-- =========================================================================
 
--- =========================================================================
--- BAGIAN B: ANALISIS KEAMANAN & TELEMETRI SCAN
--- =========================================================================
-CREATE TABLE IF NOT EXISTS analysis_stats (
-    id BIGSERIAL PRIMARY KEY,
-    analysis_type analysis_type_enum NOT NULL,
-    risk_level risk_level_enum NOT NULL,
-    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
-    scam_type VARCHAR(50) NOT NULL DEFAULT 'unknown',
-    analysis_status analysis_status_enum NOT NULL DEFAULT 'complete',
-    indicators_count SMALLINT NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-CREATE TABLE IF NOT EXISTS analysis_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(100),
-    analysis_type analysis_type_enum NOT NULL,
-    input_hash VARCHAR(64) NOT NULL,
-    sanitized_summary VARCHAR(255) NOT NULL,
-    risk_level risk_level_enum NOT NULL,
-    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
-    scam_type VARCHAR(50) NOT NULL DEFAULT 'unknown',
-    indicators_summary JSONB NOT NULL DEFAULT '[]'::jsonb,
-    expires_at TIMESTAMPTZ NOT NULL DEFAULT (timezone('utc'::text, now()) + INTERVAL '30 days'),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
--- =========================================================================
--- BAGIAN C: DIREKTORI ANCAMAN DOMAIN PUBLIK (scanned_domains)
--- =========================================================================
-CREATE TABLE IF NOT EXISTS scanned_domains (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    domain VARCHAR(255) UNIQUE NOT NULL,
-    check_count INTEGER NOT NULL DEFAULT 1,
-    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
-    risk_category VARCHAR(20) NOT NULL CHECK (risk_category IN ('high', 'review', 'low')),
-    scam_category VARCHAR(100) DEFAULT 'Phishing & Penipuan',
-    notes TEXT,
-    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    last_checked_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
--- =========================================================================
--- BAGIAN D: TAKSONOMI PENIPUAN & PUSAT PENGETAHUAN
--- =========================================================================
+-- 3. Taksonomi Induk Kategori Modus Penipuan
 CREATE TABLE IF NOT EXISTS scam_categories (
     id VARCHAR(50) PRIMARY KEY,
     code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(150) NOT NULL,
-    description TEXT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT NOT NULL,
     risk_tier severity_level_enum NOT NULL DEFAULT 'TINGGI',
-    icon_name VARCHAR(50) DEFAULT 'shield-alert',
+    icon_name VARCHAR(50) NOT NULL DEFAULT 'shield-alert',
     order_index SMALLINT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 4. Ensiklopedia & Artikel Panduan Edukasi
+-- [RELASI]: category_code -> scam_categories(code)
 CREATE TABLE IF NOT EXISTS knowledge_articles (
     id VARCHAR(50) PRIMARY KEY,
     category_code VARCHAR(50) NOT NULL REFERENCES scam_categories(code) ON DELETE CASCADE,
@@ -206,8 +166,79 @@ CREATE TABLE IF NOT EXISTS knowledge_articles (
 );
 
 -- =========================================================================
--- BAGIAN E: GUARDIAN CHALLENGE (BANK SOAL & SIMULASI AI PERCABANGAN)
+-- BAGIAN C: PEMINDAI ANCAMAN & INTELIJEN SIBER
 -- =========================================================================
+
+-- 5. Metrik Agregasi Analisis Platform
+CREATE TABLE IF NOT EXISTS analysis_stats (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    analysis_type analysis_type_enum NOT NULL,
+    risk_level risk_level_enum NOT NULL,
+    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
+    scam_type VARCHAR(100) NOT NULL,
+    indicators_count SMALLINT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 6. Histori Analisis URL & Pesan Percakapan
+-- [RELASI]: user_id -> app_users(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS analysis_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
+    guest_session_id VARCHAR(100),
+    analysis_type analysis_type_enum NOT NULL,
+    input_target TEXT NOT NULL,
+    domain VARCHAR(255),
+    ip_address VARCHAR(45),
+    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
+    risk_level risk_level_enum NOT NULL,
+    scam_category VARCHAR(100) NOT NULL,
+    confidence_score NUMERIC(5, 2) NOT NULL DEFAULT 0.00,
+    analysis_time_ms INTEGER NOT NULL DEFAULT 0,
+    status analysis_status_enum NOT NULL DEFAULT 'complete',
+    indicators JSONB NOT NULL DEFAULT '[]'::jsonb,
+    ai_explanation TEXT,
+    is_bookmarked BOOLEAN NOT NULL DEFAULT FALSE,
+    privacy_consent BOOLEAN NOT NULL DEFAULT TRUE,
+    raw_response JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 7. Direktori Ancaman Domain Publik
+CREATE TABLE IF NOT EXISTS scanned_domains (
+    domain VARCHAR(255) PRIMARY KEY,
+    check_count INTEGER NOT NULL DEFAULT 1,
+    risk_score SMALLINT NOT NULL CHECK (risk_score >= 0 AND risk_score <= 100),
+    risk_category risk_level_enum NOT NULL DEFAULT 'review',
+    scam_category VARCHAR(100) NOT NULL DEFAULT 'Lainnya',
+    notes TEXT,
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    last_checked_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 8. Presets Demo Homepage (Contoh Uji 1-Klik)
+CREATE TABLE IF NOT EXISTS demo_presets (
+    id VARCHAR(50) PRIMARY KEY,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('url', 'chat')),
+    title VARCHAR(150) NOT NULL,
+    subtitle VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    expected_category VARCHAR(50) NOT NULL,
+    expected_score INT NOT NULL,
+    scam_type VARCHAR(50) NOT NULL,
+    tags TEXT[] DEFAULT ARRAY[]::TEXT[],
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+-- =========================================================================
+-- BAGIAN D: GUARDIAN CHALLENGE (BANK SOAL & SIMULASI AI PERCABANGAN)
+-- =========================================================================
+
+-- 9. Bank Soal Kuis Cepat Ketahanan Siber
+-- [RELASI]: category_code -> scam_categories(code)
 CREATE TABLE IF NOT EXISTS challenge_questions (
     id VARCHAR(50) PRIMARY KEY,
     category_code VARCHAR(50) NOT NULL REFERENCES scam_categories(code) ON DELETE CASCADE,
@@ -225,6 +256,7 @@ CREATE TABLE IF NOT EXISTS challenge_questions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 10. Kategori Modul Skenario Simulasi
 CREATE TABLE IF NOT EXISTS challenge_categories (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -233,9 +265,11 @@ CREATE TABLE IF NOT EXISTS challenge_categories (
     sort_order INT DEFAULT 0
 );
 
+-- 11. Skenario Percabangan Interaktif AI
+-- [RELASI]: category_id -> challenge_categories(id)
 CREATE TABLE IF NOT EXISTS challenge_scenarios (
     id VARCHAR(100) PRIMARY KEY,
-    category_id VARCHAR(50) REFERENCES challenge_categories(id) ON DELETE CASCADE,
+    category_id VARCHAR(50) NOT NULL REFERENCES challenge_categories(id) ON DELETE CASCADE,
     title VARCHAR(200) NOT NULL,
     difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
     character_name VARCHAR(100) NOT NULL,
@@ -249,20 +283,28 @@ CREATE TABLE IF NOT EXISTS challenge_scenarios (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
+-- 12. Sesi Berjalan Permainan Simulasi
+-- [RELASI]: scenario_id -> challenge_scenarios(id)
+-- [RELASI]: user_id -> app_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS challenge_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id VARCHAR(100) NOT NULL,
-    scenario_id VARCHAR(100) REFERENCES challenge_scenarios(id) ON DELETE CASCADE,
-    current_node_id VARCHAR(50) NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('in_progress', 'completed', 'abandoned')),
-    history JSONB DEFAULT '[]'::jsonb,
+    scenario_id VARCHAR(100) NOT NULL REFERENCES challenge_scenarios(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
+    guest_session_id VARCHAR(100),
+    current_node_id VARCHAR(50) NOT NULL DEFAULT 'node_1',
+    status VARCHAR(20) NOT NULL DEFAULT 'in_progress' CHECK (status IN ('in_progress', 'completed', 'failed', 'abandoned')),
+    history JSONB NOT NULL DEFAULT '[]'::jsonb,
+    detected_red_flags JSONB NOT NULL DEFAULT '[]'::jsonb,
+    total_score INT NOT NULL DEFAULT 50,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()),
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
+-- 13. Keputusan Pengguna di Tiap Simpul Percabangan
+-- [RELASI]: session_id -> challenge_sessions(id)
 CREATE TABLE IF NOT EXISTS challenge_decisions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID REFERENCES challenge_sessions(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES challenge_sessions(id) ON DELETE CASCADE,
     node_id VARCHAR(50) NOT NULL,
     chosen_option_id VARCHAR(50) NOT NULL,
     is_safe_choice BOOLEAN NOT NULL,
@@ -271,11 +313,15 @@ CREATE TABLE IF NOT EXISTS challenge_decisions (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
 );
 
+-- 14. Lembar Hasil Akhir & Evaluasi Simulasi
+-- [RELASI]: session_id -> challenge_sessions(id)
+-- [RELASI]: scenario_id -> challenge_scenarios(id)
+-- [RELASI]: user_id -> app_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS challenge_results (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    session_id UUID REFERENCES challenge_sessions(id) ON DELETE CASCADE UNIQUE,
-    user_id VARCHAR(100) NOT NULL,
-    scenario_id VARCHAR(100) NOT NULL,
+    session_id UUID NOT NULL REFERENCES challenge_sessions(id) ON DELETE CASCADE UNIQUE,
+    scenario_id VARCHAR(100) NOT NULL REFERENCES challenge_scenarios(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
     score INT NOT NULL CHECK (score >= 0 AND score <= 100),
     safety_rating VARCHAR(30) NOT NULL,
     red_flags_detected_count INT NOT NULL,
@@ -285,8 +331,10 @@ CREATE TABLE IF NOT EXISTS challenge_results (
 );
 
 -- =========================================================================
--- BAGIAN F: FORUM KOMUNITAS & MODERASI KONTEN
+-- BAGIAN E: FORUM KOMUNITAS WARGA & MODERASI KONTEN
 -- =========================================================================
+
+-- 15. Saluran Percakapan Realtime Komunitas
 CREATE TABLE IF NOT EXISTS community_channels (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -298,8 +346,32 @@ CREATE TABLE IF NOT EXISTS community_channels (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 16. Pesan Chat Realtime di Saluran
+-- [RELASI]: channel_id -> community_channels(id)
+-- [RELASI]: user_id -> app_users(id) ON DELETE SET NULL
+-- [RELASI]: reply_to_id -> community_messages(id) (Self-referencing FK)
+CREATE TABLE IF NOT EXISTS community_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    channel_id VARCHAR(50) NOT NULL REFERENCES community_channels(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
+    author_name VARCHAR(100) NOT NULL,
+    author_badge channel_badge_enum NOT NULL DEFAULT 'Warga Waspada',
+    avatar_color VARCHAR(30) DEFAULT '#334257',
+    message_type message_type_enum NOT NULL DEFAULT 'general',
+    content TEXT NOT NULL,
+    evidence_snippet TEXT,
+    reply_to_id UUID REFERENCES community_messages(id) ON DELETE SET NULL,
+    helpful_count INTEGER NOT NULL DEFAULT 0,
+    is_verified_solution BOOLEAN NOT NULL DEFAULT FALSE,
+    is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+-- 17. Cerita / Artikel Pengalaman Warga
+-- [RELASI]: author_id -> app_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS community_posts (
     id VARCHAR(50) PRIMARY KEY,
+    author_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
     author_name VARCHAR(100) NOT NULL,
     author_badge VARCHAR(50) DEFAULT 'Warga Waspada',
     title VARCHAR(255) NOT NULL,
@@ -316,25 +388,13 @@ CREATE TABLE IF NOT EXISTS community_posts (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
-CREATE TABLE IF NOT EXISTS community_messages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    channel_id VARCHAR(50) NOT NULL REFERENCES community_channels(id) ON DELETE CASCADE,
-    author_name VARCHAR(100) NOT NULL,
-    author_badge channel_badge_enum NOT NULL DEFAULT 'Warga Waspada',
-    avatar_color VARCHAR(30) DEFAULT '#334257',
-    message_type message_type_enum NOT NULL DEFAULT 'general',
-    content TEXT NOT NULL,
-    evidence_snippet TEXT,
-    reply_to_id UUID REFERENCES community_messages(id) ON DELETE SET NULL,
-    helpful_count INTEGER NOT NULL DEFAULT 0,
-    is_verified_solution BOOLEAN NOT NULL DEFAULT FALSE,
-    is_flagged BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
+-- 18. Laporan Pelanggaran Postingan Warga
+-- [RELASI]: post_id -> community_posts(id)
+-- [RELASI]: reporter_id -> app_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS post_reports (
     id VARCHAR(50) PRIMARY KEY,
     post_id VARCHAR(50) NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+    reporter_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
     reporter_name VARCHAR(100) NOT NULL,
     report_reason VARCHAR(100) NOT NULL,
     details TEXT,
@@ -343,14 +403,11 @@ CREATE TABLE IF NOT EXISTS post_reports (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
--- Ekstensi Sistem Komunitas Warga (Diskusi, Threaded Replies, Solusi Terbaik, Reputasi, Report, Notifikasi)
-DO $$ BEGIN
-    CREATE TYPE community_discussion_status AS ENUM ('TERBUKA', 'TERJAWAB', 'DITUTUP');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
+-- 19. Utas Laporan & Diskusi Tanya Jawab Warga
+-- [RELASI]: user_id -> app_users(id) ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS community_discussions (
     id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
     author_name VARCHAR(150) NOT NULL,
     author_badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
     avatar_color VARCHAR(30) DEFAULT '#143826',
@@ -370,10 +427,14 @@ CREATE TABLE IF NOT EXISTS community_discussions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 20. Komentar & Tanggapan Berulir (Threaded / Nested Replies)
+-- [RELASI]: discussion_id -> community_discussions(id)
+-- [RELASI]: user_id -> app_users(id) ON DELETE CASCADE
+-- [RELASI]: parent_id -> community_comments(id) (Self-referencing FK)
 CREATE TABLE IF NOT EXISTS community_comments (
     id VARCHAR(50) PRIMARY KEY,
     discussion_id VARCHAR(50) NOT NULL REFERENCES community_discussions(id) ON DELETE CASCADE,
-    user_id VARCHAR(50) NOT NULL,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
     parent_id VARCHAR(50) REFERENCES community_comments(id) ON DELETE CASCADE,
     author_name VARCHAR(150) NOT NULL,
     author_badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
@@ -387,17 +448,28 @@ CREATE TABLE IF NOT EXISTS community_comments (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- Relasi Tambahan: Kunci Solusi Terbaik Diskusi ke Komentar Terkait
+DO $$ BEGIN
+    ALTER TABLE community_discussions
+    ADD CONSTRAINT fk_discussions_best_solution
+    FOREIGN KEY (best_solution_comment_id) REFERENCES community_comments(id) ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+-- 21. Upvote / Dukungan Warga (Mencegah Duplikasi Vote)
+-- [RELASI]: user_id -> app_users(id) ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS community_votes (
     id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    target_type VARCHAR(20) NOT NULL,
+    user_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('post', 'comment')),
     target_id VARCHAR(50) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
     CONSTRAINT unique_user_vote UNIQUE (user_id, target_type, target_id)
 );
 
+-- 22. Buku Induk Reputasi & Badge Relawan
+-- [RELASI]: user_id -> app_users(id) ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS community_reputations (
-    user_id VARCHAR(50) PRIMARY KEY,
+    user_id UUID PRIMARY KEY REFERENCES app_users(id) ON DELETE CASCADE,
     reputation_points INTEGER NOT NULL DEFAULT 0,
     badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
     is_verified_volunteer BOOLEAN NOT NULL DEFAULT FALSE,
@@ -405,48 +477,62 @@ CREATE TABLE IF NOT EXISTS community_reputations (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 23. Log Riwayat Perolehan Poin Relawan
+-- [RELASI]: user_id -> community_reputations(user_id) ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS community_reputation_logs (
     id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
+    user_id UUID NOT NULL REFERENCES community_reputations(user_id) ON DELETE CASCADE,
     action VARCHAR(50) NOT NULL,
     points INTEGER NOT NULL,
     source_id VARCHAR(50),
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 24. Laporan Moderasi Konten oleh Warga
+-- [RELASI]: reporter_id -> app_users(id) ON DELETE CASCADE
+-- [RELASI]: reviewed_by -> admin_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS community_moderation_reports (
     id VARCHAR(50) PRIMARY KEY,
-    reporter_id VARCHAR(50) NOT NULL,
+    reporter_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
     reporter_name VARCHAR(100) NOT NULL,
-    target_type VARCHAR(20) NOT NULL,
+    target_type VARCHAR(20) NOT NULL CHECK (target_type IN ('post', 'comment')),
     target_id VARCHAR(50) NOT NULL,
     reason VARCHAR(100) NOT NULL,
     notes TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     moderator_notes TEXT,
-    reviewed_by VARCHAR(50),
+    reviewed_by UUID REFERENCES admin_users(id) ON DELETE SET NULL,
     reviewed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 25. Pusat Notifikasi Interaktif Pengguna
+-- [RELASI]: recipient_id -> app_users(id) ON DELETE CASCADE
+-- [RELASI]: actor_id -> app_users(id) ON DELETE SET NULL
+-- [RELASI]: discussion_id -> community_discussions(id) ON DELETE CASCADE
+-- [RELASI]: comment_id -> community_comments(id) ON DELETE CASCADE
 CREATE TABLE IF NOT EXISTS community_notifications (
     id VARCHAR(50) PRIMARY KEY,
-    recipient_id VARCHAR(50) NOT NULL,
-    actor_id VARCHAR(50),
+    recipient_id UUID NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+    actor_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
     actor_name VARCHAR(100),
     type VARCHAR(50) NOT NULL,
-    discussion_id VARCHAR(50),
-    comment_id VARCHAR(50),
+    discussion_id VARCHAR(50) REFERENCES community_discussions(id) ON DELETE CASCADE,
+    comment_id VARCHAR(50) REFERENCES community_comments(id) ON DELETE CASCADE,
     message TEXT NOT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 -- =========================================================================
--- BAGIAN G: AUDIT LOG & KONFIGURASI RUNTIME ADMIN
+-- BAGIAN F: AUDIT TRAIL, TELEMETRI & RUNTIME CONFIG
 -- =========================================================================
+
+-- 26. Log Audit Tindakan Administrator
+-- [RELASI]: admin_id -> admin_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS admin_audit_logs (
     id VARCHAR(50) PRIMARY KEY,
+    admin_id UUID REFERENCES admin_users(id) ON DELETE SET NULL,
     actor VARCHAR(100) NOT NULL DEFAULT 'Super Administrator',
     action VARCHAR(100) NOT NULL,
     target VARCHAR(200) NOT NULL,
@@ -456,6 +542,7 @@ CREATE TABLE IF NOT EXISTS admin_audit_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 27. Konfigurasi Operasional Mesin AI & Crawler
 CREATE TABLE IF NOT EXISTS system_runtime_config (
     id VARCHAR(50) PRIMARY KEY DEFAULT 'default',
     ai_provider VARCHAR(50) NOT NULL DEFAULT 'gemini',
@@ -474,11 +561,16 @@ CREATE TABLE IF NOT EXISTS system_runtime_config (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 28. Telemetri Konsumsi Token AI
+-- [RELASI]: user_id -> app_users(id) ON DELETE SET NULL
+-- [RELASI]: admin_id -> admin_users(id) ON DELETE SET NULL
 CREATE TABLE IF NOT EXISTS ai_token_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES app_users(id) ON DELETE SET NULL,
+    admin_id UUID REFERENCES admin_users(id) ON DELETE SET NULL,
     provider VARCHAR(50) NOT NULL DEFAULT 'gemini',
     model VARCHAR(100) NOT NULL,
-    feature VARCHAR(50) NOT NULL,
+    endpoint VARCHAR(100) NOT NULL,
     prompt_tokens INT NOT NULL DEFAULT 0,
     completion_tokens INT NOT NULL DEFAULT 0,
     total_tokens INT NOT NULL DEFAULT 0,
@@ -486,68 +578,105 @@ CREATE TABLE IF NOT EXISTS ai_token_logs (
     status VARCHAR(20) NOT NULL DEFAULT 'success',
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
+
+-- =========================================================================
+-- BAGIAN G: INDEKS PERFORMA & RELASIONAL QUERY
+-- =========================================================================
+
+-- Indeks Pengguna & Autentikasi
+CREATE INDEX IF NOT EXISTS idx_app_users_username ON app_users(username);
+CREATE INDEX IF NOT EXISTS idx_app_users_email ON app_users(email);
+CREATE INDEX IF NOT EXISTS idx_app_users_google_id ON app_users(google_id) WHERE google_id IS NOT NULL;
+
+-- Indeks Analisis & Riwayat
+CREATE INDEX IF NOT EXISTS idx_analysis_history_user_id ON analysis_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_analysis_history_domain ON analysis_history(domain);
+CREATE INDEX IF NOT EXISTS idx_analysis_history_created_at ON analysis_history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scanned_domains_risk ON scanned_domains(risk_category, risk_score DESC);
+
+-- Indeks Guardian Challenge
+CREATE INDEX IF NOT EXISTS idx_challenge_sessions_user ON challenge_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_sessions_scenario ON challenge_sessions(scenario_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_decisions_session ON challenge_decisions(session_id);
+CREATE INDEX IF NOT EXISTS idx_challenge_results_user ON challenge_results(user_id);
+
+-- Indeks Forum Komunitas & Komentar
+CREATE INDEX IF NOT EXISTS idx_community_discussions_user ON community_discussions(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_discussions_cat_status ON community_discussions(category, status);
+CREATE INDEX IF NOT EXISTS idx_community_comments_discussion ON community_comments(discussion_id);
+CREATE INDEX IF NOT EXISTS idx_community_comments_user ON community_comments(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_comments_parent ON community_comments(parent_id);
+CREATE INDEX IF NOT EXISTS idx_community_votes_target ON community_votes(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_community_reputations_points ON community_reputations(reputation_points DESC);
+CREATE INDEX IF NOT EXISTS idx_community_notifications_recipient ON community_notifications(recipient_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_community_messages_channel ON community_messages(channel_id, created_at DESC);
+
+-- Indeks Audit & Telemetri
+CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_created ON admin_audit_logs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_ai_token_logs_created ON ai_token_logs(created_at DESC);
 
-CREATE TABLE IF NOT EXISTS demo_presets (
-    id VARCHAR(100) PRIMARY KEY,
-    type analysis_type_enum NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    subtitle VARCHAR(255),
-    content TEXT NOT NULL,
-    expected_category risk_level_enum NOT NULL,
-    expected_score SMALLINT NOT NULL CHECK (expected_score >= 0 AND expected_score <= 100),
-    scam_type VARCHAR(50) NOT NULL,
-    tags TEXT[] NOT NULL DEFAULT '{}',
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
+-- =========================================================================
+-- BAGIAN H: OTOMASI TRIGGER (UPDATE TIMESTAMP)
+-- =========================================================================
+DROP TRIGGER IF EXISTS trg_app_users_updated_at ON app_users;
+CREATE TRIGGER trg_app_users_updated_at
+BEFORE UPDATE ON app_users
+FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+DROP TRIGGER IF EXISTS trg_knowledge_articles_updated_at ON knowledge_articles;
+CREATE TRIGGER trg_knowledge_articles_updated_at
+BEFORE UPDATE ON knowledge_articles
+FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+DROP TRIGGER IF EXISTS trg_analysis_history_updated_at ON analysis_history;
+CREATE TRIGGER trg_analysis_history_updated_at
+BEFORE UPDATE ON analysis_history
+FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+DROP TRIGGER IF EXISTS trg_community_discussions_updated_at ON community_discussions;
+CREATE TRIGGER trg_community_discussions_updated_at
+BEFORE UPDATE ON community_discussions
+FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
+
+DROP TRIGGER IF EXISTS trg_community_comments_updated_at ON community_comments;
+CREATE TRIGGER trg_community_comments_updated_at
+BEFORE UPDATE ON community_comments
+FOR EACH ROW EXECUTE FUNCTION trigger_set_timestamp();
 
 -- =========================================================================
--- INDEXES UNTUK PERFORMA TINGGI
--- =========================================================================
-CREATE INDEX IF NOT EXISTS idx_scanned_domains_name ON scanned_domains (domain);
-CREATE INDEX IF NOT EXISTS idx_scanned_domains_category ON scanned_domains (risk_category, check_count DESC);
-CREATE INDEX IF NOT EXISTS idx_scanned_domains_last_checked ON scanned_domains (last_checked_at DESC);
-CREATE INDEX IF NOT EXISTS idx_knowledge_articles_category ON knowledge_articles (category_code);
-CREATE INDEX IF NOT EXISTS idx_knowledge_articles_slug ON knowledge_articles (slug);
-CREATE INDEX IF NOT EXISTS idx_challenge_questions_cat ON challenge_questions (category_code);
-CREATE INDEX IF NOT EXISTS idx_comm_messages_channel ON community_messages (channel_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_comm_posts_status ON community_posts (status, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_post_reports_status ON post_reports (status);
-CREATE INDEX IF NOT EXISTS idx_admin_audit_logs_severity ON admin_audit_logs (severity, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_sessions_user ON challenge_sessions(user_id, status);
-CREATE INDEX IF NOT EXISTS idx_results_user ON challenge_results(user_id, completed_at DESC);
-
--- =========================================================================
--- SEED DATA AWAL: KREDENSIAL, KANAL, KATEGORI, ARTIKEL & SOAL
+-- BAGIAN I: DATA AWAL / INITIAL SEED DATA
 -- =========================================================================
 
--- 1. Admin Akun Default (admin / admin123)
-INSERT INTO admin_users (username, password_hash, name, role)
-VALUES ('admin', 'admin123', 'Super Administrator', 'admin')
+-- 1. Akun Admin Awal
+INSERT INTO admin_users (id, username, password_hash, name, role)
+VALUES ('00000000-0000-0000-0000-000000000001', 'admin', '$2b$10$N0BYxb9LYvfq1XiS0/RYLu2sVuWfvibjKtHQkYsLkkxkz3wB4lOHy', 'Super Administrator', 'admin')
 ON CONFLICT (username) DO NOTHING;
 
--- 2. Kategori Ancaman
+-- 2. Akun Pengguna Awal (Admin & Demo Warga)
+INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status) VALUES
+('00000000-0000-0000-0000-000000000001', 'admin', 'admin@scamora.id', '$2b$10$N0BYxb9LYvfq1XiS0/RYLu2sVuWfvibjKtHQkYsLkkxkz3wB4lOHy', 'Super Administrator', 'verified', 'admin', 'active'),
+('a0000000-0000-0000-0000-000000000001', 'warga_budi', 'budi@scamora.id', '$2b$10$N0BYxb9LYvfq1XiS0/RYLu2sVuWfvibjKtHQkYsLkkxkz3wB4lOHy', 'Budi Santoso', 'verified', 'user', 'active'),
+('a0000000-0000-0000-0000-000000000002', 'relawan_siti', 'siti@scamora.id', '$2b$10$N0BYxb9LYvfq1XiS0/RYLu2sVuWfvibjKtHQkYsLkkxkz3wB4lOHy', 'Siti Rahmawati', 'verified', 'user', 'active')
+ON CONFLICT (username) DO NOTHING;
+
+-- 3. Taksonomi Kategori Kejahatan Siber
 INSERT INTO scam_categories (id, code, name, description, risk_tier, icon_name, order_index) VALUES
 ('cat_phishing', 'phishing', 'Phishing & Rekayasa Web', 'Pencurian kredensial akun, perbankan, dan data pribadi melalui situs tiruan.', 'KRITIS', 'globe', 1),
 ('cat_apk', 'apk_malware', 'Malware Android (.APK)', 'Penyebaran file aplikasi berbahaya bermodus undangan atau resi untuk menyedot OTP.', 'KRITIS', 'smartphone', 2),
-('cat_banking', 'banking_fraud', 'Rekayasa Sosial Perbankan (Vishing/OTP)', 'Oknum mengaku pegawai bank yang mendesak korban menyebutkan kode OTP atau PIN.', 'KRITIS', 'phone-call', 3),
-('cat_job', 'job_scam', 'Lowongan Kerja Palsu (Task Scam)', 'Tawaran pekerjaan paruh waktu mudah dengan syarat deposit uang muka.', 'TINGGI', 'briefcase', 4),
-('cat_giveaway', 'giveaway_scam', 'Undian & Hadiah Palsu', 'Klaim hadiah bernilai puluhan juta dengan syarat mentransfer biaya pajak fiktif.', 'SEDANG', 'gift', 5),
-('cat_invest', 'investment_scam', 'Investasi Bodong', 'Penawaran keuntungan modal instan tanpa risiko melalui grup Telegram atau robot trading.', 'TINGGI', 'trending-up', 6)
+('cat_job', 'job_scam', 'Lowongan Kerja Fiktif', 'Penipuan tugas paruh waktu berbayar, freelance bodong, dan pemerasan uang muka.', 'TINGGI', 'briefcase', 3),
+('cat_investasi', 'fake_investment', 'Investasi Bodong & Pinjol Ilegal', 'Janji imbal hasil tidak realistis dan jeratan pinjaman online tanpa izin OJK.', 'KRITIS', 'trending-up', 4),
+('cat_soceng', 'social_engineering', 'Social Engineering (Vishing/Catfishing)', 'Manipulasi psikologis menebar panik atau asmara untuk transfer dana ke rekening penipu.', 'TINGGI', 'user-x', 5)
 ON CONFLICT (code) DO NOTHING;
 
--- 3. Kanal Komunitas
+-- 4. Saluran Komunitas Awal
 INSERT INTO community_channels (id, name, title, description, icon, sort_order) VALUES
 ('umum', 'diskusi-umum', 'Diskusi Umum & Tanya Jawab', 'Ruang berbagi pengalaman dan pertanyaan seputar keamanan digital sehari-hari.', 'message-square', 1),
 ('phishing', 'lapor-phishing', 'Waspada Phishing & Link Bank', 'Bahas temuan website tiruan perbankan, e-commerce, dan pencurian OTP.', 'globe', 2),
-('apk', 'malware-apk', 'Teror File .APK Undangan/Paket', 'Laporkan dan diskusikan modus aplikasi berbahaya yang dikirim via WhatsApp.', 'smartphone', 3),
-('job-scam', 'loker-freelance-bodong', 'Loker Like & Subscribe Bodong', 'Bedah modus pekerjaan sampingan dengan deposit awal komisi palsu.', 'briefcase', 4),
-('investasi', 'investasi-bodong', 'Investasi Bodong & Robot Trading', 'Edukasi dan diskusi bahaya skema ponzi, kripto ilegal, dan robot trading.', 'trending-up', 5)
+('apk', 'waspada-apk', 'Teror File APK & Resi Kurir', 'Diskusi penanganan ponsel terinfeksi virus undangan pernikahan atau tilang palsu.', 'smartphone', 3),
+('loker', 'lowongan-bodong', 'Info Loker Bodong & Freelance', 'Klarifikasi tawaran kerja mencurigakan via Telegram, WhatsApp, atau medsos.', 'briefcase', 4)
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Kategori Simulasi Tantangan
+-- 5. Kategori Simulasi Tantangan
 INSERT INTO challenge_categories (id, name, description, icon, sort_order) VALUES
 ('phishing', 'Phishing & Rekayasa Web', 'Deteksi situs tiruan dan manipulasi form kredensial', 'globe', 1),
 ('social_engineering', 'Social Engineering (Vishing/Chat)', 'Kenali manipulasi emosional, urgensi, dan ancaman palsu', 'phone-call', 2),
@@ -555,12 +684,12 @@ INSERT INTO challenge_categories (id, name, description, icon, sort_order) VALUE
 ('task_scam', 'Job Scam & Freelance Palsu', 'Pilah tawaran kerja resmi vs skema deposit uang muka', 'briefcase', 4)
 ON CONFLICT (id) DO NOTHING;
 
--- 5. Konfigurasi Sistem Default
+-- 6. Konfigurasi Sistem Default
 INSERT INTO system_runtime_config (id, ai_provider, gemini_model, temperature, max_tokens)
 VALUES ('default', 'gemini', 'gemini-3.5-flash-lite', 0.10, 1024)
 ON CONFLICT (id) DO NOTHING;
 
--- 6. Domain Contoh Publik
+-- 7. Domain Contoh Publik
 INSERT INTO scanned_domains (domain, check_count, risk_score, risk_category, scam_category, notes, is_verified) VALUES
 ('bank-nusa-login.xyz', 37, 92, 'high', 'Phishing Perbankan', 'Typosquatting dan form pencurian m-Banking', TRUE),
 ('undian-hadiah-id.top', 54, 88, 'high', 'Undian Palsu', 'Domain gratisan mengklaim hadiah puluhan juta', TRUE),
@@ -569,7 +698,7 @@ INSERT INTO scanned_domains (domain, check_count, risk_score, risk_category, sca
 ('tokopedia.com', 128, 0, 'low', 'E-Commerce Resmi', 'Domain terverifikasi & sertifikat SSL resmi', TRUE)
 ON CONFLICT (domain) DO NOTHING;
 
--- 7. Presets Demo Masukan
+-- 8. Presets Demo Masukan
 INSERT INTO demo_presets (id, type, title, subtitle, content, expected_category, expected_score, scam_type, tags) VALUES
 ('url-bank-phishing', 'url', 'Phishing BCA Internet Banking', 'Typosquatting & Subdomain Masking', 'http://bca-klik.com.secure-login-update.xyz/login?verifikasi=true&token=rahasia123', 'high', 95, 'phishing', ARRAY['Bank', 'Typosquatting', 'HTTP']),
 ('url-legit-store', 'url', 'Toko Online Resmi Indonesia', 'Domain Terverifikasi & HTTPS Resmi', 'https://tokopedia.com/promo/guncang-sepatu-sneakers', 'low', 0, 'unknown', ARRAY['E-Commerce', 'HTTPS', 'Aman']),
