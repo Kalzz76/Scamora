@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronDown, ShieldCheck, ShieldAlert, Sparkles } from 'lucide-react';
+import { ChevronDown, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { analysisService } from '../../services/analysisService';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
@@ -428,29 +428,26 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Scan Quota Indicator Pill */}
-          <div className="mt-3">
-            {isAuthenticated ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-800 text-[11px] font-bold shadow-2xs font-mono">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Akun Terverifikasi &bull; Pemindaian Tanpa Batas</span>
-              </div>
-            ) : guestScansUsed < 1 ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/90 text-amber-900 text-[11px] font-semibold shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>Mode Tamu: 1 Kuota Gratis Tersedia</span>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowQuotaModal(true)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-[11px] font-bold shadow-2xs hover:bg-rose-100 transition cursor-pointer"
-              >
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                <span>Kuota Tamu Habis (1/1) &bull; Masuk untuk Pemindaian Tanpa Batas &rarr;</span>
-              </button>
-            )}
-          </div>
+          {/* Scan Quota Indicator Pill (Only shown if authenticated or quota exhausted) */}
+          {(isAuthenticated || guestScansUsed >= 1) && (
+            <div className="mt-3">
+              {isAuthenticated ? (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-800 text-[11px] font-bold shadow-2xs font-mono">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Akun Terverifikasi &bull; Pemindaian Tanpa Batas</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowQuotaModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-[11px] font-bold shadow-2xs hover:bg-rose-100 transition cursor-pointer"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Kuota Tamu Habis (1/1) &bull; Masuk untuk Pemindaian Tanpa Batas &rarr;</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Row Form: Single Unified Pill Container */}
           <div className="w-full max-w-[680px] lg:max-w-[760px] mx-auto mt-4 sm:mt-6 px-1">
