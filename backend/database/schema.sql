@@ -343,6 +343,105 @@ CREATE TABLE IF NOT EXISTS post_reports (
     created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- Ekstensi Sistem Komunitas Warga (Diskusi, Threaded Replies, Solusi Terbaik, Reputasi, Report, Notifikasi)
+DO $$ BEGIN
+    CREATE TYPE community_discussion_status AS ENUM ('TERBUKA', 'TERJAWAB', 'DITUTUP');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+CREATE TABLE IF NOT EXISTS community_discussions (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    author_name VARCHAR(150) NOT NULL,
+    author_badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
+    avatar_color VARCHAR(30) DEFAULT '#143826',
+    category VARCHAR(50) NOT NULL DEFAULT 'tanya-jawab-warga',
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    evidence_snippet TEXT,
+    evidence_image_url TEXT,
+    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+    status community_discussion_status NOT NULL DEFAULT 'TERBUKA',
+    best_solution_comment_id VARCHAR(50),
+    helpful_count INTEGER NOT NULL DEFAULT 0,
+    comment_count INTEGER NOT NULL DEFAULT 0,
+    is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
+    is_locked BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS community_comments (
+    id VARCHAR(50) PRIMARY KEY,
+    discussion_id VARCHAR(50) NOT NULL REFERENCES community_discussions(id) ON DELETE CASCADE,
+    user_id VARCHAR(50) NOT NULL,
+    parent_id VARCHAR(50) REFERENCES community_comments(id) ON DELETE CASCADE,
+    author_name VARCHAR(150) NOT NULL,
+    author_badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
+    avatar_color VARCHAR(30) DEFAULT '#143826',
+    content TEXT NOT NULL,
+    evidence_image_url TEXT,
+    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+    is_best_solution BOOLEAN NOT NULL DEFAULT FALSE,
+    helpful_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS community_votes (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    target_type VARCHAR(20) NOT NULL,
+    target_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    CONSTRAINT unique_user_vote UNIQUE (user_id, target_type, target_id)
+);
+
+CREATE TABLE IF NOT EXISTS community_reputations (
+    user_id VARCHAR(50) PRIMARY KEY,
+    reputation_points INTEGER NOT NULL DEFAULT 0,
+    badge VARCHAR(50) NOT NULL DEFAULT 'Warga Waspada',
+    is_verified_volunteer BOOLEAN NOT NULL DEFAULT FALSE,
+    helpful_solutions_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS community_reputation_logs (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    points INTEGER NOT NULL,
+    source_id VARCHAR(50),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS community_moderation_reports (
+    id VARCHAR(50) PRIMARY KEY,
+    reporter_id VARCHAR(50) NOT NULL,
+    reporter_name VARCHAR(100) NOT NULL,
+    target_type VARCHAR(20) NOT NULL,
+    target_id VARCHAR(50) NOT NULL,
+    reason VARCHAR(100) NOT NULL,
+    notes TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    moderator_notes TEXT,
+    reviewed_by VARCHAR(50),
+    reviewed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS community_notifications (
+    id VARCHAR(50) PRIMARY KEY,
+    recipient_id VARCHAR(50) NOT NULL,
+    actor_id VARCHAR(50),
+    actor_name VARCHAR(100),
+    type VARCHAR(50) NOT NULL,
+    discussion_id VARCHAR(50),
+    comment_id VARCHAR(50),
+    message TEXT NOT NULL,
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 -- =========================================================================
 -- BAGIAN G: AUDIT LOG & KONFIGURASI RUNTIME ADMIN
 -- =========================================================================

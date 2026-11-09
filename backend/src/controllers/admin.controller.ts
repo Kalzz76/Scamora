@@ -1951,3 +1951,27 @@ export async function handleDeleteUser(req: Request, res: Response): Promise<voi
 
   res.status(200).json({ success: true, data: { id, message: 'User berhasil dihapus.' } });
 }
+
+export async function handleToggleUserVolunteer(req: Request, res: Response): Promise<void> {
+  const { id } = req.params;
+  const { isVolunteer } = req.body;
+  const isVol = Boolean(isVolunteer);
+
+  if (isDbConnected()) {
+    try {
+      await query(
+        `INSERT INTO community_reputations (user_id, is_verified_volunteer, badge, updated_at)
+         VALUES ($1, $2, $3, NOW())
+         ON CONFLICT (user_id) DO UPDATE SET is_verified_volunteer = $2, badge = $3, updated_at = NOW()`,
+        [id, isVol, isVol ? 'Relawan Komunitas' : 'Warga Waspada']
+      );
+      await query(
+        `INSERT INTO admin_audit_logs (id, actor, action, target, severity, details)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [`log-${Date.now()}`, 'admin', 'TOGGLE_VOLUNTEER_BADGE', 'Community Moderation', 'info', `${isVol ? 'Memberikan' : 'Mencabut'} badge Relawan Komunitas untuk user '${id}'.`]
+      );
+    } catch {}
+  }
+
+  res.status(200).json({ success: true, data: { id, isVolunteer: isVol } });
+}

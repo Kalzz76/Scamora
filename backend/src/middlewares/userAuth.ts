@@ -2,9 +2,11 @@ import type { NextFunction, Request, Response } from 'express';
 import { verifyAdminToken } from '../services/adminAuthService';
 
 export interface AuthenticatedUser {
+  id?: string;
   username: string;
   role: string;
   tier: string;
+  fullName?: string;
 }
 
 declare global {
@@ -13,6 +15,27 @@ declare global {
       user?: AuthenticatedUser;
     }
   }
+}
+
+export function optionalUserAuth(
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7).trim();
+    const verification = verifyAdminToken(token);
+    if (verification.valid && verification.username) {
+      req.user = {
+        id: (verification as any).id,
+        username: verification.username,
+        role: verification.role || 'user',
+        tier: verification.tier || 'verified',
+      };
+    }
+  }
+  next();
 }
 
 export function requireUserAuth(

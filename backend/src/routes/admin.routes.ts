@@ -36,6 +36,7 @@ import {
   handleUpdateUserTier,
   handleUpdateUserStatus,
   handleDeleteUser,
+  handleToggleUserVolunteer,
 } from '../controllers/admin.controller';
 import { requireAdminAuth } from '../middlewares/adminAuth';
 import { validateBody } from '../middlewares/validate';
@@ -59,6 +60,7 @@ router.get('/users', handleGetUsers);
 router.post('/users', handleCreateUser);
 router.put('/users/:id/tier', handleUpdateUserTier);
 router.put('/users/:id/status', handleUpdateUserStatus);
+router.put('/users/:id/volunteer', handleToggleUserVolunteer);
 router.delete('/users/:id', handleDeleteUser);
 
 // 3. AI Engine Config
