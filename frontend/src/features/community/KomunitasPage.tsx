@@ -8,11 +8,9 @@ import {
   Edit3,
   Search,
   Bell,
-  Rocket,
   Plus,
   Flame,
   Trophy,
-  Sparkles,
   Award,
   ShieldCheck,
   AlertTriangle,
@@ -124,23 +122,6 @@ const SUGGESTED_GROUPS = [
     description: 'Pendampingan hukum dan etika siber bagi korban intimidasi kontak darurat oleh aplikasi pinjaman tanpa izin OJK.',
     queryTag: 'Pinjol',
     categoryTarget: 'posko-solusi-lapor' as DiscussionCategory,
-  },
-];
-
-const MODERATORS = [
-  {
-    id: 'mod-1',
-    name: 'Dimas Pratama, S.Kom',
-    specialty: 'Analis Malware APK & Forensik',
-    isOnline: true,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'mod-2',
-    name: 'Aulia Rizky, M.T',
-    specialty: 'Praktisi Keamanan Jaringan & Phishing',
-    isOnline: true,
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80',
   },
 ];
 
@@ -645,7 +626,7 @@ export const KomunitasPage: React.FC = () => {
               }`}
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>Buat Laporan</span>
+              <span>Postingan</span>
             </button>
           </nav>
 
@@ -717,29 +698,7 @@ export const KomunitasPage: React.FC = () => {
           {/* ======================================================================= */}
           <aside className="lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pr-1 pb-6">
             
-            {/* Card 1: Level Kamu */}
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex flex-col gap-3 text-left">
-              <h4 className="font-black text-[10.5px] text-gray-400 uppercase tracking-widest font-mono">
-                Level Kamu
-              </h4>
-              
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0 shadow-inner">
-                  <Rocket className="w-4 h-4 text-amber-600" />
-                </div>
-                <div>
-                  <h5 className="text-xs sm:text-sm font-black leading-tight text-gray-900">Level 12</h5>
-                  <p className="text-[10px] text-gray-500 font-bold font-mono">450 / 800 XP</p>
-                  <span className="text-[9.5px] font-bold text-emerald-700">Warga Detektor Senior</span>
-                </div>
-              </div>
-
-              <div className="w-full h-2 bg-gray-100 border border-gray-200/50 rounded-full overflow-hidden mt-0.5">
-                <div className="h-full bg-gradient-to-r from-[#E86A33] to-[#ff8c53] rounded-full w-[56%]" />
-              </div>
-            </div>
-
-            {/* Card 2: Kanal Modus Penipuan */}
+            {/* Kanal Modus Penipuan */}
             <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex flex-col gap-3 text-left">
               <div className="flex justify-between items-center">
                 <h4 className="font-black text-[10.5px] text-gray-400 uppercase tracking-widest font-mono">
@@ -875,24 +834,6 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 3: Kontribusi & Klaim XP */}
-            <div className="rounded-2xl p-4 sm:p-5 border border-[#0f9b8a]/20 bg-[#0f9b8a]/8 backdrop-blur-md flex flex-col gap-2.5 text-left">
-              <h4 className="font-black text-[10.5px] text-[#0f9b8a] uppercase tracking-widest flex items-center gap-1.5 font-mono">
-                <Award className="w-3.5 h-3.5" />
-                <span>Kontribusi &amp; Klaim XP</span>
-              </h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Laporkan temuan nomor penipu baru untuk klaim 50 XP per verifikasi.
-              </p>
-              <button 
-                onClick={() => handleCopy('https://scamora.vercel.app/#/komunitas?ref=WARGA-KEVIN-2026', 'Tautan Edukasi')} 
-                className="bg-[#0f9b8a] hover:bg-[#0c8072] text-white w-full py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
-              >
-                <span>Salin Tautan Edukasi</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
           </aside>
 
           {/* ======================================================================= */}
@@ -930,7 +871,7 @@ export const KomunitasPage: React.FC = () => {
                         className="px-3 py-1 rounded-full border border-gray-200 bg-white hover:bg-gray-50 text-[10.5px] font-bold text-gray-700 flex items-center gap-1.5 transition cursor-pointer"
                       >
                         <Edit3 className="w-3 h-3 text-[#E86A33]" />
-                        <span>Tulis Lengkap</span>
+                        <span>Tulis Postingan</span>
                       </button>
                       
                       <button 
@@ -1071,7 +1012,6 @@ export const KomunitasPage: React.FC = () => {
                               <div>
                                 <h4 className="text-xs font-black text-gray-900 flex items-center gap-1.5 flex-wrap">
                                   <span>{disc.authorName}</span>
-                                  <span className="text-[9.5px] font-bold text-[#0f9b8a]">Level 8</span>
                                   {disc.authorBadge && (
                                     <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full font-bold bg-gray-100 text-gray-600">
                                       {disc.authorBadge}
@@ -1091,9 +1031,8 @@ export const KomunitasPage: React.FC = () => {
 
                             <div className="flex items-center gap-1.5">
                               {isPinned && (
-                                <span className="bg-[#EFE9FF] text-[#6A4BFF] border border-[#6A4BFF]/20 rounded-md px-2 py-0.2 font-black text-[9px] uppercase tracking-wider flex items-center gap-1">
-                                  <Sparkles className="w-2.5 h-2.5" />
-                                  <span>PINNED</span>
+                                <span className="bg-[#EFE9FF] text-[#6A4BFF] border border-[#6A4BFF]/20 rounded-md px-2 py-0.5 font-black text-[9px] uppercase tracking-wider">
+                                  PINNED
                                 </span>
                               )}
                               <span className={`text-[9px] font-mono px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
@@ -1460,48 +1399,7 @@ export const KomunitasPage: React.FC = () => {
           {/* ======================================================================= */}
           <aside className="lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pl-1 pb-6">
             
-            {/* Card 1: Moderator & Relawan Aktif */}
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex flex-col gap-3 text-left">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <h4 className="font-black text-[10.5px] text-gray-400 uppercase tracking-widest font-mono">
-                  Moderator Aktif
-                </h4>
-                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full inline-block" />
-                  Siaga
-                </span>
-              </div>
-              
-              <div className="space-y-3">
-                {MODERATORS.map((mod) => (
-                  <div key={mod.id} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <img 
-                        alt={mod.name} 
-                        className="w-8 h-8 rounded-full border border-gray-200 object-cover shrink-0" 
-                        src={mod.avatar}
-                      />
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-black text-gray-900 leading-tight truncate">{mod.name}</p>
-                        <p className="text-[9px] text-[#0f9b8a] font-bold leading-none mt-0.5 truncate">{mod.specialty}</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        setNewPostTitle(`[Konsultasi Kasus] ${mod.name}: `);
-                        setMainTab('postingan');
-                      }} 
-                      className="w-6 h-6 rounded-md border border-gray-200 flex items-center justify-center bg-white hover:bg-[#143826] hover:text-white transition shadow-2xs shrink-0 cursor-pointer"
-                      title="Kirim pesan konsultasi"
-                    >
-                      <MessageSquare className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 2: Trending Discussion */}
+            {/* Card 1: Trending Discussion */}
             <div className="rounded-2xl p-4 sm:p-5 border border-amber-200/80 bg-amber-500/8 backdrop-blur-md flex flex-col gap-3 text-left">
               <h4 className="font-black text-[10.5px] text-amber-700 uppercase tracking-widest flex items-center gap-1.5 font-mono">
                 <Flame className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
