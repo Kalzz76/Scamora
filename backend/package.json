@@ -32,6 +32,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
+    "@vercel/node": "^5.6.14",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
