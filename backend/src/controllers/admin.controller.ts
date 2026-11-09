@@ -408,10 +408,19 @@ export async function handleUserRegister(req: Request, res: Response): Promise<v
     return;
   }
 
-  if (!password || typeof password !== 'string' || password.length < 6) {
+  if (!password || typeof password !== 'string' || password.length < 8) {
     res.status(422).json({
       success: false,
-      error: { code: 'VALIDATION_ERROR', message: 'Kata sandi minimal 6 karakter.' },
+      error: { code: 'VALIDATION_ERROR', message: 'Kata sandi minimal 8 karakter.' },
+    });
+    return;
+  }
+
+  const hasSpecialChar = /[^a-zA-Z0-9]/.test(password);
+  if (!hasSpecialChar) {
+    res.status(422).json({
+      success: false,
+      error: { code: 'VALIDATION_ERROR', message: 'Kata sandi harus mengandung minimal 1 karakter unik / simbol (contoh: @, #, $, %, !).' },
     });
     return;
   }

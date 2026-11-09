@@ -92,8 +92,13 @@ export const LoginPage: React.FC = () => {
       setErrorMessage('Kata sandi wajib diisi.');
       return;
     }
-    if (regPassword.length < 6) {
-      setErrorMessage('Kata sandi minimal 6 karakter.');
+    if (regPassword.length < 8) {
+      setErrorMessage('Kata sandi minimal 8 karakter.');
+      return;
+    }
+    const hasUniqueChar = /[^a-zA-Z0-9]/.test(regPassword);
+    if (!hasUniqueChar) {
+      setErrorMessage('Kata sandi harus mengandung minimal 1 karakter unik / simbol (contoh: @, #, $, %, !).');
       return;
     }
     if (regPassword !== regConfirmPassword) {
@@ -398,7 +403,7 @@ export const LoginPage: React.FC = () => {
                     type="password"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
-                    placeholder="Min 6 karakter"
+                    placeholder="Min. 8 karakter & 1 simbol"
                     disabled={isLoading}
                     className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
@@ -417,6 +422,11 @@ export const LoginPage: React.FC = () => {
                     className="w-full px-3 py-2.5 bg-[#faf8f5] border border-[#d9d6d0] rounded-xl text-xs text-[#14161c] placeholder-[#94a3b8] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/20 focus:border-[#0f9b8a] transition font-mono"
                   />
                 </div>
+              </div>
+
+              <div className="text-[11px] text-[#64748b] text-left flex items-center gap-1.5 pt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0f9b8a]" />
+                <span>Kata sandi minimal 8 karakter dengan minimal 1 karakter unik / simbol (!@#$%^&*).</span>
               </div>
 
               <button
