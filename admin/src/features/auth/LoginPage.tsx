@@ -191,24 +191,14 @@ export const LoginPage: React.FC = () => {
 
       <div className="relative z-10 w-full max-w-md my-6">
         {/* Brand Header */}
-        <div className="text-center mb-6 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 border border-teal-200/80 text-[#0f9b8a] text-[11px] font-semibold">
-            <span className="w-2 h-2 rounded-full bg-[#0f9b8a] animate-pulse" />
-            <span>Portal Akses Akun</span>
-          </div>
-
+        <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-white border border-[#d9d6d0] shadow-xs p-1.5 flex items-center justify-center">
               <img src="/Logo.png" alt="Scamora Logo" className="w-full h-full object-contain" />
             </div>
-            <div className="text-left">
-              <h1 className="text-2xl font-black text-[#14161c] tracking-tight leading-none">
-                Scamora
-              </h1>
-              <p className="text-[11px] text-[#64748b] font-medium mt-1">
-                Perlindungan AI Cerdas Berbasis Komunitas
-              </p>
-            </div>
+            <h1 className="text-2xl font-black text-[#14161c] tracking-tight leading-none">
+              Scamora
+            </h1>
           </div>
         </div>
 
