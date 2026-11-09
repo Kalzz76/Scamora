@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   ShieldCheck,
   Lock,
@@ -7,6 +7,7 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ArrowLeft,
   AlertCircle,
   KeyRound,
   CheckCircle2,
@@ -146,6 +147,17 @@ export const LoginPage: React.FC = () => {
         />
       </div>
 
+      {/* Back to Home Button - Fixed to Top Left Corner of Screen */}
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#D8E0E7] dark:border-slate-700 text-[#334257] dark:text-slate-200 hover:text-[#0f9b8a] dark:hover:text-emerald-400 text-xs font-bold shadow-sm hover:shadow-md transition-all hover:-translate-x-0.5 group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Kembali ke Beranda</span>
+        </Link>
+      </div>
+
       <div className="relative z-10 w-full max-w-md my-4">
         {/* Brand Header */}
         <div className="text-center mb-5 sm:mb-6 space-y-2">
@@ -165,7 +177,7 @@ export const LoginPage: React.FC = () => {
                 Scamora <span className="text-[#548CA8]">Auth</span>
               </h1>
               <p className="text-[10px] sm:text-[11px] text-[#476072] dark:text-slate-400 font-mono">
-                Command &amp; User Control Center
+                Portal Akses Pengguna Terverifikasi
               </p>
             </div>
           </div>

@@ -160,18 +160,18 @@ export const LoginPage: React.FC = () => {
         />
       </div>
 
-      <div className="relative z-10 w-full max-w-md my-4">
-        {/* Back to Home Button */}
-        <div className="mb-3 text-left">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-[#D8E0E7] dark:border-slate-700 text-[#334257] dark:text-slate-300 hover:text-[#0f9b8a] dark:hover:text-emerald-400 text-xs font-semibold shadow-xs transition"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Kembali ke Beranda</span>
-          </Link>
-        </div>
+      {/* Back to Home Button - Fixed to Top Left Corner of Screen */}
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-[#D8E0E7] dark:border-slate-700 text-[#334257] dark:text-slate-200 hover:text-[#0f9b8a] dark:hover:text-emerald-400 text-xs font-bold shadow-sm hover:shadow-md transition-all hover:-translate-x-0.5 group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Kembali ke Beranda</span>
+        </Link>
+      </div>
 
+      <div className="relative z-10 w-full max-w-md my-4">
         {/* Brand Header */}
         <div className="text-center mb-5 sm:mb-6 space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-[#D8E0E7] dark:border-slate-700 shadow-xs">
