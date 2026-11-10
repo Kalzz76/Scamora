@@ -32,6 +32,8 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
       email: `warga_${uniqueId}@example.com`,
       password: 'SandiAman123!',
       confirmPassword: 'SandiAman123!',
+      turnstileToken: 'mock-turnstile-test-pass',
+      bypassOtp: true,
     };
 
     it('berhasil mendaftar dengan seluruh data yang valid dan menyimpan hash bcrypt', async () => {
@@ -66,6 +68,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
           email: `different_${Date.now()}@example.com`,
           password: 'Password999!',
           confirmPassword: 'Password999!',
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 
@@ -85,6 +88,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
           email: validUser.email,
           password: 'Password999!',
           confirmPassword: 'Password999!',
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 
@@ -180,6 +184,8 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
           email: testEmail,
           password: testPassword,
           confirmPassword: testPassword,
+          turnstileToken: 'mock-turnstile-test-pass',
+          bypassOtp: true,
         }),
       });
     });
@@ -191,6 +197,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
         body: JSON.stringify({
           username: testUsername,
           password: testPassword,
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 
@@ -208,6 +215,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
         body: JSON.stringify({
           username: testEmail, // Diisi email
           password: testPassword,
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 
@@ -225,6 +233,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
         body: JSON.stringify({
           username: testUsername,
           password: 'PasswordSalah999!',
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 
@@ -241,6 +250,7 @@ describe('Authentication & Google OAuth Tests (/api/v1/auth)', { timeout: 30000 
         body: JSON.stringify({
           username: 'user_antah_berantah_999999',
           password: 'Password123!',
+          turnstileToken: 'mock-turnstile-test-pass',
         }),
       });
 

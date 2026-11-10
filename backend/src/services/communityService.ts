@@ -1307,7 +1307,11 @@ export const communityService = {
     }
 
     // Cegah vote konten milik sendiri
-    if (authorId === user.id) {
+    if (
+      authorId === user.id ||
+      authorId === user.username ||
+      authorId === `usr-${user.username}`
+    ) {
       throw new Error('Anda tidak dapat memberikan vote Membantu pada postingan atau komentar Anda sendiri.');
     }
 

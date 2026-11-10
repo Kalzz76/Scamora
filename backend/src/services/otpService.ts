@@ -371,6 +371,42 @@ export async function verifyOtpCode(
   }
 
   if (!activeRecord) {
+    let wasUsed = false;
+    if (isDbConnected()) {
+      try {
+        const checkUsed = await query(
+          `SELECT id FROM auth_otps WHERE LOWER(email) = $1 AND purpose = $2 AND is_used = TRUE LIMIT 1`,
+          [cleanEmail, purpose]
+        );
+        if (checkUsed && checkUsed.rows.length > 0) wasUsed = true;
+      } catch {}
+    }
+    if (!wasUsed && supabase) {
+      try {
+        const { data: supaUsed } = await supabase
+          .from('auth_otps')
+          .select('id')
+          .ilike('email', cleanEmail)
+          .eq('purpose', purpose)
+          .eq('is_used', true)
+          .limit(1);
+        if (supaUsed && supaUsed.length > 0) wasUsed = true;
+      } catch {}
+    }
+    if (!wasUsed) {
+      wasUsed = otpsStore.some(
+        (o) => o.email.toLowerCase() === cleanEmail && o.purpose === purpose && o.isUsed
+      );
+    }
+
+    if (wasUsed) {
+      return {
+        success: false,
+        errorCode: 'ALREADY_USED',
+        errorMessage: 'Kode OTP ini telah digunakan. Silakan minta kode OTP baru.',
+      };
+    }
+
     return {
       success: false,
       errorCode: 'NOT_FOUND',

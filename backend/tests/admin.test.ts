@@ -2,6 +2,7 @@ import type { Server } from 'http';
 import type { AddressInfo } from 'net';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import app from '../src/app';
+import { createAdminToken } from '../src/services/adminAuthService';
 
 describe('Admin API Contract Tests (/api/v1/admin)', () => {
   let server: Server;
@@ -30,6 +31,17 @@ describe('Admin API Contract Tests (/api/v1/admin)', () => {
     const json = (await res.json()) as { success: boolean; error: { code: string } };
     expect(json.success).toBe(false);
     expect(json.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('rejects regular citizen user token with 403 Forbidden', async () => {
+    const citizenToken = createAdminToken('citizen_user', 'user', 'verified');
+    const res = await fetch(`${baseUrl}/stats`, {
+      headers: { Authorization: `Bearer ${citizenToken}` },
+    });
+    expect(res.status).toBe(403);
+    const json = (await res.json()) as { success: boolean; error: { code: string } };
+    expect(json.success).toBe(false);
+    expect(json.error.code).toBe('FORBIDDEN');
   });
 
   it('rejects login with invalid credentials with 401', async () => {

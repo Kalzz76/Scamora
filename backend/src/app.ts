@@ -7,6 +7,9 @@ import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
 
+// Trust proxy for Vercel / Cloudflare edge reverse proxy to ensure accurate client IP in rateLimiters
+app.set('trust proxy', 1);
+
 const allowedOrigins = [
   env.FRONTEND_ORIGIN,
   'http://localhost:5173',

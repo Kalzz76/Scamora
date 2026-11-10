@@ -104,7 +104,7 @@ export async function handleAnalyzeUrl(
           risk_score: riskScore,
           scam_type: scamType,
           indicators_count: result.indicators?.length || 0,
-        }).then(() => {}).catch(() => {});
+        }).then(() => {}, () => {});
       } catch {}
     }
 
@@ -203,7 +203,7 @@ export async function handleAnalyzeChat(
           risk_score: riskScore,
           scam_type: scamType,
           indicators_count: result.indicators?.length || 0,
-        }).then(() => {}).catch(() => {});
+        }).then(() => {}, () => {});
       } catch {}
     }
 

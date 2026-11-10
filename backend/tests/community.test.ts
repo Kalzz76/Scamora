@@ -297,6 +297,25 @@ describe('Community Forum & Citizen Interaction Tests (/api/v1/community)', { ti
   });
 
   describe('5. Sistem Vote Membantu & Anti-Manipulasi (POST /community/vote)', () => {
+    let selfDiscId: string;
+
+    beforeAll(async () => {
+      const res = await fetch(`${baseUrl}/community/discussions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user1Token}`,
+        },
+        body: JSON.stringify({
+          category: 'tanya-jawab-warga',
+          title: 'Diskusi Khusus Uji Coba Anti Self-Vote Konten Sendiri',
+          content: 'Pengujian untuk memastikan pembuat konten tidak dapat memanipulasi voting sendiri.',
+        }),
+      });
+      const data = await res.json();
+      selfDiscId = data.data.id;
+    });
+
     it('menolak pengguna yang memberikan vote Membantu pada kontennya sendiri (403 FORBIDDEN)', async () => {
       const res = await fetch(`${baseUrl}/community/vote`, {
         method: 'POST',
@@ -306,7 +325,7 @@ describe('Community Forum & Citizen Interaction Tests (/api/v1/community)', { ti
         },
         body: JSON.stringify({
           targetType: 'post',
-          targetId: 'disc-101',
+          targetId: selfDiscId,
         }),
       });
 
