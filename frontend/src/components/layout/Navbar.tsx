@@ -8,6 +8,7 @@ import {
   GraduationCap, 
   Users,
   LogIn,
+  UserPlus,
   User,
   ShieldCheck,
   Shield,
@@ -300,13 +301,22 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   )}
                 </div>
               ) : (
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-1.5 px-4.5 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm cursor-pointer"
-                >
-                  <span>Get Started</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-[#14161c] hover:text-[#0f9b8a] hover:bg-[#f1ede6]/80 transition cursor-pointer"
+                  >
+                    <LogIn className="w-3.5 h-3.5 opacity-70" />
+                    <span>Masuk</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center gap-1.5 px-4.5 py-2 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold transition shadow-xs hover:shadow-sm cursor-pointer"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Daftar Akun</span>
+                  </Link>
+                </div>
               )}
             </div>
 
@@ -399,12 +409,22 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   )}
                 </div>
               ) : (
-                <Link
-                  to="/login"
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0f9b8a] text-white text-xs font-bold shadow-xs cursor-pointer"
-                >
-                  <span>Get Started</span>
-                </Link>
+                <div className="flex items-center gap-1.5">
+                  <Link
+                    to="/login"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#d9d6d0] bg-white text-[#14161c] text-xs font-bold shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    <LogIn className="w-3 h-3 text-[#64748b]" />
+                    <span>Masuk</span>
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    <span>Daftar</span>
+                  </Link>
+                </div>
               )}
             </div>
 

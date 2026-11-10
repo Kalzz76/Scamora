@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronDown, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { ChevronDown, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { analysisService } from '../../services/analysisService';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
@@ -428,24 +428,17 @@ export const HomePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Scan Quota Indicator Pill (Only shown if authenticated or quota exhausted) */}
-          {(isAuthenticated || guestScansUsed >= 1) && (
+          {/* Guest Scan Quota Warning (Only shown when guest quota exhausted) */}
+          {!isAuthenticated && guestScansUsed >= 1 && (
             <div className="mt-3">
-              {isAuthenticated ? (
-                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/90 text-emerald-800 text-[11px] font-bold shadow-2xs font-mono">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Akun Terverifikasi &bull; Pemindaian Tanpa Batas</span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowQuotaModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-[11px] font-bold shadow-2xs hover:bg-rose-100 transition cursor-pointer"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
-                  <span>Kuota Tamu Habis (1/1) &bull; Masuk untuk Pemindaian Tanpa Batas &rarr;</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowQuotaModal(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-rose-50 border border-rose-200/90 text-rose-800 text-[11px] font-bold shadow-2xs hover:bg-rose-100 transition cursor-pointer"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-600" />
+                <span>Kuota Tamu Habis (1/1) &bull; Masuk untuk Pemindaian Tanpa Batas &rarr;</span>
+              </button>
             </div>
           )}
 
