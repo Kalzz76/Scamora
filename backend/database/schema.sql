@@ -125,6 +125,22 @@ CREATE TABLE IF NOT EXISTS app_users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
+-- 2b. Otentikasi & Verifikasi OTP (Registrasi & Lupa Password)
+CREATE TABLE IF NOT EXISTS auth_otps (
+    id VARCHAR(50) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp_hash VARCHAR(255) NOT NULL,
+    purpose VARCHAR(50) NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    attempt_count INTEGER NOT NULL DEFAULT 0,
+    is_used BOOLEAN NOT NULL DEFAULT FALSE,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+CREATE INDEX IF NOT EXISTS idx_auth_otps_email_purpose ON auth_otps(email, purpose);
+CREATE INDEX IF NOT EXISTS idx_auth_otps_created ON auth_otps(created_at DESC);
+
 -- =========================================================================
 -- BAGIAN B: TAKSONOMI KEJAHATAN & PUSAT EDUKASI
 -- =========================================================================
