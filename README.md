@@ -137,7 +137,9 @@ Scamora/
 │   │   ├── routes/                 # Endpoint router /api/v1
 │   │   ├── schemas/                # Skema validasi Zod
 │   │   └── services/               # Layanan bisnis (OTP, Mail, AI, Heuristik URL, Crawler, PII)
-│   └── tests/                      # Suite pengujian otomatis Vitest
+│   ├── tests/                      # Suite pengujian otomatis Vitest
+│   ├── Dockerfile                  # Multi-stage Dockerfile untuk Backend (Dev & Prod)
+│   └── .dockerignore               # Filter berkas build Docker Backend
 ├── frontend/                       # Aplikasi antarmuka pengguna (React 19 + Vite + Tailwind v4)
 │   ├── src/
 │   │   ├── admin/                  # Modul Admin Dashboard (Overview, Users, Engine, Moderasi)
@@ -145,7 +147,11 @@ Scamora/
 │   │   ├── features/               # Modul publik (Home, Report, Panduan, Kuis, Komunitas)
 │   │   ├── services/               # Axios API client, auth service, analysis service
 │   │   └── types/                  # Definisi TypeScript untuk API dan kontrak data
-│   └── public/                     # Aset statis publik
+│   ├── public/                     # Aset statis publik
+│   ├── Dockerfile                  # Multi-stage Dockerfile untuk Frontend (Dev & Nginx Prod)
+│   └── .dockerignore               # Filter berkas build Docker Frontend
+├── docker-compose.yml              # Orkestrasi Docker lokal (Postgres + Backend + Frontend)
+├── .dockerignore                   # Filter berkas root konteks Docker
 ├── package.json                    # Workspace root scripts
 ├── schema.sql                      # DDL skema database root
 └── README.md                       # Dokumentasi resmi proyek
@@ -153,7 +159,76 @@ Scamora/
 
 ---
 
-## 🚀 Panduan Menjalankan Proyek Lokal (*Local Development Guide*)
+## 🐳 Panduan Menjalankan dengan Docker (*Docker Quickstart — Direkomendasikan*)
+
+Scamora menyediakan konfigurasi **Docker Compose** siap pakai untuk menyiapkan lingkungan pengembangan secara instan tanpa perlu memasang Node.js, PostgreSQL, atau dependensi lokal lainnya secara manual di perangkat Anda.
+
+### Layanan yang Dikelola oleh Docker Compose:
+- **`scamora-postgres`:** Database PostgreSQL 16 Alpine pada port `5432`, otomatis menginisialisasi skema dan seeder via berkas `schema.sql`, serta menyimpan data persisten di named volume `scamora_pgdata`.
+- **`scamora-backend`:** Layanan REST API Express v5 pada port `8000` dengan hot-reloading aktif via volume mount `./backend:/app`.
+- **`scamora-frontend`:** Aplikasi web Vite React 19 pada port `5173` dengan hot-reloading aktif via volume mount `./frontend:/app`.
+
+---
+
+### Perintah Utama Docker Compose:
+
+#### 1. Menjalankan Seluruh Proyek
+Cukup jalankan satu perintah berikut di root repositori:
+```bash
+# Menjalankan seluruh layanan di latar belakang (detached mode)
+docker compose up -d
+
+# Atau jalankan dengan log interaktif dan bangun ulang image:
+docker compose up --build
+```
+Setelah kontainer aktif, akses layanan melalui browser:
+- 🌐 **Frontend Web:** `http://localhost:5173`
+- ⚙️ **Backend REST API:** `http://localhost:8000` (Pemeriksaan status: `http://localhost:8000/api/v1/health`)
+- 🗄️ **Database PostgreSQL:** `localhost:5432` (User: `postgres`, Password: `postgres`, Database: `scamora`)
+
+#### 2. Memantau Log Kontainer
+```bash
+# Memantau log real-time dari seluruh layanan
+docker compose logs -f
+
+# Memantau log layanan tertentu
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f postgres
+```
+
+#### 3. Menghentikan Layanan Docker
+```bash
+# Menghentikan kontainer sementara tanpa menghapus container
+docker compose stop
+
+# Menghentikan dan menghapus kontainer (data database tetap tersimpan aman di volume)
+docker compose down
+```
+
+#### 4. Menjalankan Ulang (*Restart*) Layanan
+```bash
+# Menjalankan ulang seluruh layanan
+docker compose restart
+
+# Menjalankan ulang layanan tertentu
+docker compose restart backend
+docker compose restart frontend
+```
+
+#### 5. Reset Data Database Lokal
+Jika Anda ingin membersihkan database lokal dan menginisialisasi ulang skema awal:
+```bash
+# Perhatian: perintah ini akan menghapus volume persistent database lokal
+docker compose down -v
+docker compose up -d
+```
+
+---
+
+## 💻 Panduan Menjalankan Tanpa Docker (*Manual Local Setup*)
+
+Bagi developer yang memilih menjalankan proyek secara *native* langsung di mesin lokal tanpa Docker:
 
 ### 1. Prasyarat Instalasi
 Pastikan perangkat Anda telah terpasang:
