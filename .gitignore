@@ -34,9 +34,12 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Reference materials / external repos
+referensi/
+referensi-desain/
 referemsi/
 personal_nabil/
 PhishingScanner/
+**/node_modules/
 
 # Editor and OS files
 .vscode/

@@ -10,7 +10,6 @@ import {
   Bell,
   Plus,
   Flame,
-  Trophy,
   Award,
   ShieldCheck,
   AlertTriangle,
@@ -130,12 +129,6 @@ const TRENDING_TOPICS = [
   { id: 'tr-2', title: 'Undangan Pernikahan Digital Kuras Saldo Bank', query: 'Undangan', comments: 118 },
   { id: 'tr-3', title: 'Cara Resmi Blokir Rekening Penipu 1x24 Jam', query: 'Blokir Rekening', comments: 95 },
   { id: 'tr-4', title: 'Grup Telegram Misi Like Video Berujung Deposit', query: 'Telegram', comments: 78 },
-];
-
-const LEADERBOARD_USERS = [
-  { rank: 1, name: 'Kevin Sanjaya', xp: '1,250 XP', isTop: true },
-  { rank: 2, name: 'Maya Putri', xp: '980 XP', isTop: false },
-  { rank: 3, name: 'Rizky Pratama', xp: '760 XP', isTop: false },
 ];
 
 export const KomunitasPage: React.FC = () => {
@@ -1420,43 +1413,7 @@ export const KomunitasPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 3: Leaderboard (Mingguan) */}
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex flex-col gap-2.5 text-left">
-              <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                <h4 className="font-black text-[10.5px] text-gray-400 uppercase tracking-widest flex items-center gap-1 font-mono">
-                  <Trophy className="w-3 h-3 text-amber-500" />
-                  <span>Leaderboard (Mingguan)</span>
-                </h4>
-                <span className="text-[9.5px] font-bold text-[#0f9b8a]">Top Warga</span>
-              </div>
-              
-              <div className="space-y-1.5 font-bold text-[11px]">
-                {LEADERBOARD_USERS.map((user) => (
-                  <div 
-                    key={user.rank}
-                    className={`flex items-center justify-between p-1.5 rounded-lg transition ${
-                      user.isTop 
-                        ? 'bg-amber-50 border border-amber-200/80 shadow-2xs' 
-                        : 'bg-gray-50/70 border border-gray-100'
-                    }`}
-                  >
-                    <span className="flex items-center gap-2 truncate">
-                      <span className="w-4 h-4 rounded-full bg-white border border-gray-200 flex items-center justify-center font-mono text-[9px] font-bold text-gray-700 shrink-0">
-                        {user.rank}
-                      </span>
-                      <span className="font-bold text-gray-900 truncate leading-none text-xs">
-                        {user.name}
-                      </span>
-                    </span>
-                    <span className="font-black text-gray-700 font-mono text-[9.5px] shrink-0">
-                      {user.xp}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Card 4: Saluran Darurat Cepat */}
+            {/* Card 3: Saluran Darurat Cepat */}
             <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 border border-gray-200/80 shadow-xs space-y-2 text-left">
               <div className="flex items-center gap-1.5 text-xs font-bold font-mono uppercase tracking-wider text-[#143826]">
                 <PhoneCall className="w-3.5 h-3.5 text-emerald-600" />
