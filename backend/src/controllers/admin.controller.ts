@@ -255,36 +255,7 @@ let auditLogsStore: any[] = [
   },
 ];
 
-export let usersStore: any[] = [
-  {
-    id: 'usr-101',
-    username: 'budi_santoso',
-    email: 'budi.santoso@gmail.com',
-    fullName: 'Budi Santoso',
-    tier: 'verified',
-    role: 'user',
-    status: 'active',
-    scanCount: 14,
-    reportCount: 2,
-    lastActiveAt: new Date(Date.now() - 1800000).toISOString(),
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    passwordHash: hashUserPassword('password123'),
-  },
-  {
-    id: 'usr-102',
-    username: 'warga_cermat',
-    email: 'warga.cermat@scamora.id',
-    fullName: 'Warga Cermat Penipuan',
-    tier: 'verified',
-    role: 'user',
-    status: 'active',
-    scanCount: 8,
-    reportCount: 1,
-    lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
-    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-    passwordHash: hashUserPassword('password123'),
-  },
-];
+export let usersStore: any[] = [];
 
 export function getActivePresets(): DemoPresetItem[] {
   return presetsStore.filter((p) => p.isActive);
@@ -853,56 +824,46 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
     }
   }
 
-  // Fallback default telemetry
+  // Fallback default telemetry (bersih 0 jika belum ada data scan)
   res.status(200).json({
     success: true,
     data: {
-      totalScans: 1482,
-      urlScans: 894,
-      chatScans: 588,
-      highRiskCount: 642,
-      reviewCount: 489,
-      lowRiskCount: 351,
-      threatRatioPercent: 63.8,
-      avgLatencyMs: runtimeAiConfig.latencyMs || 680,
-      crawlerSuccessRate: 98.4,
-      activeThreatCount: 148,
-      apiCallsToday: 412,
-      riskDistribution: { high: 43.3, review: 33.0, low: 23.7 },
-      scamTypeBreakdown: {
-        phishing: 412,
-        job_scam: 320,
-        apk_malware: 295,
-        banking_fraud: 215,
-        giveaway_scam: 140,
-        investment_scam: 100,
-      },
-      hourlyScans24h: [
-        { hour: '00:00', scans: 24, threats: 10, safe: 14 },
-        { hour: '04:00', scans: 19, threats: 8, safe: 11 },
-        { hour: '08:00', scans: 76, threats: 32, safe: 44 },
-        { hour: '12:00', scans: 98, threats: 43, safe: 55 },
-        { hour: '14:00', scans: 122, threats: 55, safe: 67 },
-        { hour: '18:00', scans: 71, threats: 30, safe: 41 },
-        { hour: '22:00', scans: 32, threats: 13, safe: 19 },
-      ],
+      totalScans: 0,
+      urlScans: 0,
+      chatScans: 0,
+      highRiskCount: 0,
+      reviewCount: 0,
+      lowRiskCount: 0,
+      threatRatioPercent: 0,
+      avgLatencyMs: runtimeAiConfig.latencyMs || 650,
+      crawlerSuccessRate: 100,
+      activeThreatCount: 0,
+      apiCallsToday: 0,
+      riskDistribution: { high: 0, review: 0, low: 0 },
+      scamTypeBreakdown: {},
+      hourlyScans24h: Array.from({ length: 24 }, (_, i) => ({
+        hour: `${String(i).padStart(2, '0')}:00`,
+        scans: 0,
+        threats: 0,
+        safe: 0,
+      })),
       aiTelemetry: {
-        tokensUsed24h: 184520,
-        promptTokens24h: 128400,
-        completionTokens24h: 56120,
-        avgLatencyMs: runtimeAiConfig.latencyMs || 680,
-        currentLatencyMs: runtimeAiConfig.latencyMs || 620,
+        tokensUsed24h: 0,
+        promptTokens24h: 0,
+        completionTokens24h: 0,
+        avgLatencyMs: runtimeAiConfig.latencyMs || 650,
+        currentLatencyMs: runtimeAiConfig.latencyMs || 650,
         errorCount24h: 0,
         errorRatePercent: 0.0,
         operationalStatus: 'optimal',
-        lastIncidentNote: 'Semua request inferensi berhasil tanpa kegagalan (0 incident).',
+        lastIncidentNote: 'Sistem siap dan beroperasi normal.',
       },
       visitorStats: {
-        totalVisitors: 4892,
-        uniqueVisitors: 3418,
-        pageViews: 14280,
-        liveActiveUsers: 48,
-        peakHour: '14:00 - 15:00 WIB',
+        totalVisitors: 0,
+        uniqueVisitors: 0,
+        pageViews: 0,
+        liveActiveUsers: 0,
+        peakHour: '-',
       },
     },
   });

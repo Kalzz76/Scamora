@@ -552,34 +552,7 @@ export const adminService = {
       }
     } catch {}
 
-    const stored = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, [
-      {
-        id: 'usr-101',
-        username: 'budi_santoso',
-        email: 'budi.santoso@gmail.com',
-        fullName: 'Budi Santoso',
-        tier: 'verified',
-        role: 'user',
-        status: 'active',
-        scanCount: 14,
-        reportCount: 2,
-        lastActiveAt: new Date(Date.now() - 1800000).toISOString(),
-        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-      },
-      {
-        id: 'guest-204',
-        username: 'tamu_jakarta_44',
-        email: '',
-        fullName: 'Pengunjung Tamu (Guest)',
-        tier: 'guest',
-        role: 'user',
-        status: 'active',
-        scanCount: 3,
-        reportCount: 0,
-        lastActiveAt: new Date(Date.now() - 3600000).toISOString(),
-        createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      },
-    ]);
+    const stored = getStored<AppUserItem[]>(STORAGE_KEYS.USERS, []);
 
     let filtered = [...stored];
     if (params?.tier && params.tier !== 'all') {
