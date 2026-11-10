@@ -643,6 +643,63 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
           safe: val.safe,
         }));
 
+        const scamTypeBreakdown: Record<string, number> = {
+          phishing: 0,
+          job_scam: 0,
+          apk_malware: 0,
+          banking_fraud: 0,
+          investment_scam: 0,
+          impersonation: 0,
+          giveaway_scam: 0,
+        };
+        for (const r of statsRows) {
+          if (r.scam_type && r.scam_type !== 'unknown') {
+            scamTypeBreakdown[r.scam_type] = (scamTypeBreakdown[r.scam_type] || 0) + 1;
+          }
+        }
+
+        // Fetch real tokens from ai_token_logs via Supabase REST
+        let tokensUsed24h = 0;
+        let promptTokens24h = 0;
+        let completionTokens24h = 0;
+        let avgLatencyMs = runtimeAiConfig.latencyMs || 650;
+        const hourlyTokensMap: Record<string, { totalTokens: number; promptTokens: number; completionTokens: number }> = {};
+        for (let i = 0; i < 24; i++) {
+          hourlyTokensMap[`${String(i).padStart(2, '0')}:00`] = { totalTokens: 0, promptTokens: 0, completionTokens: 0 };
+        }
+
+        try {
+          const { data: tokenLogs } = await supabase.from('ai_token_logs').select('*');
+          if (tokenLogs && tokenLogs.length > 0) {
+            for (const tl of tokenLogs) {
+              const total = tl.total_tokens || 0;
+              const prompt = tl.prompt_tokens || 0;
+              const comp = tl.completion_tokens || 0;
+              tokensUsed24h += total;
+              promptTokens24h += prompt;
+              completionTokens24h += comp;
+              if (tl.created_at) {
+                const h = `${String(new Date(tl.created_at).getUTCHours()).padStart(2, '0')}:00`;
+                if (hourlyTokensMap[h]) {
+                  hourlyTokensMap[h].totalTokens += total;
+                  hourlyTokensMap[h].promptTokens += prompt;
+                  hourlyTokensMap[h].completionTokens += comp;
+                }
+              }
+            }
+            avgLatencyMs = Math.round(
+              tokenLogs.reduce((acc: number, curr: any) => acc + (curr.latency_ms || 650), 0) / tokenLogs.length
+            );
+          }
+        } catch {}
+
+        const hourlyTokens24h = Object.entries(hourlyTokensMap).map(([hour, val]) => ({
+          hour,
+          totalTokens: val.totalTokens,
+          promptTokens: val.promptTokens,
+          completionTokens: val.completionTokens,
+        }));
+
         res.status(200).json({
           success: true,
           data: {
@@ -653,7 +710,7 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
             reviewCount: review,
             lowRiskCount: low,
             threatRatioPercent: dbTotal > 0 ? parseFloat(((high / dbTotal) * 100).toFixed(1)) : 0,
-            avgLatencyMs: runtimeAiConfig.latencyMs || 650,
+            avgLatencyMs,
             crawlerSuccessRate: 100,
             activeThreatCount: high,
             apiCallsToday: dbTotal,
@@ -662,25 +719,25 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
               review: dbTotal > 0 ? parseFloat(((review / dbTotal) * 100).toFixed(1)) : 0,
               low: dbTotal > 0 ? parseFloat(((low / dbTotal) * 100).toFixed(1)) : 0,
             },
-            scamTypeBreakdown: {},
+            scamTypeBreakdown,
             hourlyScans24h,
             aiTelemetry: {
               geminiStatus: runtimeAiConfig.status,
               claudeStatus: runtimeAiConfig.claudeKeySet ? 'operational' : 'offline',
               activeProvider: runtimeAiConfig.activeProvider,
               modelInUse: runtimeAiConfig.geminiModel,
-              tokensUsed24h: 0,
-              totalTokensUsed24h: 0,
-              promptTokens24h: 0,
-              completionTokens24h: 0,
+              tokensUsed24h,
+              totalTokensUsed24h: tokensUsed24h,
+              promptTokens24h,
+              completionTokens24h,
               errorCount24h: 0,
               errorRatePercent: 0,
-              avgLatencyMs: runtimeAiConfig.latencyMs || 650,
-              currentLatencyMs: runtimeAiConfig.latencyMs || 650,
+              avgLatencyMs,
+              currentLatencyMs: runtimeAiConfig.latencyMs || avgLatencyMs,
               operationalStatus: 'optimal' as const,
               lastIncidentNote: 'Semua request inferensi berhasil tanpa kegagalan (0 incident).',
-              hourlyTokens: [],
-              hourlyTokens24h: [],
+              hourlyTokens: hourlyTokens24h,
+              hourlyTokens24h,
             },
             visitorStats: {
               totalVisitors: dbTotal * 5 + 10,

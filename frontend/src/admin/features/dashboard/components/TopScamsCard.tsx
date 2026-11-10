@@ -47,12 +47,13 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
     },
   };
 
-  // Convert to sorted array and take TOP 5
+  // Convert to sorted array and take TOP 5 (excluding unclassified / legitimate hits)
   const sorted = Object.entries(scamTypeBreakdown || {})
+    .filter(([type, count]) => type !== 'unknown' && type !== 'normal' && (count ?? 0) > 0)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const totalTop5 = sorted.reduce((acc, curr) => acc + curr[1], 0) || 1;
+  const totalTop5 = sorted.reduce((acc, curr) => acc + curr[1], 0);
 
   return (
     <div className="flex flex-col justify-between space-y-3.5 h-full">
@@ -80,52 +81,58 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
 
         {/* Top 5 Ranked List (Clean Rankings Only - No Progress Bars) */}
         <div className="divide-y divide-[#D8E0E7] pt-1.5">
-          {sorted.map(([type, count], index) => {
-            const meta = metaMap[type] || {
-              label: type.replace('_', ' ').toUpperCase(),
-              tier: 'TINGGI' as const,
-              icon: AlertOctagon,
-              color: 'text-gray-600 bg-gray-50 border-gray-200',
-            };
-            const Icon = meta.icon;
-            const percentOfTop5 = totalTop5 > 0 ? ((count / totalTop5) * 100).toFixed(1) : '0.0';
+          {sorted.length === 0 ? (
+            <div className="py-6 text-center text-xs text-[#476072] italic">
+              Belum ada data modus penipuan yang tercatat dalam 24 jam terakhir.
+            </div>
+          ) : (
+            sorted.map(([type, count], index) => {
+              const meta = metaMap[type] || {
+                label: type.replace('_', ' ').toUpperCase(),
+                tier: 'TINGGI' as const,
+                icon: AlertOctagon,
+                color: 'text-gray-600 bg-gray-50 border-gray-200',
+              };
+              const Icon = meta.icon;
+              const percentOfTop5 = totalTop5 > 0 ? ((count / totalTop5) * 100).toFixed(1) : '0.0';
 
-            return (
-              <div
-                key={type}
-                className="py-2 flex items-center justify-between text-xs hover:bg-[#EEEEEE]/40 px-1.5 rounded-lg transition-colors"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className={`w-5 h-5 rounded-md font-mono font-black text-[11px] flex items-center justify-center shrink-0 ${
-                      index === 0
-                        ? 'bg-[#334257] text-white shadow-xs'
-                        : index === 1
-                        ? 'bg-[#476072] text-white'
-                        : index === 2
-                        ? 'bg-[#548CA8] text-white'
-                        : 'bg-[#EEEEEE] text-[#476072]'
-                    }`}
-                  >
-                    #{index + 1}
-                  </span>
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Icon className="w-3.5 h-3.5 text-[#476072] shrink-0" />
-                    <span className="font-bold text-[#1A202C] text-[11px] truncate">{meta.label}</span>
-                    <span className={`text-[8px] font-bold font-mono px-1 py-0.2 rounded-xs border ${meta.color} hidden sm:inline`}>
-                      {meta.tier}
+              return (
+                <div
+                  key={type}
+                  className="py-2 flex items-center justify-between text-xs hover:bg-[#EEEEEE]/40 px-1.5 rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span
+                      className={`w-5 h-5 rounded-md font-mono font-black text-[11px] flex items-center justify-center shrink-0 ${
+                        index === 0
+                          ? 'bg-[#334257] text-white shadow-xs'
+                          : index === 1
+                          ? 'bg-[#476072] text-white'
+                          : index === 2
+                          ? 'bg-[#548CA8] text-white'
+                          : 'bg-[#EEEEEE] text-[#476072]'
+                      }`}
+                    >
+                      #{index + 1}
                     </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Icon className="w-3.5 h-3.5 text-[#476072] shrink-0" />
+                      <span className="font-bold text-[#1A202C] text-[11px] truncate">{meta.label}</span>
+                      <span className={`text-[8px] font-bold font-mono px-1 py-0.2 rounded-xs border ${meta.color} hidden sm:inline`}>
+                        {meta.tier}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0 font-mono text-[11px]">
+                    <span className="font-black text-[#1A202C]">{(count ?? 0).toLocaleString()}</span>{' '}
+                    <span className="text-[10px] text-[#476072]">kasus</span>{' '}
+                    <span className="text-[10px] text-[#548CA8] font-bold">({percentOfTop5}%)</span>
                   </div>
                 </div>
-
-                <div className="text-right shrink-0 font-mono text-[11px]">
-                  <span className="font-black text-[#1A202C]">{(count ?? 0).toLocaleString()}</span>{' '}
-                  <span className="text-[10px] text-[#476072]">kasus</span>{' '}
-                  <span className="text-[10px] text-[#548CA8] font-bold">({percentOfTop5}%)</span>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 
@@ -133,7 +140,7 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
       <div className="p-2.5 rounded-lg bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between text-[11px] text-[#476072] mt-1.5">
         <span>Total kasus dari Top 5:</span>
         <span className="font-mono font-black text-[#334257]">
-          {(totalTop5 ?? 0).toLocaleString()} insiden
+          {totalTop5.toLocaleString()} insiden
         </span>
       </div>
     </div>
