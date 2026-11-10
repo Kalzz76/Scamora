@@ -18,6 +18,9 @@ export interface AdminUser {
 
 export interface LoginResult {
   success: boolean;
+  requiresOtp?: boolean;
+  email?: string;
+  message?: string;
   error?: string;
   user?: AdminUser;
 }
@@ -76,7 +79,12 @@ export const adminAuth = {
     return Boolean(this.getToken());
   },
 
-  async login(username: string, password: string, rememberMe = false): Promise<LoginResult> {
+  async login(
+    username: string,
+    password: string,
+    rememberMe = false,
+    turnstileToken?: string
+  ): Promise<LoginResult> {
     const trimmedUser = username.trim();
     const trimmedPass = password.trim();
 
@@ -85,6 +93,7 @@ export const adminAuth = {
         username: trimmedUser,
         password: trimmedPass,
         rememberMe,
+        turnstileToken,
       });
 
       if (res.data?.success && res.data.data?.token) {
@@ -141,9 +150,49 @@ export const adminAuth = {
     email: string;
     password: string;
     confirmPassword?: string;
+    turnstileToken?: string;
   }): Promise<LoginResult> {
     try {
       const res = await apiClient.post('/auth/register', data);
+      if (res.data?.success) {
+        if (res.data.data?.requiresOtp) {
+          return {
+            success: true,
+            requiresOtp: true,
+            email: res.data.data.email || data.email,
+            message: res.data.data.message || 'Kode OTP telah dikirim ke email Anda.',
+          };
+        }
+        if (res.data.data?.token) {
+          const token = res.data.data.token;
+          const u = res.data.data.user;
+          const user: AdminUser = {
+            id: u.id,
+            username: u.username,
+            name: u.name || u.username,
+            role: u.role || 'user',
+            tier: u.tier || 'verified',
+            email: u.email,
+            avatarUrl: u.avatarUrl,
+            authProvider: u.authProvider || 'local',
+          };
+          this.setSession(token, user);
+          return { success: true, user };
+        }
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Registrasi gagal. Periksa kembali formulir Anda.',
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.message || 'Pendaftaran gagal.';
+      return { success: false, error: msg };
+    }
+  },
+
+  async verifyRegisterOtp(email: string, otp: string): Promise<LoginResult> {
+    try {
+      const res = await apiClient.post('/auth/register/verify', { email, otp });
       if (res.data?.success && res.data.data?.token) {
         const token = res.data.data.token;
         const u = res.data.data.user;
@@ -162,10 +211,90 @@ export const adminAuth = {
       }
       return {
         success: false,
-        error: res.data?.error?.message || 'Registrasi gagal. Periksa kembali formulir Anda.',
+        error: res.data?.error?.message || 'Kode OTP tidak sesuai atau telah kedaluwarsa.',
       };
     } catch (err: any) {
-      const msg = err.message || err.response?.data?.error?.message || 'Pendaftaran gagal.';
+      const msg = err.response?.data?.error?.message || err.message || 'Verifikasi OTP gagal.';
+      return { success: false, error: msg };
+    }
+  },
+
+  async resendOtp(
+    email: string,
+    purpose: 'EMAIL_VERIFICATION' | 'PASSWORD_RESET' = 'EMAIL_VERIFICATION'
+  ): Promise<{ success: boolean; message?: string; error?: string; cooldownRemaining?: number }> {
+    try {
+      const res = await apiClient.post('/auth/otp/resend', { email, purpose });
+      if (res.data?.success) {
+        return { success: true, message: res.data.data?.message || 'Kode OTP baru berhasil dikirim.' };
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Gagal mengirim ulang kode OTP.',
+        cooldownRemaining: res.data?.error?.cooldownRemaining,
+      };
+    } catch (err: any) {
+      const errorData = err.response?.data?.error;
+      return {
+        success: false,
+        error: errorData?.message || err.message || 'Gagal mengirim ulang OTP.',
+        cooldownRemaining: errorData?.cooldownRemaining,
+      };
+    }
+  },
+
+  async requestForgotPassword(email: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await apiClient.post('/auth/password/forgot', { email });
+      if (res.data?.success) {
+        return { success: true, message: res.data.data?.message || 'Instruksi reset sandi telah dikirim.' };
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Gagal memproses permintaan reset kata sandi.',
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.message || 'Gagal meminta reset kata sandi.';
+      return { success: false, error: msg };
+    }
+  },
+
+  async verifyPasswordResetOtp(
+    email: string,
+    otp: string
+  ): Promise<{ success: boolean; resetToken?: string; error?: string }> {
+    try {
+      const res = await apiClient.post('/auth/password/verify-otp', { email, otp });
+      if (res.data?.success && res.data.data?.resetToken) {
+        return { success: true, resetToken: res.data.data.resetToken };
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Kode OTP salah atau kedaluwarsa.',
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.message || 'Verifikasi OTP gagal.';
+      return { success: false, error: msg };
+    }
+  },
+
+  async resetPassword(data: {
+    email: string;
+    resetToken: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const res = await apiClient.post('/auth/password/reset', data);
+      if (res.data?.success) {
+        return { success: true, message: res.data.data?.message || 'Kata sandi berhasil diperbarui.' };
+      }
+      return {
+        success: false,
+        error: res.data?.error?.message || 'Gagal memperbarui kata sandi.',
+      };
+    } catch (err: any) {
+      const msg = err.response?.data?.error?.message || err.message || 'Gagal mereset kata sandi.';
       return { success: false, error: msg };
     }
   },
