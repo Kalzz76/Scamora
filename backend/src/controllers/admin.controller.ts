@@ -1079,12 +1079,47 @@ export async function handleGetArticles(_req: Request, res: Response): Promise<v
         LEFT JOIN scam_categories sc ON ka.category_code = sc.code
         ORDER BY ka.order_index ASC, ka.created_at DESC
       `);
-      if (dbRes) {
+      if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
+        articlesStore = dbRes.rows;
         res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch (err) {
-      console.warn('[Admin] Failed to get articles from DB:', err);
+    } catch (err: any) {
+      console.warn('[Admin] Failed to get articles from DB:', err.message);
+    }
+  }
+
+  // Supabase REST fallback
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('knowledge_articles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped = data.map((ka: any) => ({
+          id: ka.id,
+          categoryCode: ka.category_code,
+          categoryName: ka.category_code,
+          title: ka.title,
+          summary: ka.summary,
+          content: ka.content,
+          targetVictims: ka.target_victim || 'Masyarakat umum & pengguna smartphone',
+          incidentChannel: ka.incident_channel || 'WhatsApp / SMS / Web',
+          redFlags: typeof ka.red_flags === 'string' ? JSON.parse(ka.red_flags) : (ka.red_flags || []),
+          responseSteps: typeof ka.mitigation_steps === 'string' ? JSON.parse(ka.mitigation_steps) : (ka.mitigation_steps || []),
+          status: ka.is_published ? 'published' : 'draft',
+          views: ka.read_count || 0,
+          createdAt: ka.created_at,
+          updatedAt: ka.updated_at,
+        }));
+        articlesStore = mapped;
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Supabase REST getArticles error:', err.message);
     }
   }
 
@@ -1243,12 +1278,41 @@ export async function handleGetCategories(_req: Request, res: Response): Promise
         GROUP BY sc.id, sc.code, sc.name, sc.icon_name, sc.description, sc.risk_tier, sc.order_index
         ORDER BY sc.order_index ASC
       `);
-      if (dbRes && dbRes.rows.length > 0) {
+      if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
+        categoriesStore = dbRes.rows;
         res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch (err) {
-      console.warn('[Admin] Failed to get categories from DB:', err);
+    } catch (err: any) {
+      console.warn('[Admin] Failed to get categories from DB:', err.message);
+    }
+  }
+
+  // Supabase REST fallback
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('scam_categories')
+        .select('*')
+        .order('order_index', { ascending: true });
+      if (data && data.length > 0) {
+        const mapped = data.map((sc: any) => ({
+          id: sc.id,
+          code: sc.code,
+          name: sc.name,
+          icon: sc.icon_name || 'ShieldAlert',
+          description: sc.description || '',
+          riskTier: sc.risk_tier || 'HIGH',
+          articleCount: 1,
+          quizCount: 1,
+        }));
+        categoriesStore = mapped;
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Supabase REST getCategories error:', err.message);
     }
   }
 
@@ -1283,12 +1347,45 @@ export async function handleGetQuestions(_req: Request, res: Response): Promise<
         LEFT JOIN scam_categories sc ON cq.category_code = sc.code
         ORDER BY cq.order_index ASC, cq.created_at ASC
       `);
-      if (dbRes) {
+      if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
+        questionsStore = dbRes.rows;
         res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
-    } catch (err) {
-      console.warn('[Admin] Failed to get questions from DB:', err);
+    } catch (err: any) {
+      console.warn('[Admin] Failed to get questions from DB:', err.message);
+    }
+  }
+
+  // Supabase REST fallback
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('challenge_questions')
+        .select('*')
+        .order('order_index', { ascending: true });
+      if (data && data.length > 0) {
+        const mapped = data.map((cq: any) => ({
+          id: cq.id,
+          categoryCode: cq.category_code,
+          categoryName: cq.category_code,
+          scenario: cq.scenario,
+          question: cq.question,
+          difficulty: cq.difficulty === 'hard' ? 'Hard' : cq.difficulty === 'medium' ? 'Medium' : 'Easy',
+          points: cq.points || 20,
+          options: typeof cq.options === 'string' ? JSON.parse(cq.options) : (cq.options || []),
+          correctOptionId: cq.correct_option_id,
+          explanation: cq.explanation,
+          isActive: cq.is_active !== false,
+          createdAt: cq.created_at,
+        }));
+        questionsStore = mapped;
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Supabase REST getQuestions error:', err.message);
     }
   }
 
@@ -1442,13 +1539,51 @@ export async function handleGetCommunityPosts(_req: Request, res: Response): Pro
         GROUP BY cp.id
         ORDER BY cp.created_at DESC
       `);
-      if (dbRes && dbRes.rows) {
+      if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
         postsStore = dbRes.rows;
         res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
     } catch (err: any) {
       console.warn('[Admin] Failed to get community posts from DB:', err.message);
+    }
+  }
+
+  // Supabase REST fallback
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped = data.map((cp: any) => ({
+          id: cp.id,
+          authorPseudonym: cp.author_name,
+          authorBadge: cp.author_badge,
+          categoryCode: cp.category,
+          title: cp.title,
+          story: cp.chronology,
+          redFlags: cp.red_flags,
+          lessonsLearned: cp.lessons_learned,
+          financialLossEstimate: cp.loss_amount_est,
+          incidentDate: cp.incident_date,
+          status: cp.status,
+          likesCount: cp.likes_count || 0,
+          isPinned: cp.is_pinned || false,
+          reportCount: 0,
+          reportedCount: 0,
+          piiScrubbed: true,
+          createdAt: cp.created_at,
+          updatedAt: cp.updated_at,
+        }));
+        postsStore = mapped;
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Supabase REST getCommunityPosts error:', err.message);
     }
   }
 
@@ -1604,13 +1739,43 @@ export async function handleGetReports(_req: Request, res: Response): Promise<vo
         LEFT JOIN community_posts cp ON cp.id = pr.post_id
         ORDER BY pr.created_at DESC
       `);
-      if (dbRes && dbRes.rows) {
+      if (dbRes && dbRes.rows && dbRes.rows.length > 0) {
         reportsStore = dbRes.rows;
         res.status(200).json({ success: true, data: dbRes.rows });
         return;
       }
     } catch (err: any) {
       console.warn('[Admin] Failed to get reports from DB:', err.message);
+    }
+  }
+
+  // Supabase REST fallback
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('post_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        const mapped = data.map((pr: any) => ({
+          id: pr.id,
+          postId: pr.post_id,
+          postTitle: 'Laporan Komunitas',
+          reporterPseudonym: pr.reporter_name,
+          reason: pr.report_reason,
+          notes: pr.details,
+          status: pr.status === 'reviewed' || pr.status === 'action_taken' ? 'resolved' : pr.status,
+          reviewedAt: pr.reviewed_at,
+          createdAt: pr.created_at,
+          timestamp: pr.created_at,
+        }));
+        reportsStore = mapped;
+        res.status(200).json({ success: true, data: mapped });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Admin] Supabase REST getReports error:', err.message);
     }
   }
 

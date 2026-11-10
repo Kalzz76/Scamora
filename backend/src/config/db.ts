@@ -11,7 +11,11 @@ if (env.DATABASE_URL && env.DATABASE_URL.trim().length > 0) {
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 5000,
-      ssl: env.DATABASE_URL.includes('sslmode=require') || env.DATABASE_URL.includes('supabase.co')
+      ssl: env.DATABASE_URL.includes('sslmode=require') ||
+        env.DATABASE_URL.includes('supabase') ||
+        env.DATABASE_URL.includes('pooler') ||
+        env.DATABASE_URL.includes('aws-') ||
+        env.NODE_ENV === 'production'
         ? { rejectUnauthorized: false }
         : false,
     });
@@ -204,7 +208,7 @@ async function initDatabaseTables(): Promise<void> {
 }
 
 export function isDbConnected(): boolean {
-  return isConnected && pool !== null;
+  return pool !== null;
 }
 
 export function getDbPool(): Pool | null {
@@ -217,7 +221,9 @@ export async function query<T extends QueryResultRow = any>(
 ): Promise<QueryResult<T> | null> {
   if (!pool) return null;
   try {
-    return await pool.query<T>(text, params);
+    const res = await pool.query<T>(text, params);
+    isConnected = true;
+    return res;
   } catch (error: any) {
     console.error(`[DB Error] Query failed: ${text.slice(0, 80)}... Error: ${error.message}`);
     throw error;
