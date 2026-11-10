@@ -32,5 +32,23 @@ export function requireAdminAuth(
     return;
   }
 
+  // Pastikan role token memiliki wewenang administrator
+  if (verification.role !== 'admin' && verification.role !== 'superadmin') {
+    res.status(403).json({
+      success: false,
+      error: {
+        code: 'FORBIDDEN',
+        message: 'Akses ditolak. Endpoint ini hanya dapat diakses oleh administrator.',
+      },
+    });
+    return;
+  }
+
+  req.user = {
+    username: verification.username || 'admin',
+    role: verification.role,
+    tier: (verification.tier as any) || 'verified',
+  };
+
   next();
 }

@@ -11,6 +11,13 @@ import {
 } from '../services/adminAuthService';
 import { googleAuthService, GoogleUserProfile } from '../services/googleAuthService';
 import { usersStore } from './admin.controller';
+import {
+  createAndSendOtp,
+  verifyOtpCode,
+  validateAndConsumeResetToken,
+  invalidateAllUserOtps,
+  otpsStore,
+} from '../services/otpService';
 
 interface UserRecord {
   id: string;
@@ -131,7 +138,177 @@ async function resolveOrCreateGoogleUser(profile: GoogleUserProfile): Promise<Us
     }
   }
 
-  // 2. Fallback In-Memory (Memori Toko Pengguna)
+  // 2. Cek di Supabase Cloud jika terkonfigurasi
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      // A. Cek berdasarkan google_id
+      const { data: supaGoogle, error: supaErr1 } = await supabase
+        .from('app_users')
+        .select('*')
+        .eq('google_id', profile.sub)
+        .limit(1);
+
+      if (!supaErr1 && supaGoogle && supaGoogle.length > 0) {
+        const u = supaGoogle[0];
+        supabase
+          .from('app_users')
+          .update({ last_active_at: new Date().toISOString(), avatar_url: profile.picture || u.avatar_url })
+          .eq('id', u.id)
+          .then(() => {});
+
+        // Sinkronkan ke usersStore in-memory
+        const memIdx = usersStore.findIndex((m) => m.id === u.id || m.username === u.username);
+        const memObj = {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          fullName: u.full_name || profile.name,
+          role: u.role || 'user',
+          tier: u.tier || 'verified',
+          status: u.status || 'active',
+          googleId: u.google_id,
+          avatarUrl: profile.picture || u.avatar_url,
+          authProvider: 'google' as const,
+        };
+        if (memIdx !== -1) usersStore[memIdx] = { ...usersStore[memIdx], ...memObj };
+        else usersStore.push(memObj);
+
+        return {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          name: u.full_name || u.username,
+          role: u.role || 'user',
+          tier: u.tier || 'verified',
+          status: u.status || 'active',
+          googleId: u.google_id,
+          avatarUrl: profile.picture || u.avatar_url,
+          authProvider: 'google',
+        };
+      }
+
+      // B. Cek berdasarkan Email (Account Linking Aman)
+      const { data: supaEmail, error: supaErr2 } = await supabase
+        .from('app_users')
+        .select('*')
+        .ilike('email', cleanEmail)
+        .limit(1);
+
+      if (!supaErr2 && supaEmail && supaEmail.length > 0) {
+        const u = supaEmail[0];
+        if (profile.emailVerified) {
+          await supabase
+            .from('app_users')
+            .update({
+              google_id: profile.sub,
+              avatar_url: profile.picture || u.avatar_url,
+              last_active_at: new Date().toISOString(),
+            })
+            .eq('id', u.id);
+        }
+
+        const memIdx = usersStore.findIndex((m) => m.id === u.id || m.username === u.username);
+        const memObj = {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          fullName: u.full_name || profile.name,
+          role: u.role || 'user',
+          tier: u.tier || 'verified',
+          status: u.status || 'active',
+          googleId: profile.sub,
+          avatarUrl: profile.picture || u.avatar_url,
+          authProvider: (u.auth_provider as any) || 'google',
+        };
+        if (memIdx !== -1) usersStore[memIdx] = { ...usersStore[memIdx], ...memObj };
+        else usersStore.push(memObj);
+
+        return {
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          name: u.full_name || u.username,
+          role: u.role || 'user',
+          tier: u.tier || 'verified',
+          status: u.status || 'active',
+          googleId: profile.sub,
+          avatarUrl: profile.picture || u.avatar_url,
+          authProvider: (u.auth_provider as any) || 'google',
+        };
+      }
+
+      // C. Pengguna Baru di Supabase
+      let baseUsername = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 30);
+      if (baseUsername.length < 3) baseUsername = `user_${baseUsername}`;
+      let finalUsername = baseUsername;
+
+      const { data: checkUser } = await supabase
+        .from('app_users')
+        .select('id')
+        .ilike('username', finalUsername)
+        .limit(1);
+
+      if (checkUser && checkUser.length > 0) {
+        finalUsername = `${baseUsername}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
+      const newId = crypto.randomUUID();
+      const insertPayload = {
+        id: newId,
+        username: finalUsername,
+        email: cleanEmail,
+        password_hash: null,
+        full_name: profile.name,
+        google_id: profile.sub,
+        avatar_url: profile.picture || null,
+        auth_provider: 'google',
+        tier: 'verified',
+        role: 'user',
+        status: 'active',
+        scan_count: 0,
+        report_count: 0,
+      };
+
+      const { error: insErr } = await supabase.from('app_users').insert(insertPayload);
+      if (insErr) {
+        console.warn('[Auth] Supabase Google User Insert Warning:', insErr.message);
+      } else {
+        console.log(`[Auth] Pengguna Google '${finalUsername}' (${cleanEmail}) berhasil disimpan ke Supabase Cloud!`);
+      }
+
+      const memObj = {
+        id: newId,
+        username: finalUsername,
+        email: cleanEmail,
+        fullName: profile.name,
+        role: 'user',
+        tier: 'verified',
+        status: 'active',
+        googleId: profile.sub,
+        avatarUrl: profile.picture,
+        authProvider: 'google' as const,
+      };
+      usersStore.push(memObj);
+
+      return {
+        id: newId,
+        username: finalUsername,
+        email: cleanEmail,
+        name: profile.name,
+        role: 'user',
+        tier: 'verified',
+        status: 'active',
+        googleId: profile.sub,
+        avatarUrl: profile.picture,
+        authProvider: 'google',
+      };
+    } catch (err: any) {
+      console.warn('[Auth] Supabase Google lookup error, fallback in-memory:', err.message);
+    }
+  }
+
+  // 3. Fallback In-Memory (Memori Toko Pengguna)
   let existingMem = usersStore.find((u) => u.googleId === profile.sub || (u.email && u.email.toLowerCase() === cleanEmail));
   if (existingMem) {
     if (!existingMem.googleId && profile.emailVerified) {
@@ -538,84 +715,470 @@ export async function handleRegister(req: Request, res: Response, next: NextFunc
 
     // Hash password menggunakan algoritma Bcrypt yang aman
     const bcryptHash = await hashPasswordBcrypt(password);
-    const newUserId = crypto.randomUUID();
     const cleanFullName = fullName.trim();
 
-    // Simpan ke DB PostgreSQL jika terhubung
+    // 1. Jika menyertakan OTP validasi langsung atau mode bypass testing
+    if (req.body.otp) {
+      const verifyRes = await verifyOtpCode(cleanEmail, req.body.otp, 'EMAIL_VERIFICATION');
+      if (!verifyRes.success) {
+        res.status(400).json({
+          success: false,
+          error: { code: verifyRes.errorCode || 'INVALID_OTP', message: verifyRes.errorMessage },
+        });
+        return;
+      }
+      return await finalizeUserRegistration(res, {
+        fullName: cleanFullName,
+        username: cleanUsername,
+        email: cleanEmail,
+        passwordHash: bcryptHash,
+      });
+    }
+
+    // Proteksi: Bypass hanya diizinkan secara eksklusif saat pengujian otomatis internal (NODE_ENV === 'test')
+    if (process.env.NODE_ENV === 'test' && (req.headers['x-bypass-otp'] === 'true' || req.body.bypassOtp === true)) {
+      return await finalizeUserRegistration(res, {
+        fullName: cleanFullName,
+        username: cleanUsername,
+        email: cleanEmail,
+        passwordHash: bcryptHash,
+      });
+    }
+
+    // 2. Alur Utama OTP: Buat OTP 6 Digit & Kirim via Gmail SMTP
+    const otpResult = await createAndSendOtp(
+      cleanEmail,
+      'EMAIL_VERIFICATION',
+      {
+        fullName: cleanFullName,
+        username: cleanUsername,
+        email: cleanEmail,
+        passwordHash: bcryptHash,
+      },
+      cleanFullName
+    );
+
+    if (!otpResult.success) {
+      const isCooldown = Boolean(otpResult.cooldownRemaining);
+      res.status(isCooldown ? 429 : 500).json({
+        success: false,
+        error: {
+          code: isCooldown ? 'RESEND_COOLDOWN' : 'SMTP_SEND_FAILED',
+          message: otpResult.error || 'Gagal mengirimkan kode OTP ke alamat email Anda.',
+          cooldownRemaining: otpResult.cooldownRemaining,
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        requiresOtp: true,
+        email: cleanEmail,
+        expiresIn: 300,
+        message: 'Kode verifikasi OTP 6 digit telah dikirimkan ke email Anda. Silakan verifikasi untuk menyelesaikan pendaftaran.',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * Menyelesaikan pendaftaran dan menyimpan akun baru ke database setelah verifikasi OTP
+ */
+async function finalizeUserRegistration(
+  res: Response,
+  userData: { fullName: string; username: string; email: string; passwordHash: string }
+): Promise<void> {
+  const { fullName, username, email, passwordHash } = userData;
+
+  // Double check proteksi race condition akun duplikat
+  if (usersStore.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
+    res.status(409).json({
+      success: false,
+      error: { code: 'USERNAME_TAKEN', message: 'Username sudah digunakan oleh pengguna lain.' },
+    });
+    return;
+  }
+
+  if (usersStore.some((u) => u.email && u.email.toLowerCase() === email.toLowerCase())) {
+    res.status(409).json({
+      success: false,
+      error: { code: 'EMAIL_REGISTERED', message: 'Alamat email sudah terdaftar. Silakan login.' },
+    });
+    return;
+  }
+
+  const newUserId = crypto.randomUUID();
+
+  // Simpan ke DB PostgreSQL jika terhubung
+  if (isDbConnected()) {
+    try {
+      await query(
+        `INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status, auth_provider, scan_count, report_count, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, 'verified', 'user', 'active', 'local', 0, 0, NOW(), NOW())`,
+        [newUserId, username, email, passwordHash, fullName]
+      );
+    } catch (err) {
+      console.error('[Auth] Gagal menyimpan user baru ke PostgreSQL:', err);
+    }
+  }
+
+  // Simpan ke Supabase via REST Client jika terkonfigurasi
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('app_users').insert({
+        id: newUserId,
+        username,
+        email,
+        password_hash: passwordHash,
+        full_name: fullName,
+        tier: 'verified',
+        role: 'user',
+        status: 'active',
+        auth_provider: 'local',
+        scan_count: 0,
+        report_count: 0,
+      });
+    } catch (err: any) {
+      console.warn('[Auth] Gagal menyimpan user ke Supabase client:', err.message);
+    }
+  }
+
+  // Simpan ke in-memory store
+  const newMemUser = {
+    id: newUserId,
+    username,
+    email,
+    passwordHash,
+    fullName,
+    tier: 'verified',
+    role: 'user',
+    status: 'active',
+    authProvider: 'local' as const,
+    scanCount: 0,
+    reportCount: 0,
+    createdAt: new Date().toISOString(),
+    lastActiveAt: new Date().toISOString(),
+  };
+  usersStore.push(newMemUser);
+
+  // Buat session token
+  const token = createAdminToken(username, 'user', 'verified');
+
+  res.status(201).json({
+    success: true,
+    data: {
+      token,
+      user: {
+        id: newUserId,
+        username,
+        email,
+        name: fullName,
+        role: 'user',
+        tier: 'verified',
+        authProvider: 'local',
+      },
+      expiresIn: 86400,
+    },
+  });
+}
+
+/**
+ * POST /api/v1/auth/register/verify
+ * Memvalidasi OTP pendaftaran dan mengaktifkan akun pengguna
+ */
+export async function handleVerifyRegisterOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, otp } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanOtp = String(otp || '').trim();
+
+    const verifyResult = await verifyOtpCode(cleanEmail, cleanOtp, 'EMAIL_VERIFICATION');
+    if (!verifyResult.success) {
+      res.status(400).json({
+        success: false,
+        error: { code: verifyResult.errorCode || 'INVALID_OTP', message: verifyResult.errorMessage },
+      });
+      return;
+    }
+
+    const meta = verifyResult.metadata;
+    if (!meta || !meta.username || !meta.passwordHash) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'PENDING_REGISTRATION_EXPIRED', message: 'Sesi pendaftaran telah kedaluwarsa. Silakan ulangi pendaftaran.' },
+      });
+      return;
+    }
+
+    await finalizeUserRegistration(res, {
+      fullName: meta.fullName || meta.username,
+      username: meta.username,
+      email: cleanEmail,
+      passwordHash: meta.passwordHash,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/v1/auth/otp/resend
+ * Mengirim ulang kode OTP dengan cooldown 60 detik
+ */
+export async function handleResendOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, purpose } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const validPurpose = purpose === 'PASSWORD_RESET' ? 'PASSWORD_RESET' : 'EMAIL_VERIFICATION';
+
+    // Cari metadata pendaftaran terakhir jika purpose adalah EMAIL_VERIFICATION
+    let existingMeta: Record<string, any> | undefined;
+
+    if (isDbConnected()) {
+      try {
+        const dbRow = await query(
+          `SELECT metadata FROM auth_otps
+           WHERE LOWER(email) = $1 AND purpose = $2 AND metadata->>'passwordHash' IS NOT NULL
+           ORDER BY created_at DESC LIMIT 1`,
+          [cleanEmail, validPurpose]
+        );
+        if (dbRow && dbRow.rows.length > 0) {
+          existingMeta = typeof dbRow.rows[0].metadata === 'string'
+            ? JSON.parse(dbRow.rows[0].metadata)
+            : dbRow.rows[0].metadata;
+        }
+      } catch {}
+    }
+
+    if (!existingMeta) {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data: supaMeta } = await supabase
+            .from('auth_otps')
+            .select('metadata')
+            .ilike('email', cleanEmail)
+            .eq('purpose', validPurpose)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (supaMeta && supaMeta.length > 0 && supaMeta[0].metadata?.passwordHash) {
+            existingMeta = supaMeta[0].metadata;
+          }
+        } catch {}
+      }
+    }
+
+    if (!existingMeta) {
+      const lastPending = otpsStore.find(
+        (o) => o.email.toLowerCase() === cleanEmail && o.purpose === validPurpose && o.metadata && o.metadata.passwordHash
+      );
+      if (lastPending) {
+        existingMeta = lastPending.metadata;
+      }
+    }
+
+    const otpRes = await createAndSendOtp(cleanEmail, validPurpose, existingMeta);
+    if (!otpRes.success) {
+      const isCooldown = Boolean(otpRes.cooldownRemaining);
+      res.status(isCooldown ? 429 : 500).json({
+        success: false,
+        error: {
+          code: isCooldown ? 'RESEND_COOLDOWN' : 'SMTP_SEND_FAILED',
+          message: otpRes.error || 'Gagal mengirim ulang kode OTP.',
+          cooldownRemaining: otpRes.cooldownRemaining,
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Kode OTP baru telah berhasil dikirimkan ke email Anda.',
+        expiresIn: 300,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/v1/auth/password/forgot
+ * Meminta OTP reset password (Anti-enumeration: selalu kembalikan generic 200)
+ */
+export async function handleForgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+
+    // Cek apakah user ada di DB / Supabase / in-memory
+    let userFound: { id: string; name: string } | null = null;
+
+    if (isDbConnected()) {
+      try {
+        const r = await query(`SELECT id, full_name, username FROM app_users WHERE LOWER(email) = $1 LIMIT 1`, [cleanEmail]);
+        if (r && r.rows.length > 0) {
+          userFound = { id: r.rows[0].id, name: r.rows[0].full_name || r.rows[0].username };
+        }
+      } catch {}
+    }
+
+    if (!userFound) {
+      const mem = usersStore.find((u) => u.email && u.email.toLowerCase() === cleanEmail);
+      if (mem) {
+        userFound = { id: mem.id, name: mem.fullName || mem.username };
+      }
+    }
+
+    if (!userFound) {
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          const { data: supaUsers } = await supabase.from('app_users').select('id, full_name, username').eq('email', cleanEmail).limit(1);
+          if (supaUsers && supaUsers.length > 0) {
+            userFound = { id: supaUsers[0].id, name: supaUsers[0].full_name || supaUsers[0].username };
+          }
+        } catch {}
+      }
+    }
+
+    // Jika user ditemukan, generate OTP dan kirimkan via Gmail SMTP
+    if (userFound) {
+      await createAndSendOtp(cleanEmail, 'PASSWORD_RESET', { userId: userFound.id }, userFound.name);
+    }
+
+    // Selalu kembalikan respon 200 generik untuk mencegah enumeration attack
+    res.status(200).json({
+      success: true,
+      data: {
+        message: 'Jika alamat email terdaftar di sistem Scamora, instruksi dan kode OTP telah dikirimkan ke email Anda.',
+        email: cleanEmail,
+        expiresIn: 300,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/v1/auth/password/verify-otp
+ * Memvalidasi kode OTP reset password dan memberikan Reset Token sementara
+ */
+export async function handleVerifyPasswordResetOtp(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, otp } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanOtp = String(otp || '').trim();
+
+    const verifyResult = await verifyOtpCode(cleanEmail, cleanOtp, 'PASSWORD_RESET');
+    if (!verifyResult.success) {
+      res.status(400).json({
+        success: false,
+        error: { code: verifyResult.errorCode || 'INVALID_OTP', message: verifyResult.errorMessage },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        resetToken: verifyResult.resetToken,
+        message: 'Kode OTP terverifikasi. Silakan masukkan kata sandi baru Anda.',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/v1/auth/password/reset
+ * Memperbarui kata sandi pengguna dengan Reset Token valid
+ */
+export async function handleResetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { email, resetToken, newPassword, confirmNewPassword } = req.body;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+
+    if (!newPassword || newPassword.length < 8 || !/[0-9]/.test(newPassword) || !/[a-zA-Z]/.test(newPassword)) {
+      res.status(422).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Kata sandi baru minimal 8 karakter dan harus memuat kombinasi huruf serta angka.',
+        },
+      });
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      res.status(422).json({
+        success: false,
+        error: { code: 'PASSWORD_MISMATCH', message: 'Konfirmasi kata sandi baru tidak cocok.' },
+      });
+      return;
+    }
+
+    // Validasi single-use reset token secara atomik & serverless-safe
+    const isTokenValid = await validateAndConsumeResetToken(cleanEmail, String(resetToken || ''));
+    if (!isTokenValid) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_RESET_TOKEN',
+          message: 'Token reset kata sandi tidak valid atau telah kedaluwarsa. Silakan ulangi proses lupa kata sandi.',
+        },
+      });
+      return;
+    }
+
+    // Hash kata sandi baru dengan bcrypt
+    const newBcryptHash = await hashPasswordBcrypt(newPassword);
+
+    // Update di PostgreSQL jika terhubung
     if (isDbConnected()) {
       try {
         await query(
-          `INSERT INTO app_users (id, username, email, password_hash, full_name, tier, role, status, auth_provider, scan_count, report_count, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5, 'verified', 'user', 'active', 'local', 0, 0, NOW(), NOW())`,
-          [newUserId, cleanUsername, cleanEmail, bcryptHash, cleanFullName]
+          `UPDATE app_users SET password_hash = $1, updated_at = NOW() WHERE LOWER(email) = $2`,
+          [newBcryptHash, cleanEmail]
         );
-      } catch (err) {
-        console.error('[Auth] Gagal menyimpan user baru ke PostgreSQL:', err);
+      } catch (err: any) {
+        console.error('[Auth] Gagal update password di PostgreSQL:', err.message);
       }
     }
 
-    // Simpan ke Supabase via REST Client jika terkonfigurasi
+    // Update di Supabase REST jika terhubung
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        const { error: supaErr } = await supabase.from('app_users').insert({
-          id: newUserId,
-          username: cleanUsername,
-          email: cleanEmail,
-          password_hash: bcryptHash,
-          full_name: cleanFullName,
-          tier: 'verified',
-          role: 'user',
-          status: 'active',
-          auth_provider: 'local',
-          scan_count: 0,
-          report_count: 0,
-        });
-        if (supaErr) {
-          console.warn('[Auth] Supabase REST insert warning:', supaErr.message);
-        } else {
-          console.log(`[Auth] User baru '${cleanUsername}' berhasil disimpan ke Supabase Cloud.`);
-        }
-      } catch (err: any) {
-        console.warn('[Auth] Gagal menyimpan user ke Supabase client:', err.message);
-      }
+        await supabase
+          .from('app_users')
+          .update({ password_hash: newBcryptHash, updated_at: new Date().toISOString() })
+          .eq('email', cleanEmail);
+      } catch {}
     }
 
-    // Simpan ke in-memory store
-    const newMemUser = {
-      id: newUserId,
-      username: cleanUsername,
-      email: cleanEmail,
-      passwordHash: bcryptHash,
-      fullName: cleanFullName,
-      tier: 'verified',
-      role: 'user',
-      status: 'active',
-      authProvider: 'local' as const,
-      scanCount: 0,
-      reportCount: 0,
-      createdAt: new Date().toISOString(),
-      lastActiveAt: new Date().toISOString(),
-    };
-    usersStore.push(newMemUser);
+    // Update di in-memory store
+    const memUser = usersStore.find((u) => u.email && u.email.toLowerCase() === cleanEmail);
+    if (memUser) {
+      memUser.passwordHash = newBcryptHash;
+    }
 
-    // Buat session token
-    const token = createAdminToken(cleanUsername, 'user', 'verified');
+    // Batalkan seluruh OTP dan sesi token lama milik user ini
+    await invalidateAllUserOtps(cleanEmail);
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       data: {
-        token,
-        user: {
-          id: newUserId,
-          username: cleanUsername,
-          email: cleanEmail,
-          name: cleanFullName,
-          role: 'user',
-          tier: 'verified',
-          authProvider: 'local',
-        },
-        expiresIn: 86400,
+        message: 'Kata sandi Anda berhasil diperbarui. Silakan masuk menggunakan kata sandi baru.',
       },
     });
   } catch (err) {
@@ -666,8 +1229,8 @@ export async function handleGoogleCallback(req: Request, res: Response): Promise
     const user = await resolveOrCreateGoogleUser(profile);
     const token = createAdminToken(user.username, user.role, user.tier as any);
 
-    // Alihkan kembali ke frontend dengan token
-    const redirectUrl = `${env.FRONTEND_ORIGIN}/#/login?google_token=${encodeURIComponent(token)}&username=${encodeURIComponent(user.username)}&name=${encodeURIComponent(user.name)}`;
+    // Alihkan kembali ke frontend dengan token dan email asli pengguna
+    const redirectUrl = `${env.FRONTEND_ORIGIN}/#/login?google_token=${encodeURIComponent(token)}&username=${encodeURIComponent(user.username)}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email || '')}`;
     res.redirect(redirectUrl);
   } catch (err: any) {
     console.error('[Google OAuth] Callback error:', err.message);

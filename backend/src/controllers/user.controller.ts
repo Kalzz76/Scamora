@@ -1,7 +1,9 @@
 import type { Request, Response } from 'express';
 import { isDbConnected, query } from '../config/db';
-import { hashUserPassword } from '../services/adminAuthService';
+import { getSupabaseClient } from '../config/supabase';
+import { hashUserPassword, verifyUserPassword, hashPasswordBcrypt } from '../services/adminAuthService';
 import { historyService } from '../services/historyService';
+import { usersStore } from './admin.controller';
 
 // In-memory user fallback data (synced with admin controller seed)
 let inMemoryUsers: any[] = [
@@ -71,6 +73,62 @@ export async function handleGetUserProfile(req: Request, res: Response): Promise
     }
   }
 
+  // Cek di Supabase Cloud jika terkonfigurasi
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data: supaUsers } = await supabase
+        .from('app_users')
+        .select('id, username, email, full_name, tier, role, status, scan_count, report_count, created_at, last_active_at')
+        .ilike('username', username)
+        .limit(1);
+
+      if (supaUsers && supaUsers.length > 0) {
+        const u = supaUsers[0];
+        res.status(200).json({
+          success: true,
+          data: {
+            id: u.id,
+            username: u.username,
+            email: u.email,
+            name: u.full_name || u.username,
+            tier: u.tier || 'verified',
+            role: u.role || 'user',
+            status: u.status || 'active',
+            scanCount: u.scan_count || 0,
+            reportCount: u.report_count || 0,
+            createdAt: u.created_at,
+            lastActiveAt: u.last_active_at,
+          },
+        });
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Supabase] Gagal membaca profil pengguna:', err.message);
+    }
+  }
+
+  // Cek di usersStore (toko memori utama yang menyimpan Google user)
+  const storeUser = usersStore.find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (storeUser) {
+    res.status(200).json({
+      success: true,
+      data: {
+        id: storeUser.id,
+        username: storeUser.username,
+        email: storeUser.email,
+        name: storeUser.fullName || storeUser.name || storeUser.username,
+        tier: storeUser.tier || 'verified',
+        role: storeUser.role || 'user',
+        status: storeUser.status || 'active',
+        scanCount: storeUser.scanCount || 0,
+        reportCount: storeUser.reportCount || 0,
+        createdAt: storeUser.createdAt,
+      },
+    });
+    return;
+  }
+
   const mem = inMemoryUsers.find((u) => u.username === username) || {
     id: `usr-${username}`,
     username,
@@ -134,10 +192,27 @@ export async function handleUpdateUserProfile(req: Request, res: Response): Prom
     }
   }
 
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const updateData: any = { full_name: cleanName, updated_at: new Date().toISOString() };
+      if (cleanEmail) updateData.email = cleanEmail;
+      await supabase.from('app_users').update(updateData).ilike('username', username);
+    } catch (err: any) {
+      console.warn('[Supabase] Gagal update app_users:', err.message);
+    }
+  }
+
   const mem = inMemoryUsers.find((u) => u.username === username);
   if (mem) {
     mem.fullName = cleanName;
     if (cleanEmail) mem.email = cleanEmail;
+  }
+
+  const sUser = usersStore.find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (sUser) {
+    sUser.fullName = cleanName;
+    if (cleanEmail) sUser.email = cleanEmail;
   }
 
   res.status(200).json({
@@ -175,9 +250,6 @@ export async function handleUpdateUserPassword(req: Request, res: Response): Pro
     return;
   }
 
-  const oldHash = hashUserPassword(oldPassword);
-  const newHash = hashUserPassword(newPassword);
-
   if (isDbConnected()) {
     try {
       const checkRes = await query(
@@ -185,7 +257,9 @@ export async function handleUpdateUserPassword(req: Request, res: Response): Pro
         [username]
       );
       if (checkRes && checkRes.rows.length > 0) {
-        if (checkRes.rows[0].password_hash !== oldHash) {
+        const storedHash = checkRes.rows[0].password_hash;
+        const isMatch = await verifyUserPassword(oldPassword, storedHash);
+        if (!isMatch) {
           res.status(401).json({
             success: false,
             error: { code: 'WRONG_PASSWORD', message: 'Kata sandi saat ini tidak cocok.' },
@@ -193,6 +267,7 @@ export async function handleUpdateUserPassword(req: Request, res: Response): Pro
           return;
         }
 
+        const newHash = await hashPasswordBcrypt(newPassword);
         await query(
           `UPDATE app_users SET password_hash = $1, updated_at = NOW() WHERE username = $2`,
           [newHash, username]
@@ -201,6 +276,19 @@ export async function handleUpdateUserPassword(req: Request, res: Response): Pro
     } catch (err) {
       console.warn('[DB] Gagal update password:', err);
     }
+  }
+
+  const memUser = inMemoryUsers.find((u) => u.username === username);
+  if (memUser && memUser.passwordHash) {
+    const isMatch = await verifyUserPassword(oldPassword, memUser.passwordHash);
+    if (!isMatch) {
+      res.status(401).json({
+        success: false,
+        error: { code: 'WRONG_PASSWORD', message: 'Kata sandi saat ini tidak cocok.' },
+      });
+      return;
+    }
+    memUser.passwordHash = await hashPasswordBcrypt(newPassword);
   }
 
   res.status(200).json({
