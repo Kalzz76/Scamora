@@ -6,7 +6,7 @@ import React, {
   forwardRef,
   useCallback,
 } from 'react';
-import { ShieldCheck, ShieldAlert, RefreshCw, Loader2, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, RefreshCw, Loader2 } from 'lucide-react';
 
 declare global {
   interface Window {
@@ -274,25 +274,11 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
     };
 
     return (
-      <div className={`turnstile-container w-full my-2 text-left ${className}`}>
-        {/* Label Header */}
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#0f9b8a]" />
-            <span>Verifikasi Keamanan</span>
-            <span className="text-rose-500">*</span>
-          </div>
-          {status === 'verified' && (
-            <span className="text-[10px] font-mono font-semibold text-emerald-600 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> Terverifikasi
-            </span>
-          )}
-        </div>
-
+      <div className={`turnstile-container w-full my-2 flex flex-col items-center justify-center ${className}`}>
         {/* Cloudflare Turnstile Mount Container */}
-        <div className="p-2.5 rounded-xl bg-white border border-[#d9d6d0] shadow-xs flex flex-col items-center justify-center min-h-[70px] transition-all relative">
+        <div className="w-full flex flex-col items-center justify-center min-h-[65px] transition-all relative py-0.5">
           {status === 'loading' && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-xs rounded-xl flex items-center justify-center gap-2 py-3 text-xs text-[#64748b] z-10">
+            <div className="absolute inset-0 flex items-center justify-center gap-2 py-3 text-xs text-[#64748b] z-10">
               <Loader2 className="w-4 h-4 animate-spin text-[#0f9b8a]" />
               <span>Menyiapkan verifikasi keamanan...</span>
             </div>
@@ -301,7 +287,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           {/* Turnstile renders its iframe inside this div (must remain mounted and visible) */}
           <div
             ref={containerRef}
-            className="w-full flex justify-center items-center py-1 min-h-[65px]"
+            className="w-full flex justify-center items-center min-h-[65px]"
           />
 
           {/* Expired State Notice */}
@@ -339,13 +325,6 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
             </div>
           )}
         </div>
-
-        {/* Security Subtext */}
-        <p className="text-[10px] text-[#8e98ab] mt-1 text-center sm:text-left flex items-center gap-1 justify-center sm:justify-start">
-          <span>Dilindungi oleh Cloudflare Turnstile</span>
-          <span>•</span>
-          <span className="text-[#64748b]">Anti-bot otomatis & tanpa gangguan privasi</span>
-        </p>
       </div>
     );
   }
