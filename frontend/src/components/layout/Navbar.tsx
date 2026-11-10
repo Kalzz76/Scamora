@@ -10,7 +10,6 @@ import {
   LogIn,
   UserPlus,
   User,
-  ShieldCheck,
   Shield,
   LogOut,
   ArrowRight,
@@ -211,15 +210,11 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   <button
                     type="button"
                     onClick={() => setAccountMenuOpen((prev) => !prev)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200/90 text-emerald-800 text-xs font-bold transition shadow-2xs font-mono cursor-pointer"
-                    title="Menu Akun & Profil"
+                    className="w-10 h-10 rounded-full bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200/90 text-emerald-800 flex items-center justify-center transition shadow-2xs hover:shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/30"
+                    title={`Profil @${currentUser.username}`}
+                    aria-label="Menu Akun Profil"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>@{currentUser.username}</span>
-                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-900 uppercase font-black">
-                      {currentUser.role === 'admin' ? 'Admin' : 'User'}
-                    </span>
-                    <ChevronDown className={`w-3 h-3 text-emerald-700 opacity-70 ml-0.5 transition-transform duration-200 ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                    <User className="w-5 h-5 text-emerald-700" />
                   </button>
 
                   {/* Dropdown positioned right beneath the username button */}
@@ -327,12 +322,11 @@ export const Navbar: React.FC<NavbarProps> = () => {
                   <button
                     type="button"
                     onClick={() => setAccountMenuOpen((prev) => !prev)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold font-mono cursor-pointer"
-                    title="Menu Akun & Profil"
+                    className="w-9 h-9 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 flex items-center justify-center transition shadow-2xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0f9b8a]/30"
+                    title={`Profil @${currentUser.username}`}
+                    aria-label="Menu Akun Profil"
                   >
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="truncate max-w-[90px]">@{currentUser.username}</span>
-                    <ChevronDown className={`w-3 h-3 text-emerald-700 opacity-70 transition-transform duration-200 ${accountMenuOpen ? 'rotate-180' : ''}`} />
+                    <User className="w-4.5 h-4.5 text-emerald-700" />
                   </button>
 
                   {/* Dropdown positioned right beneath mobile username button */}
