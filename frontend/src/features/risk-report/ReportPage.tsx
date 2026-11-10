@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   ChevronLeft,
@@ -13,7 +12,6 @@ import { toast } from 'sonner';
 import { directoryService, type ScannedDomain } from '../../services/directoryService';
 
 export const ReportPage: React.FC = () => {
-  const navigate = useNavigate();
   const [domains, setDomains] = useState<ScannedDomain[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'newest' | 'oldest' | 'high' | 'review' | 'low'>('all');
@@ -292,18 +290,17 @@ export const ReportPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Middle: Full-width Domain with break-all so long links never get cut off */}
+                    {/* Middle: Full-width Domain - Non-clickable & Protected from Copying */}
                     <div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                        }}
-                        className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline block text-left cursor-pointer break-all leading-snug w-full"
-                        title={`Periksa ${item.domain}`}
+                      <span
+                        onCopy={(e) => e.preventDefault()}
+                        onContextMenu={(e) => e.preventDefault()}
+                        className="font-mono font-bold text-sm text-[#14161C] select-none cursor-default block text-left break-all leading-snug w-full select-none"
+                        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                        title={item.domain}
                       >
                         {item.domain}
-                      </button>
+                      </span>
                     </div>
 
                     {/* Bottom Row: Progress Bar & Risk Percentage */}
@@ -352,17 +349,16 @@ export const ReportPage: React.FC = () => {
                     return (
                       <tr key={idx} className="hover:bg-[#FAF8F5] transition-colors group">
                         
-                        {/* Domain Column */}
+                        {/* Domain Column - Non-clickable & Protected from Copying */}
                         <td className="py-4 px-6">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigate('/', { state: { prefillUrl: `http://${item.domain}` } });
-                            }}
-                            className="font-mono font-bold text-sm text-[#14161C] hover:text-[#1d3f6e] hover:underline cursor-pointer text-left transition-colors break-all max-w-xs xl:max-w-md block"
+                          <span
+                            onCopy={(e) => e.preventDefault()}
+                            onContextMenu={(e) => e.preventDefault()}
+                            className="font-mono font-bold text-sm text-[#14161C] select-none cursor-default text-left break-all max-w-xs xl:max-w-md block"
+                            style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
                           >
                             {item.domain}
-                          </button>
+                          </span>
                         </td>
 
                         {/* Frequency Column */}
