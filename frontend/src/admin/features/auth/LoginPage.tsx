@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Lock,
@@ -13,12 +13,15 @@ import {
   CheckCircle2,
   UserPlus,
   LogIn,
-  HelpCircle,
-  X,
-  ExternalLink,
+  RefreshCw,
+  Loader2,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../services/adminAuth';
+import { TurnstileWidget, type TurnstileWidgetHandle } from '../../../components/common/TurnstileWidget';
+import { OtpInput } from '../../../components/common/OtpInput';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +32,7 @@ export const LoginPage: React.FC = () => {
   const googleTokenQuery = searchParams.get('google_token');
   const googleUsernameQuery = searchParams.get('username');
   const googleNameQuery = searchParams.get('name');
+  const googleEmailQuery = searchParams.get('email');
   const googleErrorQuery = searchParams.get('error');
 
   // Handle Google OAuth callback parameters on page mount
@@ -37,9 +41,11 @@ export const LoginPage: React.FC = () => {
       setErrorMessage(decodeURIComponent(googleErrorQuery));
     } else if (googleTokenQuery && googleUsernameQuery) {
       const displayName = googleNameQuery ? decodeURIComponent(googleNameQuery) : googleUsernameQuery;
+      const displayEmail = googleEmailQuery ? decodeURIComponent(googleEmailQuery) : undefined;
       adminAuth.setSession(googleTokenQuery, {
         username: googleUsernameQuery,
         name: displayName,
+        email: displayEmail,
         role: 'user',
         tier: 'verified',
         authProvider: 'google',
@@ -47,7 +53,7 @@ export const LoginPage: React.FC = () => {
       toast.success(`Selamat datang, ${displayName}! Berhasil masuk dengan Akun Google.`);
       navigate(redirectQuery || '/', { replace: true });
     }
-  }, [googleTokenQuery, googleUsernameQuery, googleNameQuery, googleErrorQuery, navigate, redirectQuery]);
+  }, [googleTokenQuery, googleUsernameQuery, googleNameQuery, googleEmailQuery, googleErrorQuery, navigate, redirectQuery]);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -75,8 +81,46 @@ export const LoginPage: React.FC = () => {
     setAuthMode(isReg ? 'register' : 'login');
   }, [location.pathname, modeQuery]);
 
+  // Cloudflare Turnstile state
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+
+  // Registration OTP Verification States
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [otpEmail, setOtpEmail] = useState('');
+  const [registerOtpCode, setRegisterOtpCode] = useState('');
+  const [otpExpirySeconds, setOtpExpirySeconds] = useState(300);
+  const [otpCooldownSeconds, setOtpCooldownSeconds] = useState(60);
+
+  // OTP Expiry Countdown (5 menit)
+  useEffect(() => {
+    if (!isVerifyingOtp || otpExpirySeconds <= 0) return;
+    const interval = setInterval(() => {
+      setOtpExpirySeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isVerifyingOtp, otpExpirySeconds]);
+
+  // OTP Resend Cooldown (60 detik)
+  useEffect(() => {
+    if (otpCooldownSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setOtpCooldownSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [otpCooldownSeconds]);
+
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   const switchToLogin = () => {
     setErrorMessage(null);
+    setTurnstileToken(null);
+    setIsVerifyingOtp(false);
+    turnstileRef.current?.reset();
     setAuthMode('login');
     const params = new URLSearchParams(location.search);
     params.delete('mode');
@@ -86,6 +130,9 @@ export const LoginPage: React.FC = () => {
 
   const switchToRegister = () => {
     setErrorMessage(null);
+    setTurnstileToken(null);
+    setIsVerifyingOtp(false);
+    turnstileRef.current?.reset();
     setAuthMode('register');
     const params = new URLSearchParams(location.search);
     params.delete('mode');
@@ -157,18 +204,27 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      setErrorMessage('Silakan selesaikan verifikasi keamanan (CAPTCHA) terlebih dahulu.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await adminAuth.login(cleanUser, cleanPass, rememberMe);
+      const res = await adminAuth.login(cleanUser, cleanPass, rememberMe, turnstileToken);
       if (res.success) {
         toast.success(`Selamat datang kembali, ${res.user?.name || cleanUser}!`);
         const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/');
         navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Autentikasi gagal. Periksa kembali akun Anda.');
+        setTurnstileToken(null);
+        turnstileRef.current?.reset();
       }
     } catch {
       setErrorMessage('Terjadi gangguan jaringan saat memverifikasi kredensial login.');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsLoading(false);
     }
@@ -233,6 +289,11 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
+    if (!turnstileToken) {
+      setErrorMessage('Silakan selesaikan verifikasi keamanan (CAPTCHA) terlebih dahulu.');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await adminAuth.register({
@@ -241,17 +302,83 @@ export const LoginPage: React.FC = () => {
         email: cleanEmail,
         password: regPassword,
         confirmPassword: regConfirmPassword,
+        turnstileToken,
       });
 
       if (res.success) {
+        if (res.requiresOtp) {
+          toast.info(res.message || 'Kode verifikasi OTP 6 digit telah dikirimkan ke email Anda.');
+          setIsVerifyingOtp(true);
+          setOtpEmail(cleanEmail);
+          setOtpExpirySeconds(300);
+          setOtpCooldownSeconds(60);
+          setRegisterOtpCode('');
+          return;
+        }
+
         toast.success('Pendaftaran berhasil! Akun Anda aktif dan siap digunakan.');
         const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/');
         navigate(target, { replace: true });
       } else {
         setErrorMessage(res.error || 'Pendaftaran gagal. Periksa kembali data formulir.');
+        setTurnstileToken(null);
+        turnstileRef.current?.reset();
       }
     } catch {
       setErrorMessage('Terjadi gangguan jaringan saat memproses pendaftaran akun.');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyRegisterOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (registerOtpCode.length !== 6) {
+      setErrorMessage('Harap masukkan 6 digit kode OTP secara lengkap.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await adminAuth.verifyRegisterOtp(otpEmail, registerOtpCode);
+      if (res.success) {
+        toast.success(`Selamat datang, ${res.user?.name || 'Warga'}! Email berhasil diverifikasi & akun aktif.`);
+        const target = redirectQuery || (res.user?.role === 'admin' ? '/admin' : '/');
+        navigate(target, { replace: true });
+      } else {
+        setErrorMessage(res.error || 'Kode OTP tidak cocok atau telah kedaluwarsa.');
+      }
+    } catch {
+      setErrorMessage('Terjadi kendala saat memverifikasi kode OTP.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendRegisterOtp = async () => {
+    if (otpCooldownSeconds > 0 || isLoading) return;
+    setErrorMessage(null);
+    setIsLoading(true);
+
+    try {
+      const res = await adminAuth.resendOtp(otpEmail, 'EMAIL_VERIFICATION');
+      if (res.success) {
+        toast.success('Kode OTP baru telah berhasil dikirimkan ke email Anda.');
+        setOtpExpirySeconds(300);
+        setOtpCooldownSeconds(60);
+        setRegisterOtpCode('');
+      } else {
+        setErrorMessage(res.error || 'Gagal mengirim ulang kode OTP.');
+        if (res.cooldownRemaining) {
+          setOtpCooldownSeconds(res.cooldownRemaining);
+        }
+      }
+    } catch {
+      setErrorMessage('Terjadi gangguan saat meminta ulang kode OTP.');
     } finally {
       setIsLoading(false);
     }
@@ -378,6 +505,11 @@ export const LoginPage: React.FC = () => {
                   <KeyRound className="w-4.5 h-4.5 text-[#0f9b8a]" />
                   <span>Selamat Datang Kembali!</span>
                 </>
+              ) : isVerifyingOtp ? (
+                <>
+                  <ShieldCheck className="w-4.5 h-4.5 text-[#0f9b8a]" />
+                  <span>Verifikasi Email Pendaftaran</span>
+                </>
               ) : (
                 <>
                   <UserPlus className="w-4.5 h-4.5 text-[#0f9b8a]" />
@@ -388,51 +520,55 @@ export const LoginPage: React.FC = () => {
             <p className="text-xs text-[#64748b] mt-1 leading-relaxed">
               {authMode === 'login'
                 ? 'Masuk ke akun Scamora untuk mengakses seluruh fitur perlindungan digital.'
+                : isVerifyingOtp
+                ? `Masukkan 6 digit kode OTP verifikasi yang dikirimkan ke ${otpEmail}.`
                 : 'Silakan lengkapi data berikut untuk membuat akun Scamora'}
             </p>
           </div>
 
-          {/* Google Authentication Button (Official Visual Identity) */}
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading || isGoogleLoading}
-              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50/90 border border-[#d9d6d0] hover:border-slate-400 text-[#14161c] text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isGoogleLoading ? (
-                <div className="w-4 h-4 border-2 border-slate-300 border-t-[#4285F4] rounded-full animate-spin" />
-              ) : (
-                <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                  />
-                </svg>
-              )}
-              <span>{authMode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}</span>
-            </button>
+          {/* Google Authentication Button (Only shown during non-OTP mode) */}
+          {!isVerifyingOtp && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading || isGoogleLoading}
+                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50/90 border border-[#d9d6d0] hover:border-slate-400 text-[#14161c] text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-3 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isGoogleLoading ? (
+                  <div className="w-4 h-4 border-2 border-slate-300 border-t-[#4285F4] rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4.5 h-4.5 shrink-0" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                )}
+                <span>{authMode === 'login' ? 'Masuk dengan Google' : 'Daftar dengan Google'}</span>
+              </button>
 
-            <div className="flex items-center gap-3 my-2">
-              <div className="h-px flex-1 bg-[#e2ded7]" />
-              <span className="text-[10px] font-mono font-bold text-[#8a8f9c] uppercase tracking-wider whitespace-nowrap shrink-0">
-                atau via kredensial
-              </span>
-              <div className="h-px flex-1 bg-[#e2ded7]" />
+              <div className="flex items-center gap-3 my-2">
+                <div className="h-px flex-1 bg-[#e2ded7]" />
+                <span className="text-[10px] font-mono font-bold text-[#8a8f9c] uppercase tracking-wider whitespace-nowrap shrink-0">
+                  atau via kredensial
+                </span>
+                <div className="h-px flex-1 bg-[#e2ded7]" />
+              </div>
             </div>
-          </div>
+          )}
 
           {errorMessage && (
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs animate-in fade-in text-left">
@@ -523,9 +659,22 @@ export const LoginPage: React.FC = () => {
                 </label>
               </div>
 
+              {/* Cloudflare Turnstile CAPTCHA Protection */}
+              <TurnstileWidget
+                key="turnstile-login"
+                ref={turnstileRef}
+                action="login"
+                onVerify={(token) => {
+                  setTurnstileToken(token);
+                  setErrorMessage(null);
+                }}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileToken(null)}
+              />
+
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !turnstileToken}
                 className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -549,6 +698,98 @@ export const LoginPage: React.FC = () => {
                   className="text-xs text-[#0f9b8a] hover:underline font-bold cursor-pointer"
                 >
                   Daftar Sekarang
+                </button>
+              </div>
+            </form>
+          ) : isVerifyingOtp ? (
+            /* ===================== FORM VERIFIKASI OTP REGISTRASI ===================== */
+            <form onSubmit={handleVerifyRegisterOtpSubmit} className="space-y-4 text-left">
+              <div className="p-3.5 rounded-2xl bg-[#0f9b8a]/10 border border-[#0f9b8a]/20 flex items-start gap-3">
+                <Mail className="w-4 h-4 text-[#0f9b8a] shrink-0 mt-0.5" />
+                <div className="text-xs text-[#14161c] leading-relaxed">
+                  <p className="font-semibold text-[#0f9b8a]">Kode Verifikasi Terkirim</p>
+                  <p className="text-slate-600 mt-0.5">
+                    Silakan periksa kotak masuk atau spam di <span className="font-mono font-bold text-[#14161c]">{otpEmail}</span>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2 text-center py-2">
+                <label className="block text-[11px] font-bold text-[#475569] uppercase font-mono tracking-wider">
+                  Masukkan 6 Digit Kode OTP
+                </label>
+                <div className="flex justify-center">
+                  <OtpInput
+                    value={registerOtpCode}
+                    onChange={setRegisterOtpCode}
+                    length={6}
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between text-xs gap-2 pt-1 text-slate-500">
+                <div className="flex items-center gap-1.5 font-mono text-[11px]">
+                  {otpExpirySeconds > 0 ? (
+                    <span className="text-[#0f9b8a] font-semibold flex items-center gap-1">
+                      <span>⏱️ Masa berlaku:</span>
+                      <span className="font-bold underline">{formatTimer(otpExpirySeconds)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-rose-600 font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      <span>Kode OTP telah kedaluwarsa.</span>
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleResendRegisterOtp}
+                  disabled={otpCooldownSeconds > 0 || isLoading}
+                  className="text-[11px] font-bold text-[#0f9b8a] hover:underline disabled:text-slate-400 disabled:no-underline cursor-pointer disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>
+                    {otpCooldownSeconds > 0
+                      ? `Kirim ulang (${otpCooldownSeconds}s)`
+                      : 'Kirim Ulang Kode OTP'}
+                  </span>
+                </button>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || registerOtpCode.length !== 6 || otpExpirySeconds <= 0}
+                className="w-full mt-3 py-3 px-4 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Memverifikasi Kode OTP...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Verifikasi & Aktifkan Akun</span>
+                  </>
+                )}
+              </button>
+
+              <div className="text-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsVerifyingOtp(false);
+                    setRegisterOtpCode('');
+                    setErrorMessage(null);
+                  }}
+                  disabled={isLoading}
+                  className="text-xs text-[#64748b] hover:text-[#14161c] hover:underline cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Kembali ke formulir pendaftaran</span>
                 </button>
               </div>
             </form>
@@ -690,9 +931,22 @@ export const LoginPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Cloudflare Turnstile CAPTCHA Protection */}
+              <TurnstileWidget
+                key="turnstile-register"
+                ref={turnstileRef}
+                action="register"
+                onVerify={(token) => {
+                  setTurnstileToken(token);
+                  setErrorMessage(null);
+                }}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileToken(null)}
+              />
+
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !turnstileToken}
                 className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0f9b8a] hover:bg-[#0c8274] text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -735,42 +989,15 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-6 border border-[#d9d6d0] shadow-2xl space-y-4 text-left">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#0f9b8a] font-bold text-sm">
-                <HelpCircle className="w-5 h-5" />
-                <span>Bantuan Lupa Kata Sandi</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-100 text-[#64748b] cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-[#475569] leading-relaxed">
-              Demi keamanan akun warga dan pencegahan pembajakan, pemulihan akun Scamora saat ini dilayani melalui verifikasi identitas:
-            </p>
-
-            <ul className="text-xs text-[#475569] space-y-2 list-disc pl-4 leading-relaxed">
-              <li>Hubungi tim Administrator di <strong>admin@scamora.id</strong> dengan menyertakan username terdaftar.</li>
-              <li>Jika Anda mendaftar melalui <strong>Akun Google</strong>, Anda dapat langsung masuk tanpa membutuhkan kata sandi manual.</li>
-            </ul>
-
-            <button
-              type="button"
-              onClick={() => setShowForgotModal(false)}
-              className="w-full py-2.5 rounded-xl bg-[#14161c] hover:bg-[#2b2f3a] text-white text-xs font-bold transition cursor-pointer"
-            >
-              Mengerti
-            </button>
-          </div>
-        </div>
-      )}
+      <ForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        initialEmail={username.includes('@') ? username : ''}
+        onSuccess={(resetEmail) => {
+          setUsername(resetEmail);
+          switchToLogin();
+        }}
+      />
     </div>
   );
 };

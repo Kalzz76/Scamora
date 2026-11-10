@@ -1199,7 +1199,10 @@ export const communityService = {
     const disc = inMemoryDiscussions.find((d) => d.id === discussionId) || (await this.getDiscussionById(discussionId));
     if (!disc) throw new Error('Diskusi tidak ditemukan.');
 
-    const isOwner = disc.userId === user.id;
+    const isOwner =
+      disc.userId === user.id ||
+      disc.userId === user.username ||
+      disc.userId === `usr-${user.username}`;
     const isStaff = user.role === 'admin' || user.role === 'moderator' || user.role === 'superadmin';
 
     if (!isOwner && !isStaff) {

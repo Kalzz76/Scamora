@@ -555,7 +555,7 @@ export const KomunitasPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full lg:h-[calc(100vh-64px)] min-h-[calc(100vh-64px)] bg-[#FAF8F5] text-[#14161C] relative lg:overflow-hidden">
+    <div className="flex flex-col w-full h-full lg:h-[calc(100vh-64px)] min-h-[calc(100vh-64px)] bg-[#FAF8F5] text-[#14161C] relative overflow-y-auto lg:overflow-hidden">
       
       {/* Sleek Custom Scrollbar Style for Desktop Internal Columns */}
       <style>{`
@@ -674,7 +674,7 @@ export const KomunitasPage: React.FC = () => {
           {/* ======================================================================= */}
           {/* LEFT SIDEBAR (lg:col-span-3 - Independent Scroll) */}
           {/* ======================================================================= */}
-          <aside className="lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pr-1 pb-6">
+          <aside className="hidden lg:block lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pr-1 pb-6">
             
             {/* Kanal Modus Penipuan */}
             <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex flex-col gap-3 text-left">
@@ -950,13 +950,27 @@ export const KomunitasPage: React.FC = () => {
                         Jadilah yang pertama membuka konsultasi atau berbagi temuan modus baru.
                       </p>
                     </div>
-                    <button
-                      onClick={() => setMainTab('postingan')}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#143826] text-white text-xs font-bold shadow-xs cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-[#A6F4C5]" />
-                      <span>Buka Diskusi Sekarang</span>
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                      <button
+                        onClick={() => setMainTab('postingan')}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#143826] text-white text-xs font-bold shadow-xs hover:bg-[#1b4b33] transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-[#A6F4C5]" />
+                        <span>Buka Diskusi Sekarang</span>
+                      </button>
+                      {(searchQuery || statusFilter !== 'all') && (
+                        <button
+                          onClick={() => {
+                            setSearchQuery('');
+                            setStatusFilter('all');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 text-xs font-bold shadow-2xs transition cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Reset Filter</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1375,7 +1389,7 @@ export const KomunitasPage: React.FC = () => {
           {/* ======================================================================= */}
           {/* RIGHT SIDEBAR (lg:col-span-3 - Independent Scroll) */}
           {/* ======================================================================= */}
-          <aside className="lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pl-1 pb-6">
+          <aside className="hidden lg:block lg:col-span-3 space-y-4 w-full lg:h-full lg:overflow-y-auto custom-scroll pl-1 pb-6">
             
             {/* Card 1: Trending Discussion */}
             <div className="rounded-2xl p-4 sm:p-5 border border-amber-200/80 bg-amber-500/8 backdrop-blur-md flex flex-col gap-3 text-left">
@@ -1577,9 +1591,15 @@ export const KomunitasPage: React.FC = () => {
                   </div>
                 ) : (
                   focusedDiscussion.comments.map((comment) => {
-                    const isQuestionAuthor = currentUser && (
-                      focusedDiscussion.userId === currentUser.id ||
-                      focusedDiscussion.userId === `usr-${currentUser.username}`
+                    const isQuestionAuthor = Boolean(
+                      currentUser && (
+                        focusedDiscussion.userId === currentUser.id ||
+                        focusedDiscussion.userId === `usr-${currentUser.username}` ||
+                        focusedDiscussion.userId === currentUser.username ||
+                        currentUser.role === 'admin' ||
+                        currentUser.role === 'moderator' ||
+                        currentUser.role === 'superadmin'
+                      )
                     );
                     const isCommentAuthor = Boolean(
                       currentUser && (
