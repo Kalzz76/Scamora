@@ -1,12 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm --prefix frontend run build",
+  "buildCommand": "npm --prefix frontend run build && npm --prefix backend run build",
   "outputDirectory": "frontend/dist",
-  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://test1-lg4k.vercel.app/api/$1"
+      "destination": "/api/index"
     },
     {
       "source": "/(.*)",
