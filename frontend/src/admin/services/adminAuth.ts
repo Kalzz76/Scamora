@@ -205,7 +205,19 @@ export const adminAuth = {
   },
 
   getGoogleAuthUrl(): string {
-    const base = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1');
+    const envUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+    const isBrowser = typeof window !== 'undefined';
+    const isRemoteDomain = isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    let base = '/api/v1';
+
+    if (isRemoteDomain || import.meta.env.PROD) {
+      if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+        base = envUrl;
+      }
+    } else {
+      base = envUrl || 'http://localhost:8000/api/v1';
+    }
+
     return `${base}/auth/google`;
   },
 

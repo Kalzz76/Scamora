@@ -1,7 +1,31 @@
 import axios from 'axios';
 import { quotaService } from './quotaService';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1');
+function resolveApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  const isBrowser = typeof window !== 'undefined';
+  const isRemoteDomain = isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+  // Jika aplikasi diakses dari Vercel/domain publik, jangan pernah tembak ke localhost
+  if (isRemoteDomain) {
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl;
+    }
+    return '/api/v1';
+  }
+
+  // Jika build production (PROD), jangan biarkan tembak localhost
+  if (import.meta.env.PROD) {
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl;
+    }
+    return '/api/v1';
+  }
+
+  return envUrl || 'http://localhost:8000/api/v1';
+}
+
+const BASE_URL = resolveApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

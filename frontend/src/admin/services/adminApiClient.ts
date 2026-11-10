@@ -1,10 +1,25 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
-  ? (import.meta.env.VITE_API_BASE_URL.endsWith('/admin')
-      ? import.meta.env.VITE_API_BASE_URL
-      : `${import.meta.env.VITE_API_BASE_URL}/admin`)
-  : (import.meta.env.PROD ? '/api/v1/admin' : 'http://localhost:8000/api/v1/admin');
+function resolveAdminApiBaseUrl(): string {
+  const envUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+  const isBrowser = typeof window !== 'undefined';
+  const isRemoteDomain = isBrowser && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+  if (isRemoteDomain || import.meta.env.PROD) {
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+      return envUrl.endsWith('/admin') ? envUrl : `${envUrl}/admin`;
+    }
+    return '/api/v1/admin';
+  }
+
+  if (envUrl) {
+    return envUrl.endsWith('/admin') ? envUrl : `${envUrl}/admin`;
+  }
+
+  return 'http://localhost:8000/api/v1/admin';
+}
+
+const BASE_URL = resolveAdminApiBaseUrl();
 
 export const adminApiClient = axios.create({
   baseURL: BASE_URL,
