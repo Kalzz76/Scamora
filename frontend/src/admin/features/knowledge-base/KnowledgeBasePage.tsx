@@ -70,8 +70,15 @@ export const KnowledgeBasePage: React.FC = () => {
       adminService.getArticles(),
       adminService.getCategories(),
     ]);
-    setArticles(arts);
-    setCategories(cats);
+    const safeArts = (arts || []).map((art) => ({
+      ...art,
+      redFlags: Array.isArray(art.redFlags) ? art.redFlags : (typeof art.redFlags === 'string' ? JSON.parse(art.redFlags || '[]') : []),
+      responseSteps: Array.isArray(art.responseSteps) ? art.responseSteps : (typeof art.responseSteps === 'string' ? JSON.parse(art.responseSteps || '[]') : []),
+      targetVictims: art.targetVictims || 'Masyarakat umum & pengguna smartphone',
+      categoryName: art.categoryName || art.categoryCode || 'Umum',
+    }));
+    setArticles(safeArts);
+    setCategories(cats || []);
     setLoading(false);
   };
 
@@ -86,11 +93,11 @@ export const KnowledgeBasePage: React.FC = () => {
       }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const inTitle = art.title.toLowerCase().includes(q);
-        const inSummary = art.summary.toLowerCase().includes(q);
-        const inCategory = art.categoryName.toLowerCase().includes(q);
-        const inVictim = art.targetVictims.toLowerCase().includes(q);
-        const inFlags = art.redFlags.some((f) => f.toLowerCase().includes(q));
+        const inTitle = (art.title || '').toLowerCase().includes(q);
+        const inSummary = (art.summary || '').toLowerCase().includes(q);
+        const inCategory = (art.categoryName || '').toLowerCase().includes(q);
+        const inVictim = (art.targetVictims || '').toLowerCase().includes(q);
+        const inFlags = Array.isArray(art.redFlags) ? art.redFlags.some((f) => (f || '').toLowerCase().includes(q)) : false;
         return inTitle || inSummary || inCategory || inVictim || inFlags;
       }
       return true;
@@ -500,7 +507,7 @@ export const KnowledgeBasePage: React.FC = () => {
                   {/* Open Detail Button Pill */}
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[11px] font-mono text-[#5E6D7E]">
-                      {art.redFlags.length} flags &bull; {art.responseSteps.length} langkah
+                      {(art.redFlags || []).length} flags &bull; {(art.responseSteps || []).length} langkah
                     </span>
                     <span className="text-xs font-bold text-[#548CA8] group-hover:text-[#334257] flex items-center gap-1 transition-colors">
                       <span>Lihat Detail Ilmu</span>
@@ -611,11 +618,11 @@ export const KnowledgeBasePage: React.FC = () => {
                 <div className="flex items-center gap-2 text-rose-800 dark:text-rose-300">
                   <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                   <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
-                    Ciri Khas &amp; Tanda Bahaya ({activeDetailArticle.redFlags.length} Indikator):
+                    Ciri Khas &amp; Tanda Bahaya ({(activeDetailArticle.redFlags || []).length} Indikator):
                   </h3>
                 </div>
                 <div className="space-y-1.5">
-                  {activeDetailArticle.redFlags.map((flag, idx) => (
+                  {(activeDetailArticle.redFlags || []).map((flag, idx) => (
                     <div
                       key={idx}
                       className="p-2.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/50 border border-rose-200/80 dark:border-rose-500/40 text-xs text-rose-950 dark:text-rose-100 flex items-start gap-2.5"
@@ -632,11 +639,11 @@ export const KnowledgeBasePage: React.FC = () => {
                 <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <h3 className="text-xs font-bold font-mono uppercase tracking-wider">
-                    Protokol Respon Darurat Korban ({activeDetailArticle.responseSteps.length} Langkah):
+                    Protokol Respon Darurat Korban ({(activeDetailArticle.responseSteps || []).length} Langkah):
                   </h3>
                 </div>
                 <div className="space-y-2">
-                  {activeDetailArticle.responseSteps.map((step, idx) => (
+                  {(activeDetailArticle.responseSteps || []).map((step, idx) => (
                     <div
                       key={idx}
                       className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-500/40 text-xs text-emerald-950 dark:text-emerald-100 flex items-start gap-3"

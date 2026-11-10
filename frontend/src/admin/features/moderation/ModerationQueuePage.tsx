@@ -66,8 +66,8 @@ export const ModerationQueuePage: React.FC = () => {
       adminService.getCommunityPosts(),
       adminService.getReports(),
     ]);
-    setPosts(pList);
-    setReports(rList);
+    setPosts(Array.isArray(pList) ? pList : []);
+    setReports(Array.isArray(rList) ? rList : []);
     setLoading(false);
   };
 
@@ -82,10 +82,10 @@ export const ModerationQueuePage: React.FC = () => {
       }
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
-        const inTitle = post.title.toLowerCase().includes(query);
-        const inAuthor = post.authorPseudonym.toLowerCase().includes(query);
-        const inStory = post.story.toLowerCase().includes(query);
-        const inCategory = post.categoryCode.toLowerCase().includes(query);
+        const inTitle = (post.title || '').toLowerCase().includes(query);
+        const inAuthor = (post.authorPseudonym || '').toLowerCase().includes(query);
+        const inStory = (post.story || '').toLowerCase().includes(query);
+        const inCategory = (post.categoryCode || '').toLowerCase().includes(query);
         return inTitle || inAuthor || inStory || inCategory;
       }
       return true;
