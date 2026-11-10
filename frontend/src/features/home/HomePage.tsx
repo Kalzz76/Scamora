@@ -146,6 +146,11 @@ export const HomePage: React.FC = () => {
       setRecentDomains(directoryService.getDomains().slice(0, 4));
     };
     updateDomains();
+    directoryService.syncRecentFromApi().then((domains) => {
+      if (domains && domains.length > 0) {
+        setRecentDomains(domains.slice(0, 4));
+      }
+    });
     window.addEventListener('storage', updateDomains);
     window.addEventListener('focus', updateDomains);
     return () => {

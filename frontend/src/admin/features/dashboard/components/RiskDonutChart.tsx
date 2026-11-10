@@ -23,8 +23,8 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
   const [hoveredSegment, setHoveredSegment] = useState<'high' | 'review' | 'low' | null>(null);
 
   // Donut geometry constants
-  const size = 220;
-  const strokeWidth = 24;
+  const size = 168;
+  const strokeWidth = 18;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -133,30 +133,30 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
         </svg>
 
         {/* Center Text Indicator (Switches dynamically on hover) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-4">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-2">
           {activeSegmentData ? (
             <div className="animate-in fade-in zoom-in-95 duration-150">
-              <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${activeSegmentData.bgColor} ${activeSegmentData.textColor}`}>
+              <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-full ${activeSegmentData.bgColor} ${activeSegmentData.textColor}`}>
                 {activeSegmentData.label}
               </span>
-              <div className="text-2xl font-black text-[#1A202C] font-mono mt-1">
-                {activeSegmentData.count.toLocaleString()}
+              <div className="text-xl font-black text-[#1A202C] font-mono mt-0.5">
+                {(activeSegmentData.count ?? 0).toLocaleString()}
               </div>
-              <span className="text-xs font-bold text-[#476072]">
+              <span className="text-[10px] font-bold text-[#476072]">
                 {activeSegmentData.percent}% masukan
               </span>
             </div>
           ) : (
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#476072]">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-[#476072]">
                 Total Scan
               </span>
-              <div className="text-2xl font-black text-[#334257] font-mono">
-                {totalScans.toLocaleString()}
+              <div className="text-xl font-black text-[#334257] font-mono">
+                {(totalScans ?? 0).toLocaleString()}
               </div>
-              <span className="text-[10px] text-[#476072] flex items-center justify-center gap-1 mt-0.5">
+              <span className="text-[9px] text-[#476072] flex items-center justify-center gap-1 mt-0.5">
                 <Info className="w-2.5 h-2.5 text-[#548CA8]" />
-                Hover sisi donat
+                Hover donat
               </span>
             </div>
           )}
@@ -164,7 +164,7 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
       </div>
 
       {/* Clean Minimal Horizontal Legend */}
-      <div className="flex flex-wrap items-center justify-center gap-5 text-xs pt-4">
+      <div className="flex flex-wrap items-center justify-center gap-3.5 text-[11px] pt-3">
         {segments.map((seg) => (
           <div
             key={seg.id}
@@ -174,11 +174,11 @@ export const RiskDonutChart: React.FC<RiskDonutChartProps> = ({
             className="flex items-center gap-1.5 cursor-pointer text-[#476072] hover:text-[#1A202C] font-medium transition-colors"
           >
             <span
-              className="w-2.5 h-2.5 rounded-full shrink-0"
+              className="w-2 h-2 rounded-full shrink-0"
               style={{ backgroundColor: seg.color }}
             />
             <span className="font-bold">{seg.label.split(' ')[0]}</span>
-            <span className="text-[#476072] font-mono text-[11px]">({seg.percent}%)</span>
+            <span className="text-[#476072] font-mono text-[10px]">({seg.percent}%)</span>
           </div>
         ))}
       </div>

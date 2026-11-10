@@ -1,3 +1,4 @@
+// Scamora Frontend Application Root
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';

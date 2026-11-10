@@ -1,3 +1,5 @@
+import { apiClient } from './apiClient';
+
 /**
  * Scamora - Direktori Komunitas & Riwayat Pemindaian Domain
  * Menyimpan dan mengelola data domain yang telah diperiksa oleh pengguna
@@ -14,18 +16,7 @@ export interface ScannedDomain {
 
 const STORAGE_KEY = 'scamora_community_domains_v1';
 
-const INITIAL_DOMAINS: ScannedDomain[] = [
-  { domain: 'bank-nusa-login.xyz', count: 37, riskPercent: 92, category: 'high', lastChecked: '5 menit lalu', timestamp: Date.now() - 5 * 60 * 1000 },
-  { domain: 'undian-hadiah-id.top', count: 54, riskPercent: 88, category: 'high', lastChecked: '12 menit lalu', timestamp: Date.now() - 12 * 60 * 1000 },
-  { domain: 'undangan-nikah-digital.top', count: 42, riskPercent: 95, category: 'high', lastChecked: '25 menit lalu', timestamp: Date.now() - 25 * 60 * 1000 },
-  { domain: 'tilang-online-bayar.click', count: 29, riskPercent: 85, category: 'high', lastChecked: '45 menit lalu', timestamp: Date.now() - 45 * 60 * 1000 },
-  { domain: 'resi-paket-cek.site', count: 21, riskPercent: 76, category: 'high', lastChecked: '1 jam lalu', timestamp: Date.now() - 60 * 60 * 1000 },
-  { domain: 'promo-belanja-kilat.click', count: 18, riskPercent: 44, category: 'review', lastChecked: '3 jam lalu', timestamp: Date.now() - 3 * 60 * 60 * 1000 },
-  { domain: 'bit.ly/undian-bca-resmi-hadiah2026', count: 15, riskPercent: 45, category: 'review', lastChecked: '4 jam lalu', timestamp: Date.now() - 4 * 60 * 60 * 1000 },
-  { domain: 'toko-buku-kota.id', count: 12, riskPercent: 8, category: 'low', lastChecked: 'Kemarin', timestamp: Date.now() - 24 * 60 * 60 * 1000 },
-  { domain: 'perpustakaan-kota.id', count: 9, riskPercent: 0, category: 'low', lastChecked: '2 hari lalu', timestamp: Date.now() - 48 * 60 * 60 * 1000 },
-  { domain: 'tokopedia.com', count: 128, riskPercent: 0, category: 'low', lastChecked: '3 jam lalu', timestamp: Date.now() - 3 * 60 * 60 * 1000 },
-];
+const INITIAL_DOMAINS: ScannedDomain[] = [];
 
 export const directoryService = {
   getDomains(): ScannedDomain[] {
@@ -41,6 +32,25 @@ export const directoryService = {
       // Fallback
     }
     return INITIAL_DOMAINS;
+  },
+
+  async syncRecentFromApi(): Promise<ScannedDomain[]> {
+    try {
+      const res = await apiClient.get<{ success: boolean; data: any[] }>('/scanned-domains');
+      if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        const mapped: ScannedDomain[] = res.data.data.map((d: any) => ({
+          domain: d.domain,
+          count: d.count || 1,
+          riskPercent: d.riskScore || 0,
+          category: d.riskCategory || (d.riskScore >= 60 ? 'high' : d.riskScore >= 30 ? 'review' : 'low'),
+          lastChecked: d.lastCheckedAt ? new Date(d.lastCheckedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Baru saja',
+          timestamp: d.lastCheckedAt ? new Date(d.lastCheckedAt).getTime() : Date.now(),
+        }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+        return mapped;
+      }
+    } catch {}
+    return this.getDomains();
   },
 
   recordDomain(rawInput: string, riskScore: number, riskLevel?: 'high' | 'review' | 'low') {
@@ -104,10 +114,10 @@ export const directoryService = {
 
   getStats(): { totalDomains: number; highRiskPercent: number; checksToday: number } {
     const list = this.getDomains();
-    const totalDomains = 1248 + list.length - INITIAL_DOMAINS.length;
+    const totalDomains = list.length;
     const highRiskCount = list.filter((d) => d.category === 'high').length;
-    const highRiskPercent = Math.round((highRiskCount / Math.max(1, list.length)) * 100);
-    const checksToday = 86 + list.reduce((acc, curr) => (curr.lastChecked === 'Baru saja' ? acc + 1 : acc), 0);
+    const highRiskPercent = list.length > 0 ? Math.round((highRiskCount / list.length) * 100) : 0;
+    const checksToday = list.filter((d) => Date.now() - d.timestamp < 86400000).length;
 
     return {
       totalDomains,

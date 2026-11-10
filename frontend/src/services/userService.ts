@@ -45,19 +45,18 @@ export const userService = {
         return res.data.data;
       }
     } catch {
-      // Fallback
+      // Fallback to empty real state
     }
 
-    // Default fallback
     return {
-      totalScans: 8,
-      urlScans: 5,
-      chatScans: 3,
-      challengeAttempts: 2,
-      highestScore: 90,
-      averageScore: 85,
-      tier: 'verified',
-      isUnlimited: true,
+      totalScans: 0,
+      urlScans: 0,
+      chatScans: 0,
+      challengeAttempts: 0,
+      highestScore: 0,
+      averageScore: 0,
+      tier: 'standard',
+      isUnlimited: false,
     };
   },
 
@@ -68,45 +67,10 @@ export const userService = {
         return res.data.data;
       }
     } catch {
-      // Fallback
+      // Clean fallback
     }
 
-    const currentUser = adminAuth.getUser();
-    return [
-      {
-        id: 'hist-sample-1',
-        userId: currentUser?.username || 'user',
-        type: 'url',
-        inputSummary: 'Analisis URL: bank-bca-verifikasi.xyz',
-        riskLevel: 'high',
-        riskScore: 95,
-        scamType: 'phishing',
-        indicatorsCount: 4,
-        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-      },
-      {
-        id: 'hist-sample-2',
-        userId: currentUser?.username || 'user',
-        type: 'chat',
-        inputSummary: 'Analisis Pesan: Undangan pernikahan file .apk...',
-        riskLevel: 'high',
-        riskScore: 88,
-        scamType: 'apk_malware',
-        indicatorsCount: 3,
-        createdAt: new Date(Date.now() - 3600000 * 20).toISOString(),
-      },
-      {
-        id: 'hist-sample-3',
-        userId: currentUser?.username || 'user',
-        type: 'url',
-        inputSummary: 'Analisis URL: tokopedia.com/promo-resmi',
-        riskLevel: 'low',
-        riskScore: 0,
-        scamType: 'unknown',
-        indicatorsCount: 0,
-        createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-      },
-    ];
+    return [];
   },
 
   async getProfile(): Promise<UserProfileData> {
@@ -121,16 +85,16 @@ export const userService = {
     }
 
     return {
-      id: fallbackUser?.id || 'usr-local',
-      username: fallbackUser?.username || 'pengguna',
+      id: fallbackUser?.id || '',
+      username: fallbackUser?.username || 'tamu',
       name: fallbackUser?.name || 'Pengguna Scamora',
-      email: fallbackUser?.email || `${fallbackUser?.username || 'user'}@scamora.id`,
-      tier: fallbackUser?.tier || 'verified',
+      email: fallbackUser?.email || '',
+      tier: fallbackUser?.tier || 'standard',
       role: fallbackUser?.role || 'user',
       status: 'active',
-      scanCount: 8,
-      reportCount: 1,
-      createdAt: new Date(Date.now() - 86400000 * 14).toISOString(),
+      scanCount: 0,
+      reportCount: 0,
+      createdAt: new Date().toISOString(),
     };
   },
 

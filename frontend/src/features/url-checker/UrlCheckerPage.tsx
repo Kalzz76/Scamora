@@ -43,7 +43,15 @@ export const UrlCheckerPage: React.FC<UrlCheckerPageProps> = ({
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const navigate = useNavigate();
 
-  const urlPresets = DEMO_PRESETS.filter((p) => p.type === 'url');
+  const [urlPresets, setUrlPresets] = useState(DEMO_PRESETS.filter((p) => p.type === 'url'));
+
+  useEffect(() => {
+    analysisService.getDemoPresets().then((data) => {
+      if (data && data.length > 0) {
+        setUrlPresets(data.filter((p) => p.type === 'url'));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });

@@ -15,6 +15,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { challengeService } from '../../../services/challengeService';
 import {
   TIERED_QUIZ_QUESTIONS,
   DIFFICULTY_METADATA,
@@ -80,10 +81,42 @@ export const TieredQuizModule: React.FC = () => {
   const isPassed = Math.round((score / totalQuestions) * 100) >= meta.passScorePercentage;
 
   // Start a quiz session for the chosen difficulty
-  const handleStartLevel = (difficulty: QuizDifficulty) => {
+  const handleStartLevel = async (difficulty: QuizDifficulty) => {
     setSelectedDifficulty(difficulty);
-    const qs = prepareQuizSession(difficulty);
-    setSessionQuestions(qs);
+    try {
+      const dbQuestions = await challengeService.getQuizQuestions(difficulty);
+      if (dbQuestions && dbQuestions.length > 0) {
+        const mapped: QuizQuestion[] = dbQuestions.map((q: any) => {
+          let opts: any[] = [];
+          if (Array.isArray(q.options)) {
+            opts = q.options.map((opt: any) => ({
+              text: opt.text || opt.label || '',
+              isCorrect: opt.id === q.correct_option_id || opt.isCorrect === true,
+              reason: opt.reason || q.explanation || '',
+            }));
+          }
+          return {
+            id: q.id,
+            difficulty: q.difficulty || difficulty,
+            category: q.category_code || 'Tantangan Deteksi',
+            scenario: q.scenario || '',
+            question: q.question,
+            options: opts.length > 0 ? opts : [
+              { text: 'Pilihan Benar', isCorrect: true, reason: q.explanation || '' },
+              { text: 'Pilihan Salah', isCorrect: false, reason: 'Jawaban kurang tepat' },
+            ],
+          };
+        });
+        const shuffled = mapped.sort(() => 0.5 - Math.random()).slice(0, 5);
+        setSessionQuestions(shuffled);
+      } else {
+        const qs = prepareQuizSession(difficulty);
+        setSessionQuestions(qs);
+      }
+    } catch {
+      const qs = prepareQuizSession(difficulty);
+      setSessionQuestions(qs);
+    }
     setCurrentIdx(0);
     setSelectedOption(null);
     setScore(0);

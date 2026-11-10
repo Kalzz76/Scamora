@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   handleAnalyzeChat,
   handleAnalyzeUrl,
+  handleGetScannedDomains,
 } from '../controllers/analyze.controller';
 import { analyzeRateLimiter } from '../middlewares/rateLimit';
 import { validateBody } from '../middlewares/validate';
@@ -11,6 +12,8 @@ import {
 } from '../schemas/analyze.schema';
 
 const router = Router();
+
+router.get('/scanned-domains', handleGetScannedDomains);
 
 router.post(
   '/analyze/url',

@@ -26,6 +26,12 @@ export const ReportPage: React.FC = () => {
   useEffect(() => {
     setDomains(directoryService.getDomains());
     setStats(directoryService.getStats());
+    directoryService.syncRecentFromApi().then((data) => {
+      if (data && data.length > 0) {
+        setDomains(data);
+        setStats(directoryService.getStats());
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -151,7 +157,7 @@ export const ReportPage: React.FC = () => {
               Total Domain Diperiksa
             </span>
             <div className="font-display font-bold text-2xl sm:text-4xl text-[#14161C] sm:mt-2">
-              {stats.totalDomains.toLocaleString('id-ID')}
+              {(stats?.totalDomains ?? 0).toLocaleString('id-ID')}
             </div>
           </div>
 

@@ -1,0 +1,147 @@
+================================================================================
+          PANDUAN KONSEP DEPLOYMENT 2 SISI VERCEL (FRONTEND & BACKEND)
+                       PROYEK SCAMORA PLATFORM
+================================================================================
+
+Halo bro/sis! Dokumen ini menjelaskan secara lengkap dan santai tentang kenapa 
+dan bagaimana kita memisahkan Scamora menjadi DUA proyek Vercel yang berbeda 
+(Frontend di satu Vercel, Backend di Vercel lainnya).
+
+--------------------------------------------------------------------------------
+1. ANALOGI SEDERHANA: MEJA MAKAN VS DAPUR RESTORAN
+--------------------------------------------------------------------------------
+Bayangkan sebuah restoran modern:
+- FRONTEND (Meja & Kasir): Tempat pelanggan duduk, melihat menu visual yang bagus,
+  mengisi formulir pesanan, dan membaca hasil laporan.
+- BACKEND (Dapur & Gudang): Tempat memproses pesanan, memasak data dengan AI
+  (Google Gemini), memeriksa database Supabase, dan menjaga kunci rahasia.
+
+Kenapa tidak digabung jadi satu ruangan sempit?
+Karena kasir dan meja makan butuh kecepatan super kilat (CDN global), sedangkan
+dapur butuh privasi tinggi agar resep rahasia (API Key, password DB) tidak bisa
+diintip oleh pelanggan di meja.
+
+--------------------------------------------------------------------------------
+2. ARSITEKTUR ALUR KOMUNIKASI (DIAGRAM SISTEM)
+--------------------------------------------------------------------------------
+
+   [ USER / BROWSER ]
+          │
+          │ 1. Akses Website (HTML, CSS, React UI)
+          ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │                  VERCEL PROYEK 1: FRONTEND                  │
+   │  Root Directory : /frontend                                 │
+   │  Teknologi      : React + Vite + Tailwind (Static SPA)      │
+   │  Contoh Domain  : https://scamora-app.vercel.app            │
+   └─────────────────────────────────────────────────────────────┘
+          │
+          │ 2. Kirim URL/Chat untuk diperiksa via HTTPS REST API
+          │    Target: VITE_API_BASE_URL
+          ▼
+   ┌─────────────────────────────────────────────────────────────┐
+   │                  VERCEL PROYEK 2: BACKEND                   │
+   │  Root Directory : /backend                                  │
+   │  Teknologi      : Express.js (Vercel Serverless Function)   │
+   │  Contoh Domain  : https://scamora-api.vercel.app            │
+   └─────────────────────────────────────────────────────────────┘
+          │                                            │
+          │ 3. Panggil Gemini AI                      │ 4. Simpan hasil scan
+          ▼                                            ▼
+   [ GOOGLE GEMINI AI ]                       [ SUPABASE CLOUD DB ]
+   Analisis Pola & Heuristik                  PostgreSQL Pooler (Port 6543)
+                                              Tabel: analysis_history,
+                                                     scanned_domains,
+                                                     demo_presets, dll.
+
+--------------------------------------------------------------------------------
+3. KENAPA HARUS DIPISAH MENJADI 2 PROYEK VERCEL?
+--------------------------------------------------------------------------------
+1. KEAMANAN TINGKAT TINGGI (Zero Secret Leak)
+   - Kredensial sensitif seperti:
+     * DATABASE_URL (password PostgreSQL)
+     * GEMINI_API_KEY
+     * ADMIN_SECRET
+     HANYA disimpan di Environment Variables Backend Vercel. Browser pengguna 
+     tidak akan pernah bisa mengintip kunci-kunci ini dari Inspect Element.
+
+2. KECEPATAN & PERFORMA MAKSIMAL (Edge CDN Caching)
+   - Frontend adalah SPA (Single Page Application) statis. Vercel menyebarkannya
+     ke ratusan server Edge CDN di seluruh dunia. Halaman web terbuka dalam
+     hitungan milidetik.
+   - Backend berjalan secara on-demand (Serverless Function) hanya ketika ada
+     request analisis atau interaksi database.
+
+3. INDEPENDENT DEPLOYMENT & DEBUGGING (Bebas Gangguan)
+   - Kalau kamu hanya ingin mengubah warna tombol, tata letak UI, atau teks di
+     Frontend, kamu bisa deploy Frontend dalam 15 detik tanpa menyentuh atau 
+     mengganggu server Backend sama sekali.
+   - Begitu juga sebaliknya: tuning prompt AI atau logika backend tidak akan
+     membuat tampilan frontend down.
+
+--------------------------------------------------------------------------------
+4. BAGAIMANA CARA KEDUANYA SALING BERBICARA?
+--------------------------------------------------------------------------------
+Agar dua proyek Vercel ini bisa saling terhubung, ada 2 aturan jembatan:
+
+A. Jembatan Keluar (Frontend -> Backend):
+   - Frontend butuh alamat kemana harus mengirim data.
+   - Ini diatur lewat Environment Variable di Frontend:
+     VITE_API_BASE_URL = https://scamora-api.vercel.app/api/v1
+   - Library Axios di frontend akan menembak ke domain backend tersebut.
+
+B. Jembatan Masuk (Backend CORS Permission):
+   - Browser modern punya fitur keamanan bernama CORS (Cross-Origin Resource
+     Sharing) yang secara default menolak jika domain A mengambil data dari
+     domain B.
+   - Backend Scamora sudah dipasangi konfigurasi Express CORS yang mengizinkan
+     permintaan dari domain frontend kamu (FRONTEND_ORIGIN) dan semua subdomain
+     preview Vercel (*.vercel.app).
+
+--------------------------------------------------------------------------------
+5. LANGKAH PRAKTIS SETUP DI DASHBOARD VERCEL
+--------------------------------------------------------------------------------
+
+LANGKAH 1: DEPLOY BACKEND DULU
+1. Di Vercel Dashboard, klik "Add New..." -> "Project" -> Pilih Repo Git ini.
+2. Pada bagian "Root Directory", klik EDIT -> Pilih folder: backend
+3. Pengaturan Build:
+   - Framework Preset : Other
+   - Build Command    : npm run build
+   - Output Directory : (kosongkan / default)
+4. Masukkan Environment Variables untuk Backend:
+   - DATABASE_URL    = postgresql://<USER>:<PASSWORD>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+   - SUPABASE_URL    = https://<PROJECT_REF>.supabase.co
+   - SUPABASE_KEY    = <SUPABASE_SERVICE_ROLE_KEY>
+   - GEMINI_API_KEY  = <YOUR_GEMINI_API_KEY>
+   - GEMINI_MODEL    = gemini-3.5-flash-lite
+   - AI_PROVIDER     = gemini
+   - NODE_ENV        = production
+   - FRONTEND_ORIGIN = (sementara isi http://localhost:5173 atau kosongkan dulu)
+5. Klik "Deploy". Catat URL backend yang didapat (misal: https://scamora-api.vercel.app).
+
+LANGKAH 2: DEPLOY FRONTEND
+1. Di Vercel Dashboard, klik lagi "Add New..." -> "Project" -> Pilih Repo Git yang sama.
+2. Pada bagian "Root Directory", klik EDIT -> Pilih folder: frontend
+3. Pengaturan Build:
+   - Framework Preset : Vite
+   - Build Command    : npm run build
+   - Output Directory : dist
+4. Masukkan Environment Variables untuk Frontend:
+   - VITE_API_BASE_URL             = https://scamora-api.vercel.app/api/v1  <-- Ganti pakai URL backend di Langkah 1!
+   - VITE_USE_MOCK                 = false
+   - VITE_SUPABASE_URL             = https://<PROJECT_REF>.supabase.co
+   - VITE_SUPABASE_PUBLISHABLE_KEY = <SUPABASE_ANON_KEY>
+   - VITE_SUPABASE_ANON_KEY        = <SUPABASE_ANON_KEY>
+5. Klik "Deploy". Catat URL frontend kamu (misal: https://scamora-app.vercel.app).
+
+LANGKAH 3: SINKRONISASI AKHIR
+1. Buka kembali proyek Backend di Vercel -> Menu Settings -> Environment Variables.
+2. Edit FRONTEND_ORIGIN dan isi dengan URL frontend dari Langkah 2:
+   FRONTEND_ORIGIN = https://scamora-app.vercel.app
+3. Klik "Redeploy" pada backend. SELESAI! Kedua sistem sudah terhubung penuh.
+
+================================================================================
+                    DOKUMEN INI SIAP DIBAGIKAN KE TIM / TEMAN
+================================================================================
+

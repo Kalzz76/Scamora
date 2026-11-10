@@ -62,31 +62,31 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
   return (
     <>
-      <header className="w-full fixed top-0 left-0 right-0 z-50 h-[64px] bg-transparent pointer-events-none px-2.5 sm:px-6 flex items-center justify-between">
+      <header className="w-full fixed top-0 left-0 right-0 z-50 h-[50px] bg-transparent pointer-events-none px-2 sm:px-4 flex items-center justify-between">
         {/* SISI KIRI: PULAU BRANDING KONTEN & MOBILE DRAWER TRIGGER */}
-        <div className="glass-panel-dark rounded-2xl px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-2 sm:gap-3 pointer-events-auto shadow-xl group border border-white/20">
+        <div className="glass-panel-dark rounded-xl px-2 sm:px-3 py-1 flex items-center gap-1.5 sm:gap-2 pointer-events-auto shadow-lg group border border-white/20">
           {/* Hamburger Menu on Mobile */}
           <button
             type="button"
             onClick={() => setIsDrawerOpen(true)}
-            className="md:hidden w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
+            className="md:hidden w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer"
             title="Buka Navigasi Admin"
             aria-label="Buka Navigasi Admin"
           >
-            <Menu className="w-4 h-4 text-cyan-300" />
+            <Menu className="w-3.5 h-3.5 text-cyan-300" />
           </button>
 
-          <Link to="/admin" className="flex items-center gap-2">
+          <Link to="/admin" className="flex items-center gap-1.5">
             <div>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-black text-base sm:text-lg tracking-tight text-white group-hover:text-cyan-300 transition-colors">
+              <div className="flex items-center gap-1.5">
+                <span className="font-black text-sm tracking-tight text-white group-hover:text-cyan-300 transition-colors">
                   Scamora
                 </span>
-                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md bg-[#548CA8] text-white font-mono uppercase tracking-wider shadow-xs">
+                <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.2 rounded bg-[#548CA8] text-white font-mono uppercase tracking-wider shadow-xs">
                   Admin
                 </span>
               </div>
-              <p className="text-[9px] sm:text-[10px] text-slate-200 font-medium leading-none mt-0.5 font-mono hidden xs:block">
+              <p className="text-[8px] text-slate-200 font-medium leading-none mt-0.5 font-mono hidden xs:block">
                 Command &amp; Control Center
               </p>
             </div>
@@ -94,12 +94,12 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         </div>
 
         {/* SISI KANAN: PULAU AKUN & NOTIFIKASI KONTEN */}
-        <div className="glass-panel-dark rounded-2xl p-1 sm:p-1.5 flex items-center gap-1.5 sm:gap-2 pointer-events-auto shadow-xl border border-white/20">
+        <div className="glass-panel-dark rounded-xl p-1 flex items-center gap-1 sm:gap-1.5 pointer-events-auto shadow-lg border border-white/20">
           {/* Toggle Theme: Light / Dark Mode */}
           <button
             type="button"
             onClick={toggleTheme}
-            className="w-8 h-8 rounded-xl border border-white/10 hover:border-white/20 bg-white/10 hover:bg-white/20 text-[#EEEEEE] flex items-center justify-center transition relative cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-white/10 hover:border-white/20 bg-white/10 hover:bg-white/20 text-[#EEEEEE] flex items-center justify-center transition relative cursor-pointer"
             title={isDark ? 'Beralih ke Mode Terang (Siang)' : 'Beralih ke Mode Gelap (Malam)'}
           >
             {isDark ? (
@@ -113,11 +113,11 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           <button
             type="button"
             onClick={() => toast.info('Tidak ada peringatan keamanan kritis baru.')}
-            className="w-8 h-8 rounded-xl border border-white/10 hover:border-white/20 bg-white/10 hover:bg-white/20 text-[#EEEEEE] flex items-center justify-center transition relative cursor-pointer"
+            className="w-7 h-7 rounded-lg border border-white/10 hover:border-white/20 bg-white/10 hover:bg-white/20 text-[#EEEEEE] flex items-center justify-center transition relative cursor-pointer"
             title="Notifikasi Sistem"
           >
             <Bell className="w-3.5 h-3.5" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#548CA8]" />
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#548CA8]" />
           </button>
 
           {/* User Account Capsule */}
@@ -125,32 +125,32 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
             <button
               type="button"
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:pr-3 rounded-xl border border-white/10 hover:border-[#548CA8] bg-white/10 hover:bg-white/20 transition cursor-pointer"
+              className="flex items-center gap-1.5 p-0.5 sm:pr-2 rounded-lg border border-white/10 hover:border-[#548CA8] bg-white/10 hover:bg-white/20 transition cursor-pointer"
             >
               {/* Avatar with Online Pulse */}
               <div className="relative">
-                <div className="w-7 h-7 rounded-lg bg-[#476072] text-white flex items-center justify-center font-bold text-xs font-mono shadow-xs border border-white/20">
+                <div className="w-6 h-6 rounded-md bg-[#476072] text-white flex items-center justify-center font-bold text-[10px] font-mono shadow-xs border border-white/20">
                   SA
                 </div>
-                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#334257]" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-1 ring-[#334257]" />
               </div>
 
               {/* Name & Role Text (hidden on small screens) */}
               <div className="text-left hidden md:block">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-white">
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-white leading-tight">
                     {currentUser?.name || 'Super Administrator'}
                   </span>
-                  <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-sm bg-[#548CA8] text-white font-bold">
+                  <span className="text-[8px] font-mono px-1 py-0 rounded-xs bg-[#548CA8] text-white font-bold">
                     Online
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-200 block leading-tight font-mono">
+                <span className="text-[9px] text-slate-200 block leading-none font-mono">
                   {currentUser?.username ? `${currentUser.username}@scamora.id` : 'admin@scamora.id'}
                 </span>
               </div>
 
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-200 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 text-slate-200 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {/* User Profile Dropdown Menu */}

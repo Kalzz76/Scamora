@@ -121,14 +121,14 @@ const AdminLayout: React.FC = () => {
       />
 
       {/* Workspace Body: Fixed Sidebar (Left on desktop, hidden on mobile) + Content (Right) */}
-      <div className="flex-1 flex min-w-0 pt-[64px] relative z-10 bg-transparent">
-        {/* Fixed Mini Sidebar (74px spacer only on md+ screens) */}
-        <div className="hidden md:block w-[74px] shrink-0 relative z-40">
+      <div className="flex-1 flex min-w-0 pt-[50px] relative z-10 bg-transparent">
+        {/* Fixed Mini Sidebar (54px spacer only on md+ screens) */}
+        <div className="hidden md:block w-[54px] shrink-0 relative z-40">
           <AdminSidebar reportCount={1} />
         </div>
 
-        {/* Main Content Area: pb-24 on mobile to prevent overlap with bottom dock */}
-        <main className="flex-1 min-w-0 overflow-y-auto pb-24 md:pb-12 bg-transparent">
+        {/* Main Content Area: pb-20 on mobile to prevent overlap with bottom dock */}
+        <main className="flex-1 min-w-0 overflow-y-auto pb-20 md:pb-8 bg-transparent">
           <Outlet />
         </main>
       </div>

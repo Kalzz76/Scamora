@@ -1,4 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
+import { isDbConnected, query } from '../config/db';
+import { getSupabaseClient } from '../config/supabase';
 import {
   abandonSession,
   createSession,
@@ -14,13 +16,13 @@ import {
 } from '../services/challengeService';
 import type { DifficultyLevel } from '../types/challenge';
 
-export function handleListCategories(
+export async function handleListCategories(
   _req: Request,
   res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   try {
-    const categories = listCategories();
+    const categories = await listCategories();
     res.status(200).json({
       success: true,
       data: categories,
@@ -30,15 +32,15 @@ export function handleListCategories(
   }
 }
 
-export function handleListScenarios(
+export async function handleListScenarios(
   req: Request,
   res: Response,
   next: NextFunction
-): void {
+): Promise<void> {
   try {
     const categoryId = req.query.category_id as string | undefined;
     const difficulty = req.query.difficulty as DifficultyLevel | undefined;
-    const scenarios = listScenarios(categoryId, difficulty);
+    const scenarios = await listScenarios(categoryId, difficulty);
     res.status(200).json({
       success: true,
       data: scenarios,
@@ -247,6 +249,45 @@ export function handleGetStatistics(
       success: true,
       data: stats,
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function handleGetQuizQuestions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const difficulty = req.query.difficulty as string | undefined;
+    if (isDbConnected()) {
+      let q = `SELECT * FROM challenge_questions WHERE is_active = true`;
+      const params: any[] = [];
+      if (difficulty) {
+        q += ` AND difficulty = $1`;
+        params.push(difficulty);
+      }
+      q += ` ORDER BY order_index ASC, created_at ASC`;
+      const dbRes = await query(q, params);
+      if (dbRes && dbRes.rows.length > 0) {
+        res.status(200).json({ success: true, data: dbRes.rows });
+        return;
+      }
+    }
+
+    const sb = getSupabaseClient();
+    if (sb) {
+      let queryBuilder = sb.from('challenge_questions').select('*').eq('is_active', true);
+      if (difficulty) queryBuilder = queryBuilder.eq('difficulty', difficulty);
+      const { data } = await queryBuilder.order('order_index', { ascending: true });
+      if (data && data.length > 0) {
+        res.status(200).json({ success: true, data });
+        return;
+      }
+    }
+
+    res.status(200).json({ success: true, data: [] });
   } catch (err) {
     next(err);
   }

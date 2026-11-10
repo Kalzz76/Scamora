@@ -3,6 +3,7 @@ import {
   handleAbandonSession,
   handleCreateSession,
   handleGenerateScenario,
+  handleGetQuizQuestions,
   handleGetSession,
   handleGetSessionResult,
   handleGetStatistics,
@@ -20,6 +21,7 @@ import {
 
 const router = Router();
 
+router.get('/quiz-questions', handleGetQuizQuestions);
 router.get('/categories', handleListCategories);
 router.get('/scenarios', handleListScenarios);
 router.post(

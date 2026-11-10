@@ -1,7 +1,6 @@
 import crypto from 'crypto';
 import { getSupabaseClient } from '../../config/supabase';
 import { isDbConnected, query } from '../../config/db';
-import { SEED_CATEGORIES, SEED_SCENARIOS } from '../../data/seedScenarios';
 import type {
   ChallengeCategory,
   ChallengeResult,
@@ -13,40 +12,62 @@ import type {
 } from '../../types/challenge';
 import { generateScenarioWithGemini } from './geminiScenarioGenerator';
 
-// In-memory state storage (Fallback & caching layer)
+// In-memory state storage (Cache layer populated from database)
 const memorySessions = new Map<string, ChallengeSession>();
 const memoryResults = new Map<string, ChallengeResult>();
 const dynamicScenarios = new Map<string, ChallengeScenario>();
 
-// Prepopulate seed scenarios into dynamic map
-for (const s of SEED_SCENARIOS) {
-  dynamicScenarios.set(s.id, s);
-}
-
 export async function syncScenariosFromDb(): Promise<void> {
-  if (!isDbConnected()) return;
-  try {
-    const res = await query('SELECT * FROM challenge_scenarios ORDER BY created_at ASC');
-    if (res && res.rows) {
-      for (const row of res.rows) {
-        dynamicScenarios.set(row.id, {
-          id: row.id,
-          categoryId: row.category_id,
-          title: row.title,
-          difficulty: row.difficulty,
-          characterName: row.character_name,
-          characterRole: row.character_role,
-          characterAvatar: row.character_avatar,
-          initialDialogue: typeof row.initial_dialogue === 'string' ? JSON.parse(row.initial_dialogue) : row.initial_dialogue,
-          decisionNodes: typeof row.decision_nodes === 'string' ? JSON.parse(row.decision_nodes) : row.decision_nodes,
-          redFlags: typeof row.red_flags === 'string' ? JSON.parse(row.red_flags) : row.red_flags,
-          learningPoints: typeof row.learning_points === 'string' ? JSON.parse(row.learning_points) : row.learning_points,
-          isAiGenerated: row.is_ai_generated || false,
-        });
+  if (isDbConnected()) {
+    try {
+      const res = await query('SELECT * FROM challenge_scenarios ORDER BY created_at ASC');
+      if (res && res.rows && res.rows.length > 0) {
+        for (const row of res.rows) {
+          dynamicScenarios.set(row.id, {
+            id: row.id,
+            categoryId: row.category_id,
+            title: row.title,
+            difficulty: row.difficulty,
+            characterName: row.character_name,
+            characterRole: row.character_role,
+            characterAvatar: row.character_avatar,
+            initialDialogue: typeof row.initial_dialogue === 'string' ? JSON.parse(row.initial_dialogue) : row.initial_dialogue,
+            decisionNodes: typeof row.decision_nodes === 'string' ? JSON.parse(row.decision_nodes) : row.decision_nodes,
+            redFlags: typeof row.red_flags === 'string' ? JSON.parse(row.red_flags) : row.red_flags,
+            learningPoints: typeof row.learning_points === 'string' ? JSON.parse(row.learning_points) : row.learning_points,
+            isAiGenerated: row.is_ai_generated || false,
+          });
+        }
+        return;
       }
+    } catch (err: any) {
+      console.warn('[Challenge] syncScenariosFromDb error:', err.message);
     }
-  } catch (err: any) {
-    console.warn('[Challenge] syncScenariosFromDb error:', err.message);
+  }
+
+  const sb = getSupabaseClient();
+  if (sb) {
+    try {
+      const { data } = await sb.from('challenge_scenarios').select('*').order('created_at', { ascending: true });
+      if (data && data.length > 0) {
+        for (const row of data) {
+          dynamicScenarios.set(row.id, {
+            id: row.id,
+            categoryId: row.category_id,
+            title: row.title,
+            difficulty: row.difficulty,
+            characterName: row.character_name,
+            characterRole: row.character_role,
+            characterAvatar: row.character_avatar,
+            initialDialogue: typeof row.initial_dialogue === 'string' ? JSON.parse(row.initial_dialogue) : row.initial_dialogue,
+            decisionNodes: typeof row.decision_nodes === 'string' ? JSON.parse(row.decision_nodes) : row.decision_nodes,
+            redFlags: typeof row.red_flags === 'string' ? JSON.parse(row.red_flags) : row.red_flags,
+            learningPoints: typeof row.learning_points === 'string' ? JSON.parse(row.learning_points) : row.learning_points,
+            isAiGenerated: row.is_ai_generated || false,
+          });
+        }
+      }
+    } catch {}
   }
 }
 
@@ -55,23 +76,65 @@ setTimeout(() => {
   syncScenariosFromDb().catch(() => {});
 }, 1500);
 
-export function listCategories(): ChallengeCategory[] {
-  return SEED_CATEGORIES.map((cat) => {
-    let count = 0;
-    for (const sc of dynamicScenarios.values()) {
-      if (sc.categoryId === cat.id) count++;
+export async function listCategories(): Promise<ChallengeCategory[]> {
+  const categories: ChallengeCategory[] = [];
+  if (isDbConnected()) {
+    try {
+      const res = await query('SELECT * FROM challenge_categories ORDER BY sort_order ASC');
+      if (res && res.rows && res.rows.length > 0) {
+        for (const row of res.rows) {
+          let count = 0;
+          for (const sc of dynamicScenarios.values()) {
+            if (sc.categoryId === row.id) count++;
+          }
+          categories.push({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            icon: row.icon,
+            sort_order: row.sort_order,
+            scenario_count: count,
+          });
+        }
+        return categories;
+      }
+    } catch (err: any) {
+      console.warn('[Challenge] listCategories DB error:', err.message);
     }
-    return {
-      ...cat,
-      scenario_count: count,
-    };
-  });
+  }
+
+  const sb = getSupabaseClient();
+  if (sb) {
+    try {
+      const { data } = await sb.from('challenge_categories').select('*').order('sort_order', { ascending: true });
+      if (data && data.length > 0) {
+        for (const row of data) {
+          let count = 0;
+          for (const sc of dynamicScenarios.values()) {
+            if (sc.categoryId === row.id) count++;
+          }
+          categories.push({
+            id: row.id,
+            name: row.name,
+            description: row.description,
+            icon: row.icon,
+            sort_order: row.sort_order,
+            scenario_count: count,
+          });
+        }
+        return categories;
+      }
+    } catch {}
+  }
+
+  return categories;
 }
 
-export function listScenarios(
+export async function listScenarios(
   categoryId?: string,
   difficulty?: DifficultyLevel
-): Array<Omit<ChallengeScenario, 'decisionNodes'>> {
+): Promise<Array<Omit<ChallengeScenario, 'decisionNodes'>>> {
+  await syncScenariosFromDb();
   let list = Array.from(dynamicScenarios.values());
 
   if (categoryId) {
@@ -532,8 +595,6 @@ function buildChallengeResult(
     (rf) => !session.detectedRedFlags.includes(rf.id)
   );
 
-  const category = SEED_CATEGORIES.find((c) => c.id === scenario.categoryId);
-
   const feedbackSummary =
     score >= 70
       ? `Luar biasa! Anda menunjukkan ketelitian tinggi dalam mendeteksi manipulasi pada kasus "${scenario.title}". Refleks keamanan Anda mampu menghentikan serangan rekayasa sosial.`
@@ -546,7 +607,7 @@ function buildChallengeResult(
     scenarioId: scenario.id,
     scenarioTitle: scenario.title,
     difficulty: scenario.difficulty,
-    categoryName: category?.name || scenario.categoryId,
+    categoryName: scenario.categoryId,
     score,
     safetyRating,
     redFlagsDetected,

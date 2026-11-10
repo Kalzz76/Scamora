@@ -99,11 +99,11 @@ export const AiEngineConfigPage: React.FC = () => {
   }
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-10 w-full max-w-7xl mx-auto">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 w-full max-w-6xl mx-auto">
       {/* ========================================================================= */}
       {/* 1. KONDISI AI SAAT INI (GRAFIK PENGGUNAAN TOKEN & TEMPAT UJI KONEKSI)      */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8">
+      <section className="glass-panel rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5">
         <AiConditionSection
           aiConfig={aiConfig}
           hourlyTokens={stats?.aiTelemetry?.hourlyTokens24h}
@@ -116,27 +116,27 @@ export const AiEngineConfigPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. SETTING LANJUTAN (COLLAPSIBLE / ACCORDION DENGAN KLIK BUKA TUTUP)      */}
       {/* ========================================================================= */}
-      <section className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-6">
+      <section className="glass-panel rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 space-y-4">
         {/* Clickable Header Accordion Trigger */}
         <button
           type="button"
           onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
-          className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8E0E7] pb-4 text-left cursor-pointer group hover:bg-[#EEEEEE]/30 -mx-2 px-2 py-2 rounded-xl transition-colors"
+          className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-[#D8E0E7] pb-3 text-left cursor-pointer group hover:bg-[#EEEEEE]/30 -mx-1.5 px-1.5 py-1.5 rounded-lg transition-colors"
         >
-          <div className="flex items-start sm:items-center gap-3">
-            <span className="w-6 h-6 rounded-md bg-[#334257] text-white text-xs font-black font-mono flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+          <div className="flex items-start sm:items-center gap-2.5">
+            <span className="w-5 h-5 rounded-md bg-[#334257] text-white text-[11px] font-black font-mono flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
               2
             </span>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-black text-[#1A202C] tracking-tight group-hover:text-[#548CA8] transition-colors">
+                <h2 className="text-base font-black text-[#1A202C] tracking-tight group-hover:text-[#548CA8] transition-colors">
                   Setting Lanjutan AI Engine &amp; Web Crawler
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold uppercase">
+                <span className="px-1.5 py-0.2 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[9px] font-bold uppercase">
                   {isAdvancedOpen ? 'Terbuka' : 'Tertutup'}
                 </span>
               </div>
-              <p className="text-xs text-[#476072] mt-0.5">
+              <p className="text-[11px] text-[#476072] mt-0.5">
                 {isAdvancedOpen
                   ? 'Klik untuk menutup kembali panel pengaturan lanjutan ini.'
                   : 'Klik untuk membuka & mengubah model penalaran, temperatur, crawler sandbox, dan ambang batas risiko.'}
@@ -144,16 +144,16 @@ export const AiEngineConfigPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-            <span className="text-xs font-bold text-[#548CA8] font-mono hidden sm:inline">
+          <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+            <span className="text-[11px] font-bold text-[#548CA8] font-mono hidden sm:inline">
               {isAdvancedOpen ? 'Tutup Pengaturan' : 'Buka Pengaturan'}
             </span>
             <div
-              className={`w-8 h-8 rounded-xl border border-[#D8E0E7] bg-white flex items-center justify-center text-[#334257] transition-transform duration-200 ${
+              className={`w-7 h-7 rounded-lg border border-[#D8E0E7] bg-white flex items-center justify-center text-[#334257] transition-transform duration-200 ${
                 isAdvancedOpen ? 'rotate-180 bg-[#548CA8]/15 border-[#548CA8]' : ''
               }`}
             >
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-3.5 h-3.5" />
             </div>
           </div>
         </button>

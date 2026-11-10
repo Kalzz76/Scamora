@@ -14,42 +14,8 @@ export interface ScanHistoryRecord {
   result?: any;
 }
 
-// In-memory fallback history with realistic sample data for seed users
-const inMemoryHistory: ScanHistoryRecord[] = [
-  {
-    id: 'hist-1',
-    userId: 'budi_santoso',
-    type: 'url',
-    inputSummary: 'Analisis URL: bca.secure-update-login.xyz',
-    riskLevel: 'high',
-    riskScore: 92,
-    scamType: 'phishing',
-    indicatorsCount: 4,
-    createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-  },
-  {
-    id: 'hist-2',
-    userId: 'budi_santoso',
-    type: 'chat',
-    inputSummary: 'Analisis Pesan: Halo kak, ada tugas like video YouTube komisi 2jt...',
-    riskLevel: 'high',
-    riskScore: 85,
-    scamType: 'job_scam',
-    indicatorsCount: 3,
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-  },
-  {
-    id: 'hist-3',
-    userId: 'budi_santoso',
-    type: 'url',
-    inputSummary: 'Analisis URL: tokopedia.com/official-store',
-    riskLevel: 'low',
-    riskScore: 0,
-    scamType: 'unknown',
-    indicatorsCount: 0,
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-  },
-];
+// In-memory fallback history (clean state, no mock data)
+const inMemoryHistory: ScanHistoryRecord[] = [];
 
 // Guest scan tracking map: guestSessionId -> scan count
 const guestScanMap = new Map<string, number>();
@@ -79,23 +45,35 @@ export const historyService = {
 
     if (isDbConnected()) {
       try {
-        const inputHash = crypto.createHash('sha256').update(record.inputSummary).digest('hex');
+        let userUuid: string | null = null;
+        if (record.userId && record.userId !== 'guest') {
+          const uRes = await query('SELECT id FROM app_users WHERE username = $1 OR id::text = $1 LIMIT 1', [record.userId]);
+          if (uRes && uRes.rows.length > 0) {
+            userUuid = uRes.rows[0].id;
+          }
+        }
+
         await query(
-          `INSERT INTO analysis_history (user_id, analysis_type, input_hash, sanitized_summary, risk_level, risk_score, scam_type, indicators_summary, created_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+          `INSERT INTO analysis_history (
+            user_id, guest_session_id, analysis_type, input_target, domain, risk_score, risk_level, scam_category, confidence_score, status, indicators, ai_explanation, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
           [
-            record.userId,
+            userUuid,
+            record.userId === 'guest' ? 'guest-session' : null,
             record.type,
-            inputHash,
-            record.inputSummary.slice(0, 250),
-            record.riskLevel,
+            record.inputSummary.slice(0, 500),
+            record.type === 'url' ? record.inputSummary.replace(/^Analisis URL:\s*/, '') : null,
             record.riskScore,
+            record.riskLevel,
             record.scamType,
+            record.result?.confidence_score || 0.95,
+            'complete',
             JSON.stringify(record.result?.indicators || []),
+            record.result?.ai_explanation || null,
           ]
         );
-      } catch (err) {
-        console.warn('[DB] Gagal menyimpan analysis_history:', err);
+      } catch (err: any) {
+        console.warn('[DB] Gagal menyimpan analysis_history:', err.message);
       }
     }
 
@@ -106,10 +84,11 @@ export const historyService = {
     if (isDbConnected()) {
       try {
         const res = await query(
-          `SELECT id, user_id, analysis_type, sanitized_summary, risk_level, risk_score, scam_type, indicators_summary, created_at
-           FROM analysis_history
-           WHERE user_id = $1
-           ORDER BY created_at DESC
+          `SELECT h.id, h.user_id, h.analysis_type, h.input_target, h.risk_level, h.risk_score, h.scam_category, h.indicators, h.created_at
+           FROM analysis_history h
+           LEFT JOIN app_users u ON h.user_id = u.id
+           WHERE h.user_id::text = $1 OR u.username = $1
+           ORDER BY h.created_at DESC
            LIMIT 50`,
           [userId]
         );
@@ -118,16 +97,16 @@ export const historyService = {
             id: r.id,
             userId: r.user_id,
             type: r.analysis_type,
-            inputSummary: r.sanitized_summary,
+            inputSummary: r.input_target,
             riskLevel: r.risk_level,
             riskScore: Number(r.risk_score),
-            scamType: r.scam_type,
-            indicatorsCount: Array.isArray(r.indicators_summary) ? r.indicators_summary.length : 0,
+            scamType: r.scam_category,
+            indicatorsCount: Array.isArray(r.indicators) ? r.indicators.length : 0,
             createdAt: r.created_at,
           }));
         }
-      } catch (err) {
-        console.warn('[DB] Gagal membaca analysis_history, beralih ke memori:', err);
+      } catch (err: any) {
+        console.warn('[DB] Gagal membaca analysis_history, beralih ke memori:', err.message);
       }
     }
 
@@ -141,9 +120,9 @@ export const historyService = {
     const chatScans = history.filter((h) => h.type === 'chat').length;
     const totalScans = urlScans + chatScans;
 
-    let challengeAttempts = 3;
-    let highestScore = 95;
-    let averageScore = 88;
+    let challengeAttempts = 0;
+    let highestScore = 0;
+    let averageScore = 0;
 
     if (isDbConnected()) {
       try {

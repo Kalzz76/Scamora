@@ -98,13 +98,15 @@ export async function handleAnalyzeUrl(
     const supabase = getSupabaseClient();
     if (supabase && !isDbConnected()) {
       try {
-        supabase.from('analysis_stats').insert({
-          analysis_type: 'url',
-          risk_level: riskLevel,
-          risk_score: riskScore,
-          scam_type: scamType,
-          indicators_count: result.indicators?.length || 0,
-        }).then(() => {}, () => {});
+        Promise.resolve(
+          supabase.from('analysis_stats').insert({
+            analysis_type: 'url',
+            risk_level: riskLevel,
+            risk_score: riskScore,
+            scam_type: scamType,
+            indicators_count: result.indicators?.length || 0,
+          })
+        ).catch(() => {});
       } catch {}
     }
 
@@ -197,13 +199,15 @@ export async function handleAnalyzeChat(
     const supabase = getSupabaseClient();
     if (supabase && !isDbConnected()) {
       try {
-        supabase.from('analysis_stats').insert({
-          analysis_type: 'chat',
-          risk_level: riskLevel,
-          risk_score: riskScore,
-          scam_type: scamType,
-          indicators_count: result.indicators?.length || 0,
-        }).then(() => {}, () => {});
+        Promise.resolve(
+          supabase.from('analysis_stats').insert({
+            analysis_type: 'chat',
+            risk_level: riskLevel,
+            risk_score: riskScore,
+            scam_type: scamType,
+            indicators_count: result.indicators?.length || 0,
+          })
+        ).catch(() => {});
       } catch {}
     }
 
@@ -225,5 +229,50 @@ export async function handleAnalyzeChat(
   } catch (err) {
     next(err);
   }
+}
+
+export async function handleGetScannedDomains(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  let domains: any[] = [];
+  if (isDbConnected()) {
+    try {
+      const resDb = await query(
+        `SELECT domain, risk_score as "riskScore", risk_category as "riskCategory", scam_category as "scamCategory", check_count as "count", last_checked_at as "lastCheckedAt"
+         FROM scanned_domains
+         ORDER BY last_checked_at DESC
+         LIMIT 20`
+      );
+      if (resDb && resDb.rows.length > 0) {
+        domains = resDb.rows;
+      }
+    } catch {}
+  }
+
+  if (domains.length === 0) {
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { data } = await sb
+          .from('scanned_domains')
+          .select('domain, risk_score, risk_category, scam_category, check_count, last_checked_at')
+          .order('last_checked_at', { ascending: false })
+          .limit(20);
+        if (data && data.length > 0) {
+          domains = data.map((d: any) => ({
+            domain: d.domain,
+            riskScore: d.risk_score,
+            riskCategory: d.risk_category,
+            scamCategory: d.scam_category,
+            count: d.check_count,
+            lastCheckedAt: d.last_checked_at,
+          }));
+        }
+      } catch {}
+    }
+  }
+
+  res.status(200).json({ success: true, data: domains });
 }
 

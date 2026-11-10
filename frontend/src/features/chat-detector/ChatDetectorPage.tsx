@@ -17,7 +17,7 @@ import { motion } from 'motion/react';
 import { toast } from 'sonner';
 import { DEMO_PRESETS } from '../../lib/constants';
 import { analysisService } from '../../services/analysisService';
-import { MockAnalyzer } from '../../services/mockAnalyzer';
+import { maskPII } from '../../lib/piiMasker';
 import { Stepper } from '../../components/common/Stepper';
 import { ChatForensicsIllustration } from '../../components/illustrations/Illustrations2D';
 import type { AnalysisResult } from '../../types/analysis';
@@ -45,7 +45,15 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
   const [showQuotaModal, setShowQuotaModal] = useState(false);
   const navigate = useNavigate();
 
-  const chatPresets = DEMO_PRESETS.filter((p) => p.type === 'chat');
+  const [chatPresets, setChatPresets] = useState(DEMO_PRESETS.filter((p) => p.type === 'chat'));
+
+  useEffect(() => {
+    analysisService.getDemoPresets().then((data) => {
+      if (data && data.length > 0) {
+        setChatPresets(data.filter((p) => p.type === 'chat'));
+      }
+    });
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -59,7 +67,7 @@ export const ChatDetectorPage: React.FC<ChatDetectorPageProps> = ({
     }
   }, [initialPresetId]);
 
-  const { maskedText, maskedCount } = MockAnalyzer.maskPII(chatText);
+  const { maskedText, maskedCount } = maskPII(chatText);
 
   const handleSelectPreset = (preset: typeof chatPresets[0]) => {
     setChatText(preset.content);

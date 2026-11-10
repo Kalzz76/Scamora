@@ -38,8 +38,12 @@ referensi/
 referensi-desain/
 referemsi/
 personal_nabil/
+personal_me/
 PhishingScanner/
 **/node_modules/
+
+# Temporary disposable scripts
+temp_seeder/
 
 # Editor and OS files
 .vscode/

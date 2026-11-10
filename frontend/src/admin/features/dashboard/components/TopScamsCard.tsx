@@ -55,31 +55,31 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
   const totalTop5 = sorted.reduce((acc, curr) => acc + curr[1], 0) || 1;
 
   return (
-    <div className="flex flex-col justify-between space-y-5 h-full">
+    <div className="flex flex-col justify-between space-y-3.5 h-full">
       {/* Header */}
       <div>
-        <div className="flex items-center justify-between border-b border-[#D8E0E7] pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-              <ShieldAlert className="w-5 h-5" />
+        <div className="flex items-center justify-between border-b border-[#D8E0E7] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-[#1A202C]">3. Top 5 Modus Penipuan</h3>
-              <p className="text-xs text-[#476072]">Peringkat kasus kejahatan siber yang paling sering terdeteksi</p>
+              <h3 className="text-sm sm:text-base font-bold text-[#1A202C]">3. Top 5 Modus Penipuan</h3>
+              <p className="text-[11px] text-[#476072]">Peringkat kasus kejahatan siber yang paling sering terdeteksi</p>
             </div>
           </div>
 
           <Link
             to="/admin/knowledge"
-            className="text-xs font-bold text-[#548CA8] hover:underline flex items-center gap-1 shrink-0"
+            className="text-[11px] font-bold text-[#548CA8] hover:underline flex items-center gap-1 shrink-0"
           >
             <span>Katalog Modus</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
         {/* Top 5 Ranked List (Clean Rankings Only - No Progress Bars) */}
-        <div className="divide-y divide-[#D8E0E7] pt-2">
+        <div className="divide-y divide-[#D8E0E7] pt-1.5">
           {sorted.map(([type, count], index) => {
             const meta = metaMap[type] || {
               label: type.replace('_', ' ').toUpperCase(),
@@ -88,16 +88,16 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
               color: 'text-gray-600 bg-gray-50 border-gray-200',
             };
             const Icon = meta.icon;
-            const percentOfTop5 = ((count / totalTop5) * 100).toFixed(1);
+            const percentOfTop5 = totalTop5 > 0 ? ((count / totalTop5) * 100).toFixed(1) : '0.0';
 
             return (
               <div
                 key={type}
-                className="py-3 flex items-center justify-between text-xs hover:bg-[#EEEEEE]/40 px-2 rounded-lg transition-colors"
+                className="py-2 flex items-center justify-between text-xs hover:bg-[#EEEEEE]/40 px-1.5 rounded-lg transition-colors"
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-2.5 min-w-0">
                   <span
-                    className={`w-6 h-6 rounded-md font-mono font-black text-xs flex items-center justify-center shrink-0 ${
+                    className={`w-5 h-5 rounded-md font-mono font-black text-[11px] flex items-center justify-center shrink-0 ${
                       index === 0
                         ? 'bg-[#334257] text-white shadow-xs'
                         : index === 1
@@ -109,18 +109,18 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
                   >
                     #{index + 1}
                   </span>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Icon className="w-4 h-4 text-[#476072] shrink-0" />
-                    <span className="font-bold text-[#1A202C] truncate">{meta.label}</span>
-                    <span className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded-sm border ${meta.color} hidden sm:inline`}>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Icon className="w-3.5 h-3.5 text-[#476072] shrink-0" />
+                    <span className="font-bold text-[#1A202C] text-[11px] truncate">{meta.label}</span>
+                    <span className={`text-[8px] font-bold font-mono px-1 py-0.2 rounded-xs border ${meta.color} hidden sm:inline`}>
                       {meta.tier}
                     </span>
                   </div>
                 </div>
 
-                <div className="text-right shrink-0 font-mono">
-                  <span className="font-black text-[#1A202C]">{count.toLocaleString()}</span>{' '}
-                  <span className="text-[11px] text-[#476072]">kasus</span>{' '}
+                <div className="text-right shrink-0 font-mono text-[11px]">
+                  <span className="font-black text-[#1A202C]">{(count ?? 0).toLocaleString()}</span>{' '}
+                  <span className="text-[10px] text-[#476072]">kasus</span>{' '}
                   <span className="text-[10px] text-[#548CA8] font-bold">({percentOfTop5}%)</span>
                 </div>
               </div>
@@ -130,10 +130,10 @@ export const TopScamsCard: React.FC<TopScamsCardProps> = ({ scamTypeBreakdown })
       </div>
 
       {/* Footer summary */}
-      <div className="p-3 rounded-xl bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between text-xs text-[#476072] mt-2">
+      <div className="p-2.5 rounded-lg bg-[#EEEEEE] border border-[#D8E0E7] flex items-center justify-between text-[11px] text-[#476072] mt-1.5">
         <span>Total kasus dari Top 5:</span>
         <span className="font-mono font-black text-[#334257]">
-          {totalTop5.toLocaleString()} insiden
+          {(totalTop5 ?? 0).toLocaleString()} insiden
         </span>
       </div>
     </div>

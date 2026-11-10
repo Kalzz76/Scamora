@@ -1,3 +1,4 @@
+// Scamora Backend Express Application
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -10,20 +11,27 @@ const app = express();
 // Trust proxy for Vercel / Cloudflare edge reverse proxy to ensure accurate client IP in rateLimiters
 app.set('trust proxy', 1);
 
+const cleanFrontendOrigin = env.FRONTEND_ORIGIN?.replace(/\/+$/, '');
+
 const allowedOrigins = [
-  env.FRONTEND_ORIGIN,
+  cleanFrontendOrigin,
   'http://localhost:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
-].filter(Boolean);
+].filter(Boolean) as string[];
 
 app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, server-to-server) or in whitelist
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/+$/, '');
+      if (
+        allowedOrigins.some((o) => o.replace(/\/+$/, '') === cleanOrigin) ||
+        origin.endsWith('.vercel.app')
+      ) {
         return callback(null, true);
       }
       return callback(null, true); // Dev-friendly fallback

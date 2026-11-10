@@ -54,13 +54,21 @@ export interface TurnstileWidgetProps {
 
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
+const OLD_INVALID_SITE_KEY = '0x4AAAAAAF6vgbWmr3ad1cz9';
+const NEW_VALID_SITE_KEY = '0x4AAAAAAF67yLvs908uSKqH';
+
 // Resolve Turnstile Site Key from environment variables (Vite, Next.js convention, or fallback)
 const getTurnstileSiteKey = (): string => {
   const envKey =
     (import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined) ||
     (import.meta.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY as string | undefined) ||
     (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ||
-    '1x00000000000000000000AA'; // Official Cloudflare Always-Pass Test Sitekey
+    NEW_VALID_SITE_KEY;
+
+  // Jika envKey di Vercel masih memuat kunci lama milik teman yang belum mengizinkan domain ini
+  if (envKey === OLD_INVALID_SITE_KEY) {
+    return NEW_VALID_SITE_KEY;
+  }
   return envKey;
 };
 
@@ -158,9 +166,10 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           },
           'error-callback': (errorCode?: string) => {
             setStatus('error');
+            const currentHost = typeof window !== 'undefined' ? window.location.hostname : 'domain';
             const msg =
               errorCode === '110200'
-                ? 'Domain ini (localhost) belum didaftarkan di Cloudflare Turnstile dashboard.'
+                ? `Domain ini (${currentHost}) belum diizinkan di Cloudflare Turnstile dashboard.`
                 : `Verifikasi keamanan gagal dimuat (Error: ${errorCode || 'unknown'}).`;
             setErrorMessage(msg);
             onErrorRef.current?.(msg);

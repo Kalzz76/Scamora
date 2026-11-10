@@ -140,19 +140,19 @@ export const UserManagementPage: React.FC = () => {
   }, [users, searchQuery, statusFilter]);
 
   return (
-    <div className="p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-4 max-w-6xl mx-auto">
       {/* 1. Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#334257] text-white flex items-center justify-center shadow-md">
-              <Users className="w-5 h-5 text-[#548CA8]" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-[#334257] text-white flex items-center justify-center shadow-md">
+              <Users className="w-4 h-4 text-[#548CA8]" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-[#1A202C] dark:text-white tracking-tight">
+              <h1 className="text-lg sm:text-xl font-black text-[#1A202C] dark:text-white tracking-tight">
                 Manajemen Akun Pengguna
               </h1>
-              <p className="text-xs text-[#5E6D7E] dark:text-slate-400 font-mono mt-0.5">
+              <p className="text-[11px] text-[#5E6D7E] dark:text-slate-400 font-mono mt-0.5">
                 Pengguna Terdaftar &amp; Terverifikasi (Basis Data PostgreSQL)
               </p>
             </div>

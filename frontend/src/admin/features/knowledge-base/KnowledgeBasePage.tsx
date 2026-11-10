@@ -309,32 +309,32 @@ export const KnowledgeBasePage: React.FC = () => {
   };
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-6 w-full max-w-7xl mx-auto">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-4 w-full max-w-6xl mx-auto">
       
       {/* 1. TOP BAR: TITLE & PRIMARY ACTION (FROSTED GLASS PANEL) */}
-      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="glass-panel rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[10px] font-bold tracking-wider uppercase">
+              <span className="px-2 py-0.5 rounded-full bg-[#548CA8]/15 text-[#334257] font-mono text-[9px] font-bold tracking-wider uppercase">
                 Pusat Intelijen Edukasi
               </span>
               <span className="text-[#476072] text-xs">&bull;</span>
-              <span className="text-xs text-[#476072] font-medium">Scam Taxonomy &amp; Incident Protocols</span>
+              <span className="text-[11px] text-[#476072] font-medium">Scam Taxonomy &amp; Incident Protocols</span>
             </div>
-            <h1 className="text-2xl font-black text-[#1A202C] tracking-tight">
+            <h1 className="text-lg sm:text-xl font-black text-[#1A202C] tracking-tight">
               Pusat Pengetahuan &amp; Ensiklopedia Modus
             </h1>
-            <p className="text-xs text-[#476072]">
+            <p className="text-[11px] text-[#476072]">
               Kelola anatomi penipuan digital, panduan mitigasi korban, dan tanda bahaya yang terhubung ke platform publik.
             </p>
           </div>
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+            className="px-3 py-1.5 rounded-lg bg-[#334257] hover:bg-[#242F3E] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
           >
-            <Plus className="w-4 h-4 text-emerald-400" />
+            <Plus className="w-3.5 h-3.5 text-emerald-400" />
             <span>Tulis Materi Baru</span>
           </button>
         </div>
@@ -493,7 +493,7 @@ export const KnowledgeBasePage: React.FC = () => {
 
                     <span className="flex items-center gap-1 font-mono text-[11px]">
                       <Eye className="w-3.5 h-3.5 text-[#548CA8]" />
-                      <span>{art.views.toLocaleString()}</span>
+                      <span>{(art.views ?? 0).toLocaleString()}</span>
                     </span>
                   </div>
 
@@ -588,7 +588,7 @@ export const KnowledgeBasePage: React.FC = () => {
                 <span>&bull;</span>
                 <span className="flex items-center gap-1 font-mono">
                   <Eye className="w-3.5 h-3.5 text-[#548CA8] dark:text-cyan-400" />
-                  <span>{activeDetailArticle.views.toLocaleString()} tayangan</span>
+                  <span>{(activeDetailArticle.views ?? 0).toLocaleString()} tayangan</span>
                 </span>
               </div>
             </div>

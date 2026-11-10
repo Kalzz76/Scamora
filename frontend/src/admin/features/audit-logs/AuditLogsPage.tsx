@@ -31,12 +31,12 @@ export const AuditLogsPage: React.FC = () => {
   });
 
   return (
-    <div className="p-3 sm:p-6 lg:p-8 space-y-5 sm:space-y-8 w-full max-w-7xl mx-auto">
+    <div className="p-2 sm:p-4 lg:p-6 space-y-4 w-full max-w-6xl mx-auto">
       {/* HEADER (FROSTED GLASS PANEL) */}
-      <div className="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="glass-panel rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg sm:text-xl font-black text-[#1A202C] tracking-tight">Log Audit &amp; Jejak Rekam Sistem</h2>
-          <p className="text-[11px] sm:text-xs text-[#476072] mt-0.5">
+          <h2 className="text-base sm:text-lg font-black text-[#1A202C] tracking-tight">Log Audit &amp; Jejak Rekam Sistem</h2>
+          <p className="text-[10px] sm:text-[11px] text-[#476072] mt-0.5">
             Catatan kekal (*immutable audit trail*) seluruh aktivitas operasional, perubahan konfigurasi, dan deteksi ancaman.
           </p>
         </div>

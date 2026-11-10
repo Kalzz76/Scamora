@@ -22,8 +22,8 @@ const envSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),
   GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/google/callback'),
-  TURNSTILE_SECRET_KEY: z.string().default('1x0000000000000000000000000000000AA'),
-  TURNSTILE_SITE_KEY: z.string().default('1x00000000000000000000AA'),
+  TURNSTILE_SECRET_KEY: z.string().default('0x4AAAAAAF67yK12S3HJynaMGWIVgwTW_w0'),
+  TURNSTILE_SITE_KEY: z.string().default('0x4AAAAAAF67yLvs908uSKqH'),
   TURNSTILE_ENABLED: z
     .union([z.boolean(), z.string()])
     .transform((val) => val === true || val === 'true' || val === '1')

@@ -3,7 +3,6 @@ import crypto from 'crypto';
 import { env } from '../config/env';
 import { query, isDbConnected } from '../config/db';
 import { getSupabaseClient } from '../config/supabase';
-import { DEMO_EXAMPLES } from '../data/demoExamples';
 import { requestGeminiAnalysis } from '../services/ai/geminiClient';
 import {
   createAdminToken,
@@ -28,12 +27,8 @@ export interface DemoPresetItem {
   updatedAt: string;
 }
 
-// In-memory fallbacks initialized with realistic seed data
-let presetsStore: DemoPresetItem[] = DEMO_EXAMPLES.map((ex, idx) => ({
-  ...ex,
-  isActive: true,
-  updatedAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
-}));
+// In-memory stores (clean state, populated from Supabase/PostgreSQL)
+let presetsStore: DemoPresetItem[] = [];
 
 let runtimeAiConfig = {
   activeProvider: env.AI_PROVIDER || 'gemini',
@@ -69,193 +64,66 @@ export function getRuntimeCrawlerConfig() {
   return runtimeCrawlerConfig;
 }
 
-let articlesStore: any[] = [
-  {
-    id: 'art-apk-invitation',
-    categoryCode: 'apk_malware',
-    categoryName: 'Malware Android (.APK)',
-    title: 'Anatomi Modus Undangan Pernikahan .APK Pencuri Saldo Rekening',
-    summary: 'Bagaimana file APK mengeksploitasi izin Accessibility Service di Android untuk membaca SMS dan kode OTP perbankan secara diam-diam.',
-    targetVictims: 'Pengguna smartphone Android, nasabah m-banking',
-    redFlags: [
-      'Pesan dikirim dari nomor tak dikenal mengatasnamakan kerabat jauh',
-      'Ekstensi berkas berupa .apk bukan .pdf atau tautan web',
-      'Meminta izin aksesibilitas dan notifikasi saat aplikasi dibuka',
-    ],
-    responseSteps: [
-      'Segera nyalakan Airplane Mode (Mode Pesawat)',
-      'Hapus aplikasi dari Settings -> Apps -> Uninstall',
-      'Ganti seluruh PIN dan kata sandi m-banking dari perangkat lain',
-      'Hubungi call center resmi bank untuk memblokir rekening sementara',
-    ],
-    status: 'published',
-    views: 1240,
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: 'art-task-scam-youtube',
-    categoryCode: 'job_scam',
-    categoryName: 'Penipuan Kerja Paruh Waktu',
-    title: 'Jebakan Komisi Fantastis Kerja Like & Subscribe YouTube',
-    summary: 'Skema Ponzi gaya baru yang memancing korban dengan keuntungan awal kecil, kemudian mengunci dana jutaan rupiah dengan dalih penalti tugas.',
-    targetVictims: 'Pencari kerja sampingan, ibu rumah tangga, mahasiswa',
-    redFlags: [
-      'Komisi Rp 500.000 - Rp 2.000.000 per hari untuk pekerjaan sangat mudah',
-      'Komunikasi dipindahkan ke grup Telegram dengan banyak akun palsu',
-      'Diminta deposit uang jaminan untuk membuka level tugas lebih tinggi',
-    ],
-    responseSteps: [
-      'Hentikan seluruh transfer tambahan sekarang juga',
-      'Kumpulkan tangkapan layar bukti transfer dan nomor rekening pelaku',
-      'Laporkan nomor rekening ke cekrekening.id dan lapor.go.id',
-    ],
-    status: 'published',
-    views: 980,
-    updatedAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-];
-
-let categoriesStore: any[] = [
-  {
-    id: 'cat-phishing',
-    code: 'phishing',
-    name: 'Phishing Situs & Tautan Palsu',
-    icon: 'Link2',
-    description: 'Situs web tiruan yang memalsukan tampilan bank atau e-commerce untuk merampas kata sandi dan kredensial.',
-    riskTier: 'CRITICAL',
-    articleCount: 12,
-    quizCount: 4,
-  },
-  {
-    id: 'cat-apk',
-    code: 'apk_malware',
-    name: 'Malware Android Berkedok Dokumen (.APK)',
-    icon: 'ShieldAlert',
-    description: 'Aplikasi jahat yang menyamar sebagai undangan pernikahan, surat tilang, atau resi kurir untuk menyadap SMS OTP perbankan.',
-    riskTier: 'CRITICAL',
-    articleCount: 8,
-    quizCount: 3,
-  },
-  {
-    id: 'cat-job',
-    code: 'job_scam',
-    name: 'Penipuan Kerja Paruh Waktu (Task Scam)',
-    icon: 'Briefcase',
-    description: 'Iming-iming gaji fantastis untuk like video atau review hotel yang berujung permintaan transfer deposit.',
-    riskTier: 'HIGH',
-    articleCount: 10,
-    quizCount: 3,
-  },
-  {
-    id: 'cat-giveaway',
-    code: 'giveaway_scam',
-    name: 'Undian Hadiah & Gebyar Palsu',
-    icon: 'Gift',
-    description: 'Pemberitahuan memenangkan undian ratusan juta yang mewajibkan pembayaran pajak hadiah terlebih dahulu.',
-    riskTier: 'HIGH',
-    articleCount: 6,
-    quizCount: 2,
-  },
-  {
-    id: 'cat-banking',
-    code: 'banking_fraud',
-    name: 'Vishing & Pencurian Kredensial Perbankan',
-    icon: 'CreditCard',
-    description: 'Panggilan atau pesan mengaku petugas bank meminta kode OTP atau perubahan tarif biaya transaksi.',
-    riskTier: 'CRITICAL',
-    articleCount: 9,
-    quizCount: 2,
-  },
-];
-
-let questionsStore: any[] = [
-  {
-    id: 'quiz-1',
-    categoryCode: 'apk_malware',
-    scenario: 'Anda menerima pesan WhatsApp dari nomor kurir paket: "Paket Anda tertahan di gudang, silakan cek resi pelacakan di berkas terlampir: Resi_Pelacakan_JNT.apk"',
-    question: 'Tindakan paling aman yang harus Anda ambil adalah:',
-    difficulty: 'Easy',
-    points: 20,
-    options: [
-      { id: 'opt-1', text: 'Mengunduh dan memasang aplikasi untuk mengetahui nomor resi asli', isCorrect: false },
-      { id: 'opt-2', text: 'Meneruskan pesan ke keluarga untuk menanyakan apakah ada yang pesan paket', isCorrect: false },
-      { id: 'opt-3', text: 'Tidak membuka berkas .APK, hapus pesan, dan cek resi melalui website atau aplikasi resmi ekspedisi', isCorrect: true },
-      { id: 'opt-4', text: 'Membalas chat meminta foto fisik paket', isCorrect: false },
-    ],
-    explanation: 'Kurir resmi tidak pernah mengirim berkas biner berekstensi .apk. Berkas ini adalah malware trojan pencuri SMS OTP.',
-  },
-  {
-    id: 'quiz-2',
-    categoryCode: 'phishing',
-    scenario: 'Anda menerima SMS dari bank ternama bahwa akun Anda terancam ditutup. Tautan yang disertakan adalah "https://bca.klik-login-verifikasi.xyz"',
-    question: 'Mengapa tautan tersebut sangat berbahaya?',
-    difficulty: 'Medium',
-    points: 25,
-    options: [
-      { id: 'opt-2a', text: 'Karena menggunakan protokol HTTPS', isCorrect: false },
-      { id: 'opt-2b', text: 'Karena nama BCA diletakkan di subdomain, sedangkan domain aslinya adalah klik-login-verifikasi.xyz', isCorrect: true },
-      { id: 'opt-2c', text: 'Karena pesan dikirim melalui SMS bukan email', isCorrect: false },
-      { id: 'opt-2d', text: 'Karena tidak menyertakan foto logo bank', isCorrect: false },
-    ],
-    explanation: 'Teknik subdomain spoofing menyamarkan domain root asli (klik-login-verifikasi.xyz) dengan mencantumkan nama bank di awal.',
-  },
-];
-
-let postsStore: any[] = [
-  {
-    id: 'post-101',
-    authorPseudonym: 'Rian_Bandung99',
-    categoryCode: 'job_scam',
-    title: 'Nyaris Hilang 3 Juta di Grup Tugas Like Shopee Telegram',
-    story: 'Awalnya dapat chat WA tawaran part-time Shopee. Diberi komisi 25rb di awal dan masuk rekening. Pas tugas ke-4 disuruh deposit 500rb, lalu 2.5jt dengan dalih akun terkunci. Untung saya curiga dan langsung stop.',
-    financialLossEstimate: 'Rp 500.000',
-    piiScrubbed: true,
-    status: 'published',
-    likesCount: 24,
-    reportedCount: 0,
-    createdAt: new Date(Date.now() - 36000000).toISOString(),
-  },
-  {
-    id: 'post-102',
-    authorPseudonym: 'IbuSiti_Sby',
-    categoryCode: 'apk_malware',
-    title: 'Undangan Pernikahan Palsu Format APK',
-    story: 'Mendapat file undangan nikah format APK dari nomor tidak dikenal. Saya tidak klik karena sudah sering baca berita tentang pembobolan m-banking via APK.',
-    financialLossEstimate: 'Rp 0 (Terselamatkan)',
-    piiScrubbed: true,
-    status: 'published',
-    likesCount: 42,
-    reportedCount: 1,
-    createdAt: new Date(Date.now() - 72000000).toISOString(),
-  },
-];
-
-let reportsStore: any[] = [
-  {
-    id: 'rep-01',
-    postId: 'post-102',
-    postTitle: 'Undangan Pernikahan Palsu Format APK',
-    reporterPseudonym: 'WargaCermat',
-    reason: 'Klaim Tanpa Bukti / Perlu Verifikasi Lanjutan',
-    details: 'Pengunggah perlu menyertakan tangkapan layar nomor pengirim agar warga lain bisa memblokir nomornya.',
-    status: 'pending',
-    timestamp: new Date(Date.now() - 14400000).toISOString(),
-  },
-];
-
-let auditLogsStore: any[] = [
-  {
-    id: 'log-1',
-    actor: 'admin@scamora.id',
-    action: 'INIT_SYSTEM',
-    target: 'Security Command Center',
-    details: 'Sistem diinisialisasi dengan enkripsi mitigasi TLS tingkat 1.',
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
-    severity: 'info',
-  },
-];
+let articlesStore: any[] = [];
+let categoriesStore: any[] = [];
+let questionsStore: any[] = [];
+let postsStore: any[] = [];
+let reportsStore: any[] = [];
+let auditLogsStore: any[] = [];
 
 export let usersStore: any[] = [];
+
+export async function syncPresetsFromDb(): Promise<void> {
+  if (isDbConnected()) {
+    try {
+      const resDb = await query('SELECT * FROM demo_presets ORDER BY created_at ASC');
+      if (resDb && resDb.rows.length > 0) {
+        presetsStore = resDb.rows.map((r: any) => ({
+          id: r.id,
+          type: r.type,
+          title: r.title,
+          subtitle: r.subtitle || '',
+          content: r.content,
+          expectedCategory: r.expected_category,
+          expectedScore: r.expected_score,
+          scamType: r.scam_type,
+          tags: r.tags || [],
+          isActive: r.is_active,
+          updatedAt: r.created_at || new Date().toISOString(),
+        }));
+      }
+    } catch (e: any) {
+      console.warn('[Admin] syncPresetsFromDb error:', e.message);
+    }
+  } else {
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { data } = await sb.from('demo_presets').select('*').order('created_at', { ascending: true });
+        if (data && data.length > 0) {
+          presetsStore = data.map((r: any) => ({
+            id: r.id,
+            type: r.type,
+            title: r.title,
+            subtitle: r.subtitle || '',
+            content: r.content,
+            expectedCategory: r.expected_category,
+            expectedScore: r.expected_score,
+            scamType: r.scam_type,
+            tags: r.tags || [],
+            isActive: r.is_active,
+            updatedAt: r.created_at || new Date().toISOString(),
+          }));
+        }
+      } catch {}
+    }
+  }
+}
+
+// Auto sync presets on startup
+setTimeout(() => {
+  syncPresetsFromDb().catch(() => {});
+}, 1000);
 
 export function getActivePresets(): DemoPresetItem[] {
   return presetsStore.filter((p) => p.isActive);
@@ -677,6 +545,7 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
 
       const aiTelemetry = {
         tokensUsed24h,
+        totalTokensUsed24h: tokensUsed24h,
         promptTokens24h,
         completionTokens24h,
         avgLatencyMs: avgLatency,
@@ -800,12 +669,18 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
               claudeStatus: runtimeAiConfig.claudeKeySet ? 'operational' : 'offline',
               activeProvider: runtimeAiConfig.activeProvider,
               modelInUse: runtimeAiConfig.geminiModel,
+              tokensUsed24h: 0,
               totalTokensUsed24h: 0,
               promptTokens24h: 0,
               completionTokens24h: 0,
+              errorCount24h: 0,
               errorRatePercent: 0,
               avgLatencyMs: runtimeAiConfig.latencyMs || 650,
+              currentLatencyMs: runtimeAiConfig.latencyMs || 650,
+              operationalStatus: 'optimal' as const,
+              lastIncidentNote: 'Semua request inferensi berhasil tanpa kegagalan (0 incident).',
               hourlyTokens: [],
+              hourlyTokens24h: [],
             },
             visitorStats: {
               totalVisitors: dbTotal * 5 + 10,
@@ -849,6 +724,7 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
       })),
       aiTelemetry: {
         tokensUsed24h: 0,
+        totalTokensUsed24h: 0,
         promptTokens24h: 0,
         completionTokens24h: 0,
         avgLatencyMs: runtimeAiConfig.latencyMs || 650,
@@ -857,6 +733,7 @@ export async function handleGetStats(_req: Request, res: Response): Promise<void
         errorRatePercent: 0.0,
         operationalStatus: 'optimal',
         lastIncidentNote: 'Sistem siap dan beroperasi normal.',
+        hourlyTokens24h: [],
       },
       visitorStats: {
         totalVisitors: 0,

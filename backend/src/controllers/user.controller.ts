@@ -5,33 +5,8 @@ import { hashUserPassword, verifyUserPassword, hashPasswordBcrypt } from '../ser
 import { historyService } from '../services/historyService';
 import { usersStore } from './admin.controller';
 
-// In-memory user fallback data (synced with admin controller seed)
-let inMemoryUsers: any[] = [
-  {
-    id: 'usr-101',
-    username: 'budi_santoso',
-    email: 'budi.santoso@gmail.com',
-    fullName: 'Budi Santoso',
-    tier: 'verified',
-    role: 'user',
-    status: 'active',
-    scanCount: 14,
-    reportCount: 2,
-    createdAt: new Date(Date.now() - 604800000).toISOString(),
-  },
-  {
-    id: 'usr-102',
-    username: 'siti_rahma',
-    email: 'siti.rahma@yahoo.co.id',
-    fullName: 'Siti Rahmawati',
-    tier: 'verified',
-    role: 'user',
-    status: 'active',
-    scanCount: 9,
-    reportCount: 1,
-    createdAt: new Date(Date.now() - 432000000).toISOString(),
-  },
-];
+// In-memory user fallback store (clean state, no mock data)
+let inMemoryUsers: any[] = [];
 
 export async function handleGetUserProfile(req: Request, res: Response): Promise<void> {
   const username = req.user?.username;
@@ -129,18 +104,11 @@ export async function handleGetUserProfile(req: Request, res: Response): Promise
     return;
   }
 
-  const mem = inMemoryUsers.find((u) => u.username === username) || {
-    id: `usr-${username}`,
-    username,
-    email: `${username}@scamora.id`,
-    name: username.replace(/_/g, ' '),
-    tier: 'verified',
-    role: 'user',
-    status: 'active',
-    scanCount: 10,
-    reportCount: 1,
-    createdAt: new Date().toISOString(),
-  };
+  const mem = inMemoryUsers.find((u) => u.username === username);
+  if (!mem) {
+    res.status(404).json({ success: false, error: { message: 'Data pengguna tidak ditemukan.' } });
+    return;
+  }
 
   res.status(200).json({
     success: true,
