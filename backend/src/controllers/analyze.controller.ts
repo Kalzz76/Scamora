@@ -4,6 +4,7 @@ import type { ApiSuccessResponse, AnalysisResult } from '../types/analysis';
 import { analyzeUrl } from '../services/urlAnalyzer';
 import { analyzeChat } from '../services/chatAnalyzer';
 import { isDbConnected, query } from '../config/db';
+import { getSupabaseClient } from '../config/supabase';
 import { verifyAdminToken } from '../services/adminAuthService';
 import { historyService } from '../services/historyService';
 
@@ -94,6 +95,19 @@ export async function handleAnalyzeUrl(
       query(`UPDATE app_users SET scan_count = scan_count + 1 WHERE username = $1`, [sessionInfo.username]).catch(() => {});
     }
 
+    const supabase = getSupabaseClient();
+    if (supabase && !isDbConnected()) {
+      try {
+        supabase.from('analysis_stats').insert({
+          analysis_type: 'url',
+          risk_level: riskLevel,
+          risk_score: riskScore,
+          scam_type: scamType,
+          indicators_count: result.indicators?.length || 0,
+        }).then(() => {}).catch(() => {});
+      } catch {}
+    }
+
     if (isDbConnected()) {
       try {
         query(
@@ -178,6 +192,19 @@ export async function handleAnalyzeChat(
 
     if (sessionInfo.username && isDbConnected()) {
       query(`UPDATE app_users SET scan_count = scan_count + 1 WHERE username = $1`, [sessionInfo.username]).catch(() => {});
+    }
+
+    const supabase = getSupabaseClient();
+    if (supabase && !isDbConnected()) {
+      try {
+        supabase.from('analysis_stats').insert({
+          analysis_type: 'chat',
+          risk_level: riskLevel,
+          risk_score: riskScore,
+          scam_type: scamType,
+          indicators_count: result.indicators?.length || 0,
+        }).then(() => {}).catch(() => {});
+      } catch {}
     }
 
     if (isDbConnected()) {
