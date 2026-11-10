@@ -1,0 +1,101 @@
+services:
+  # ==============================================================================
+  # 1. DATABASE SERVICE (PostgreSQL 16)
+  # ==============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: scamora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scamora
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - scamora_pgdata:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d scamora"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - scamora-network
+
+  # ==============================================================================
+  # 2. BACKEND API SERVICE (Node.js 20 + Express v5)
+  # ==============================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: scamora-backend
+    restart: unless-stopped
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      PORT: 8000
+      NODE_ENV: development
+      FRONTEND_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/scamora
+      AI_PROVIDER: auto
+      TURNSTILE_ENABLED: "false"
+      TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - scamora-network
+
+  # ==============================================================================
+  # 3. FRONTEND SERVICE (React 19 + Vite + Tailwind v4)
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: scamora-frontend
+    restart: unless-stopped
+    env_file:
+      - path: ./frontend/.env
+        required: false
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+      VITE_USE_MOCK: "false"
+      VITE_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - scamora-network
+
+# ==============================================================================
+# PERSISTENT VOLUMES
+# ==============================================================================
+volumes:
+  scamora_pgdata:
+    name: scamora_pgdata
+    driver: local
+
+# ==============================================================================
+# ISOLATED BRIDGED NETWORK
+# ==============================================================================
+networks:
+  scamora-network:
+    name: scamora-network
+    driver: bridge
