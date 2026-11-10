@@ -63,6 +63,13 @@ function MainApp() {
   const isHome = location.pathname === '/';
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
 
+  // Ensure public & user routes NEVER inherit dark mode from admin panel
+  useEffect(() => {
+    if (!isAdmin) {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isAdmin]);
+
   return (
     <div className={`min-h-screen flex flex-col ${isAdmin || isDashboard ? 'bg-[#F4F6F8] text-[#1A202C]' : isKomunitas ? 'bg-[#faf8f5] text-[#14161c] h-screen overflow-hidden' : 'bg-[#faf8f5] text-[#14161c] pb-16 lg:pb-0'}`}>
       <ScrollToTop />

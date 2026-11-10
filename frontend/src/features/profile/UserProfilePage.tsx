@@ -15,6 +15,7 @@ import {
 import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
 import { userService, type UserProfileData } from '../../services/userService';
+import { LogoutConfirmModal } from '../../components/common/LogoutConfirmModal';
 
 export const UserProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ export const UserProfilePage: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPass, setIsChangingPass] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -118,12 +120,12 @@ export const UserProfilePage: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (confirm('Apakah Anda yakin ingin keluar dari akun Scamora?')) {
-      adminAuth.clearSession();
-      toast.info('Anda telah keluar dari akun. Selamat datang di mode pengunjung.');
-      navigate('/', { replace: true });
-    }
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    document.documentElement.classList.remove('dark');
+    adminAuth.clearSession();
+    toast.info('Anda telah keluar dari akun. Selamat datang di mode pengunjung.');
+    navigate('/', { replace: true });
   };
 
   const formatDate = (isoString?: string) => {
@@ -188,7 +190,7 @@ export const UserProfilePage: React.FC = () => {
 
         <button
           type="button"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutModal(true)}
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-rose-200 bg-rose-50/80 hover:bg-rose-100 text-rose-700 text-xs font-bold transition cursor-pointer self-stretch sm:self-auto shadow-2xs"
         >
           <LogOut className="w-4 h-4" />
@@ -352,6 +354,13 @@ export const UserProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+      />
     </div>
   );
 };

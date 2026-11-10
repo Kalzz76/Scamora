@@ -155,20 +155,15 @@
 }
 
 /* ========================================================================= */
-/* DARK MODE OVERRIDES & GLOW ACCENTS                                        */
+/* DARK MODE OVERRIDES & GLOW ACCENTS (STRICTLY SCOPED TO .admin-root)      */
 /* ========================================================================= */
 
-html.dark {
+html.dark .admin-root {
   color-scheme: dark;
 }
 
-html.dark body {
-  background-color: #0B0F17 !important;
-  color: #F1F5F9 !important;
-}
-
 /* Glass Panels in Dark Mode */
-html.dark .glass-panel {
+html.dark .admin-root .glass-panel {
   background: linear-gradient(135deg, rgba(20, 28, 42, 0.78) 0%, rgba(13, 19, 29, 0.65) 100%) !important;
   backdrop-filter: blur(20px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
@@ -177,7 +172,7 @@ html.dark .glass-panel {
   color: #F1F5F9 !important;
 }
 
-html.dark .glass-panel-subtle {
+html.dark .admin-root .glass-panel-subtle {
   background: linear-gradient(135deg, rgba(26, 36, 52, 0.65) 0%, rgba(18, 25, 38, 0.50) 100%) !important;
   backdrop-filter: blur(14px) saturate(150%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(150%) !important;
@@ -186,7 +181,7 @@ html.dark .glass-panel-subtle {
   color: #E2E8F0 !important;
 }
 
-html.dark .glass-panel-dark {
+html.dark .admin-root .glass-panel-dark {
   background: linear-gradient(135deg, rgba(15, 23, 36, 0.85) 0%, rgba(10, 15, 24, 0.70) 100%) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
@@ -195,69 +190,69 @@ html.dark .glass-panel-dark {
 }
 
 /* Typography in Dark Mode */
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark .text-\[\#1A202C\] {
+html.dark .admin-root h1,
+html.dark .admin-root h2,
+html.dark .admin-root h3,
+html.dark .admin-root h4,
+html.dark .admin-root .text-\[\#1A202C\] {
   color: #F8FAFC !important;
 }
 
-html.dark .text-\[\#334257\] {
+html.dark .admin-root .text-\[\#334257\] {
   color: #E2E8F0 !important;
 }
 
-html.dark .text-\[\#476072\],
-html.dark .text-\[\#5E6D7E\] {
+html.dark .admin-root .text-\[\#476072\],
+html.dark .admin-root .text-\[\#5E6D7E\] {
   color: #94A3B8 !important;
 }
 
-html.dark .border-\[\#D8E0E7\] {
+html.dark .admin-root .border-\[\#D8E0E7\] {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-html.dark .border-slate-200,
-html.dark .border-slate-200\/90 {
+html.dark .admin-root .border-slate-200,
+html.dark .admin-root .border-slate-200\/90 {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-html.dark .border-slate-100 {
+html.dark .admin-root .border-slate-100 {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Overriding light #EEEEEE and variations */
-html.dark .bg-\[\#EEEEEE\],
-html.dark [class*="bg-[#EEEEEE]"] {
+html.dark .admin-root .bg-\[\#EEEEEE\],
+html.dark .admin-root [class*="bg-[#EEEEEE]"] {
   background-color: rgba(30, 41, 59, 0.75) !important;
   color: #F8FAFC !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-html.dark .hover\:bg-\[\#EEEEEE\]:hover,
-html.dark [class*="hover:bg-[#EEEEEE]"]:hover {
+html.dark .admin-root .hover\:bg-\[\#EEEEEE\]:hover,
+html.dark .admin-root [class*="hover:bg-[#EEEEEE]"]:hover {
   background-color: rgba(51, 65, 85, 0.8) !important;
 }
 
-html.dark .bg-white {
+html.dark .admin-root .bg-white {
   background-color: rgba(26, 36, 52, 0.70) !important;
   color: #F8FAFC !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-html.dark .bg-white\/80,
-html.dark .bg-white\/90,
-html.dark .bg-white\/70,
-html.dark .bg-white\/60,
-html.dark .bg-white\/50,
-html.dark .bg-white\/40 {
+html.dark .admin-root .bg-white\/80,
+html.dark .admin-root .bg-white\/90,
+html.dark .admin-root .bg-white\/70,
+html.dark .admin-root .bg-white\/60,
+html.dark .admin-root .bg-white\/50,
+html.dark .admin-root .bg-white\/40 {
   background-color: rgba(26, 36, 52, 0.55) !important;
   color: #F8FAFC !important;
   border-color: rgba(255, 255, 255, 0.10) !important;
 }
 
 /* Modal Popup Window in Dark Mode */
-html.dark .bg-white.rounded-3xl,
-html.dark .bg-white.rounded-2xl {
+html.dark .admin-root .bg-white.rounded-3xl,
+html.dark .admin-root .bg-white.rounded-2xl {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 26, 0.92) 100%) !important;
   backdrop-filter: blur(24px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
@@ -267,129 +262,129 @@ html.dark .bg-white.rounded-2xl {
 }
 
 /* Overriding light slate & grey backgrounds that cause white glare in dark mode */
-html.dark .bg-slate-50,
-html.dark .bg-slate-100,
-html.dark .bg-slate-200,
-html.dark .bg-gray-50,
-html.dark .bg-gray-100,
-html.dark .bg-gray-200,
-html.dark [class*="bg-slate-50"],
-html.dark [class*="bg-slate-100"],
-html.dark [class*="bg-gray-50"],
-html.dark [class*="bg-gray-100"] {
+html.dark .admin-root .bg-slate-50,
+html.dark .admin-root .bg-slate-100,
+html.dark .admin-root .bg-slate-200,
+html.dark .admin-root .bg-gray-50,
+html.dark .admin-root .bg-gray-100,
+html.dark .admin-root .bg-gray-200,
+html.dark .admin-root [class*="bg-slate-50"],
+html.dark .admin-root [class*="bg-slate-100"],
+html.dark .admin-root [class*="bg-gray-50"],
+html.dark .admin-root [class*="bg-gray-100"] {
   background-color: rgba(30, 41, 59, 0.7) !important;
   color: #F8FAFC !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-html.dark .hover\:bg-slate-50:hover,
-html.dark .hover\:bg-slate-100:hover,
-html.dark .hover\:bg-slate-200:hover,
-html.dark .hover\:bg-gray-50:hover,
-html.dark .hover\:bg-gray-100:hover,
-html.dark .hover\:bg-gray-200:hover,
-html.dark [class*="hover:bg-slate-50"]:hover,
-html.dark [class*="hover:bg-slate-100"]:hover {
+html.dark .admin-root .hover\:bg-slate-50:hover,
+html.dark .admin-root .hover\:bg-slate-100:hover,
+html.dark .admin-root .hover\:bg-slate-200:hover,
+html.dark .admin-root .hover\:bg-gray-50:hover,
+html.dark .admin-root .hover\:bg-gray-100:hover,
+html.dark .admin-root .hover\:bg-gray-200:hover,
+html.dark .admin-root [class*="hover:bg-slate-50"]:hover,
+html.dark .admin-root [class*="hover:bg-slate-100"]:hover {
   background-color: rgba(51, 65, 85, 0.8) !important;
   color: #FFFFFF !important;
 }
 
 /* Red / Rose Danger Blocks in Dark Mode */
-html.dark .bg-rose-50,
-html.dark .bg-rose-100,
-html.dark [class*="bg-rose-50"],
-html.dark [class*="bg-rose-100"] {
+html.dark .admin-root .bg-rose-50,
+html.dark .admin-root .bg-rose-100,
+html.dark .admin-root [class*="bg-rose-50"],
+html.dark .admin-root [class*="bg-rose-100"] {
   background-color: rgba(225, 29, 72, 0.2) !important;
   border-color: rgba(244, 63, 94, 0.35) !important;
   color: #FDA4AF !important;
 }
 
-html.dark .text-rose-950,
-html.dark .text-rose-900,
-html.dark .text-rose-800,
-html.dark .text-rose-700,
-html.dark .text-rose-600 {
+html.dark .admin-root .text-rose-950,
+html.dark .admin-root .text-rose-900,
+html.dark .admin-root .text-rose-800,
+html.dark .admin-root .text-rose-700,
+html.dark .admin-root .text-rose-600 {
   color: #FDA4AF !important;
 }
 
-html.dark .hover\:bg-rose-100:hover,
-html.dark .hover\:bg-rose-50:hover {
+html.dark .admin-root .hover\:bg-rose-100:hover,
+html.dark .admin-root .hover\:bg-rose-50:hover {
   background-color: rgba(225, 29, 72, 0.28) !important;
 }
 
 /* Emerald / Green Safe Blocks in Dark Mode */
-html.dark .bg-emerald-50,
-html.dark .bg-emerald-100,
-html.dark [class*="bg-emerald-50"],
-html.dark [class*="bg-emerald-100"] {
+html.dark .admin-root .bg-emerald-50,
+html.dark .admin-root .bg-emerald-100,
+html.dark .admin-root [class*="bg-emerald-50"],
+html.dark .admin-root [class*="bg-emerald-100"] {
   background-color: rgba(16, 185, 129, 0.2) !important;
   border-color: rgba(16, 185, 129, 0.35) !important;
   color: #6EE7B7 !important;
 }
 
-html.dark .text-emerald-950,
-html.dark .text-emerald-900,
-html.dark .text-emerald-800,
-html.dark .text-emerald-700 {
+html.dark .admin-root .text-emerald-950,
+html.dark .admin-root .text-emerald-900,
+html.dark .admin-root .text-emerald-800,
+html.dark .admin-root .text-emerald-700 {
   color: #6EE7B7 !important;
 }
 
-html.dark .hover\:bg-emerald-100:hover,
-html.dark .hover\:bg-emerald-50:hover {
+html.dark .admin-root .hover\:bg-emerald-100:hover,
+html.dark .admin-root .hover\:bg-emerald-50:hover {
   background-color: rgba(16, 185, 129, 0.28) !important;
 }
 
 /* Amber / Warning Blocks in Dark Mode */
-html.dark .bg-amber-50,
-html.dark .bg-amber-50\/50,
-html.dark .bg-amber-50\/60,
-html.dark .bg-amber-50\/70,
-html.dark .bg-amber-100 {
+html.dark .admin-root .bg-amber-50,
+html.dark .admin-root .bg-amber-50\/50,
+html.dark .admin-root .bg-amber-50\/60,
+html.dark .admin-root .bg-amber-50\/70,
+html.dark .admin-root .bg-amber-100 {
   background-color: rgba(245, 158, 11, 0.16) !important;
   border-color: rgba(245, 158, 11, 0.35) !important;
 }
 
-html.dark .text-amber-950,
-html.dark .text-amber-900,
-html.dark .text-amber-800,
-html.dark .text-amber-700 {
+html.dark .admin-root .text-amber-950,
+html.dark .admin-root .text-amber-900,
+html.dark .admin-root .text-amber-800,
+html.dark .admin-root .text-amber-700 {
   color: #FCD34D !important;
 }
 
-html.dark .hover\:bg-amber-100:hover,
-html.dark .hover\:bg-amber-50:hover {
+html.dark .admin-root .hover\:bg-amber-100:hover,
+html.dark .admin-root .hover\:bg-amber-50:hover {
   background-color: rgba(245, 158, 11, 0.28) !important;
 }
 
 /* Scrollbars in Dark Mode */
-html.dark ::-webkit-scrollbar-thumb {
+html.dark .admin-root ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.22) !important;
 }
 
-html.dark ::-webkit-scrollbar-thumb:hover {
+html.dark .admin-root ::-webkit-scrollbar-thumb:hover {
   background: rgba(84, 140, 168, 0.6) !important;
 }
 
-html.dark ::-webkit-scrollbar-track {
+html.dark .admin-root ::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
-html.dark input,
-html.dark select,
-html.dark textarea {
+html.dark .admin-root input,
+html.dark .admin-root select,
+html.dark .admin-root textarea {
   background-color: rgba(15, 23, 42, 0.85) !important;
   color: #F8FAFC !important;
   border-color: rgba(255, 255, 255, 0.18) !important;
 }
 
-html.dark input::placeholder {
+html.dark .admin-root input::placeholder {
   color: #64748B !important;
 }
 
-html.dark tr.border-b {
+html.dark .admin-root tr.border-b {
   border-color: rgba(255, 255, 255, 0.08) !important;
 }
 
-html.dark tr:hover {
+html.dark .admin-root tr:hover {
   background-color: rgba(255, 255, 255, 0.04) !important;
 }

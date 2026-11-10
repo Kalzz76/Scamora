@@ -93,7 +93,7 @@ const AdminLayout: React.FC = () => {
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen relative flex flex-col font-sans overflow-x-hidden text-[#1A202C] dark:text-[#F8FAFC]">
+    <div className="admin-root min-h-screen relative flex flex-col font-sans overflow-x-hidden text-[#1A202C] dark:text-[#F8FAFC]">
       {/* Blurred City Landscape Ambient Background (Day / Night depending on theme) */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
         <img

@@ -53,6 +53,10 @@ export const adminAuth = {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem(REMEMBER_KEY);
+      localStorage.removeItem('scamora_admin_theme');
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark');
+      }
     } catch {
       // Ignore
     }

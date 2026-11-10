@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAuth } from '../../admin/services/adminAuth';
+import { LogoutConfirmModal } from '../common/LogoutConfirmModal';
 
 interface NavbarProps {
   onOpenPrivacy?: () => void;
@@ -29,6 +30,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(adminAuth.getUser());
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const desktopMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const isAuth = !!currentUser;
@@ -58,10 +60,17 @@ export const Navbar: React.FC<NavbarProps> = () => {
     };
   }, [accountMenuOpen]);
 
-  const handleLogout = () => {
+  const handleOpenLogoutConfirm = () => {
+    setAccountMenuOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    setAccountMenuOpen(false);
+    document.documentElement.classList.remove('dark');
     adminAuth.clearSession();
     setCurrentUser(null);
-    setAccountMenuOpen(false);
     toast.success('Anda telah berhasil keluar dari akun.');
     navigate('/', { replace: true });
   };
@@ -281,10 +290,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setAccountMenuOpen(false);
-                            handleLogout();
-                          }}
+                          onClick={handleOpenLogoutConfirm}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer text-left"
                           role="menuitem"
                         >
@@ -388,10 +394,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
 
                         <button
                           type="button"
-                          onClick={() => {
-                            setAccountMenuOpen(false);
-                            handleLogout();
-                          }}
+                          onClick={handleOpenLogoutConfirm}
                           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer text-left"
                           role="menuitem"
                         >
@@ -457,6 +460,13 @@ export const Navbar: React.FC<NavbarProps> = () => {
           );
         })}
       </nav>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+      />
     </>
   );
 };

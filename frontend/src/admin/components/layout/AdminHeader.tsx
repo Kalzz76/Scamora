@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner';
 import { adminAuth } from '../../services/adminAuth';
 import { useTheme } from '../../services/themeContext';
+import { LogoutConfirmModal } from '../../../components/common/LogoutConfirmModal';
 
 interface AdminHeaderProps {
   reportCount?: number;
@@ -36,18 +37,25 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [localDrawerOpen, setLocalDrawerOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const currentUser = adminAuth.getUser();
   const { isDark, toggleTheme } = useTheme();
 
   const isDrawerOpen = mobileDrawerOpen !== undefined ? mobileDrawerOpen : localDrawerOpen;
   const setIsDrawerOpen = setMobileDrawerOpen || setLocalDrawerOpen;
 
-  const handleLogout = () => {
-    toast.info('Sesi administrasi berhasil ditutup.');
+  const handleOpenLogoutConfirm = () => {
     setDropdownOpen(false);
     setIsDrawerOpen(false);
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    document.documentElement.classList.remove('dark');
+    toast.info('Sesi administrasi berhasil ditutup.');
     adminAuth.logout();
-    navigate('/admin/login', { replace: true });
+    navigate('/login', { replace: true });
   };
 
   const navItems = [
@@ -180,7 +188,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                 <div className="border-t border-white/10 pt-1">
                   <button
                     type="button"
-                    onClick={handleLogout}
+                    onClick={handleOpenLogoutConfirm}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-rose-300 hover:text-white hover:bg-rose-500/25 transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4 text-rose-400 shrink-0" />
@@ -317,7 +325,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
               <button
                 type="button"
-                onClick={handleLogout}
+                onClick={handleOpenLogoutConfirm}
                 className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4 text-rose-400" />
@@ -327,6 +335,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmLogout}
+        title="Kunci & Keluar Sesi Admin"
+        description="Apakah Anda yakin ingin menutup sesi administrasi Scamora? Anda perlu mengotentikasi ulang untuk mengakses konsol kontrol kembali."
+        confirmText="Ya, Tutup Sesi"
+      />
     </>
   );
 };
