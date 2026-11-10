@@ -72,6 +72,21 @@ async function initDatabaseTables(): Promise<void> {
       ALTER TABLE app_users ADD COLUMN IF NOT EXISTS auth_provider VARCHAR(50) DEFAULT 'local';
       CREATE UNIQUE INDEX IF NOT EXISTS idx_app_users_google_id ON app_users(google_id) WHERE google_id IS NOT NULL;
 
+      CREATE TABLE IF NOT EXISTS auth_otps (
+          id VARCHAR(50) PRIMARY KEY,
+          email VARCHAR(255) NOT NULL,
+          otp_hash VARCHAR(255) NOT NULL,
+          purpose VARCHAR(50) NOT NULL,
+          expires_at TIMESTAMPTZ NOT NULL,
+          attempt_count INTEGER NOT NULL DEFAULT 0,
+          is_used BOOLEAN NOT NULL DEFAULT FALSE,
+          metadata JSONB DEFAULT '{}'::jsonb,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+      );
+      CREATE INDEX IF NOT EXISTS idx_auth_otps_email_purpose ON auth_otps(email, purpose);
+      CREATE INDEX IF NOT EXISTS idx_auth_otps_created ON auth_otps(created_at DESC);
+
       CREATE TABLE IF NOT EXISTS ai_token_logs (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
           provider VARCHAR(50) NOT NULL DEFAULT 'gemini',
