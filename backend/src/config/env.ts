@@ -6,7 +6,7 @@ dotenv.config();
 const envSchema = z.object({
   PORT: z.coerce.number().default(8000),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  FRONTEND_ORIGIN: z.string().default('http://localhost:5173'),
+  FRONTEND_ORIGIN: z.string().default('https://scamora-teal.vercel.app'),
   ANTHROPIC_API_KEY: z.string().default(''),
   CLAUDE_MODEL: z.string().default('claude-3-5-haiku-20241022'),
   GEMINI_API_KEY: z.string().default(''),
@@ -21,7 +21,7 @@ const envSchema = z.object({
   ADMIN_SECRET: z.string().default('scamora-super-secret-admin-key-2026'),
   GOOGLE_CLIENT_ID: z.string().default(''),
   GOOGLE_CLIENT_SECRET: z.string().default(''),
-  GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/google/callback'),
+  GOOGLE_CALLBACK_URL: z.string().default('https://scamora-teal.vercel.app/api/v1/auth/google/callback'),
   TURNSTILE_SECRET_KEY: z.string().default('0x4AAAAAAF67yK12S3HJynaMGWIVgwTW_w0'),
   TURNSTILE_SITE_KEY: z.string().default('0x4AAAAAAF67yLvs908uSKqH'),
   TURNSTILE_ENABLED: z
